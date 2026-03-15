@@ -1,0 +1,17 @@
+{
+  "[project]/components/layout/Sidebar.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/components/layout/Sidebar.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/_c37987a1._.js",
+      "static/chunks/components_layout_Sidebar_tsx_8f8e4d49._.js"
+    ]
+  },
+  "[project]/components/Map.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/components/Map.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/node_modules_b3d7cc77._.js",
+      "static/chunks/components_Map_tsx_d5f8fd9f._.js",
+      "static/chunks/components_Map_tsx_85d04867._.js"
+    ]
+  }
+}
