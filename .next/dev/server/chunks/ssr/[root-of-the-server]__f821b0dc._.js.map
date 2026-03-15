@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 22, "column": 0}, "map": {"version":3,"sources":["file:///Users/sandeepsaini/Desktop/Real-Estate-Nodejs/real-estate-dashboard/app/%28dashboard%29/page.tsx"],"sourcesContent":["import { redirect } from 'next/navigation';\n\nconst Index = () => {\n  redirect('/dashboard');\n};\n\nexport default Index;\n"],"names":[],"mappings":";;;;AAAA;AAAA;;AAEA,MAAM,QAAQ;IACZ,IAAA,iMAAQ,EAAC;AACX;uCAEe"}}]
-}

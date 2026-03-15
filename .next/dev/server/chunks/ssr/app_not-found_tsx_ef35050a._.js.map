@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/sandeepsaini/Desktop/Real-Estate-Nodejs/real-estate-dashboard/app/not-found.tsx"],"sourcesContent":["export default function NotFound() {\n  return (\n    <div className=\"flex min-h-screen items-center justify-center bg-gray-100\">\n      <div className=\"text-center\">\n        <h1 className=\"mb-4 text-4xl font-bold\">404</h1>\n        <p className=\"mb-4 text-xl text-gray-600\">Oops! Page not found</p>\n        <a href=\"/\" className=\"text-blue-500 underline hover:text-blue-700\">\n          Return to Home\n        </a>\n      </div>\n    </div>\n  );\n}\n"],"names":[],"mappings":";;;;;;AAAe,SAAS;IACtB,qBACE,8OAAC;QAAI,WAAU;kBACb,cAAA,8OAAC;YAAI,WAAU;;8BACb,8OAAC;oBAAG,WAAU;8BAA0B;;;;;;8BACxC,8OAAC;oBAAE,WAAU;8BAA6B;;;;;;8BAC1C,8OAAC;oBAAE,MAAK;oBAAI,WAAU;8BAA8C;;;;;;;;;;;;;;;;;AAM5E"}}]
-}
