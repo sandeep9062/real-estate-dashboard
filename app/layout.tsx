@@ -49,7 +49,7 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <Providers>
-          <ThemeProvider attribute="class" defaultTheme="dark">
+          <ThemeProvider attribute="class" defaultTheme="light">
             <Toaster position="top-right" richColors closeButton expand />
             {children}
           </ThemeProvider>

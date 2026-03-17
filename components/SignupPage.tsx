@@ -55,6 +55,15 @@ export default function SignupPage({
       className="flex items-center justify-center min-h-screen bg-gray-100 bg-center bg-cover"
       style={{ backgroundImage: "url('/real-estate-login.jpg')" }}
     >
+      {/* Logo in top-left corner */}
+      <div className="absolute top-4 left-4 z-10">
+        <img
+          src="/propertybulbul.png"
+          alt="PropertyBulbul Logo"
+          className="h-12 w-auto"
+        />
+      </div>
+
       <div className="w-full max-w-sm p-6 sm:p-10 mx-4 sm:mx-0 shadow-xl bg-white/30 backdrop-blur-md rounded-xl">
         <h2 className="mb-6 text-3xl font-bold text-center text-gray-900">
           Create Account

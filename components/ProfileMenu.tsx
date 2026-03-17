@@ -123,7 +123,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ user }) => {
         setUser({
           user: updatedUser,
           token: localStorage.getItem("token") || "",
-        })
+        }),
       );
       toast.success("Profile updated successfully");
       setIsModalOpen(false);
@@ -215,10 +215,13 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ user }) => {
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-lg p-0 border-0 bg-white shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Edit Profile</DialogTitle>
+          </DialogHeader>
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-t-lg">
             <div className="flex items-center gap-3">
-              <UserIcon className="h-6 w-6" />
+              <UserIcon className="mr-3 h-6 w-6" />
               <div>
                 <h2 className="text-xl font-bold">Edit Profile</h2>
                 <p className="text-blue-100 text-sm">

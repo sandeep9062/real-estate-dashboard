@@ -31,6 +31,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     data: currentUserData,
     isLoading: isUserLoading,
     error,
+    refetch,
   } = useGetCurrentUserQuery(undefined, {
     skip: !token || (isAuthenticated && !!user),
     pollingInterval: 300000, // Poll every 5 minutes to keep user data fresh
@@ -45,8 +46,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (mounted && !isAuthenticated && !isUserLoading) {
       router.replace("/auth");
+    } else if (mounted && isAuthenticated && user && user.role !== "admin") {
+      // Redirect non-admin users to auth page
+      router.replace("/auth");
     }
-  }, [mounted, isAuthenticated, router, isUserLoading]);
+  }, [mounted, isAuthenticated, user, isUserLoading, router]);
 
   // ✅ Handle user data updates from API
   useEffect(() => {
@@ -66,12 +70,20 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     }
   }, [error, dispatch, router]);
 
+  // ✅ Check authentication status on mount
+  useEffect(() => {
+    if (mounted && token && !user && !isUserLoading) {
+      // If we have a token but no user data, try to fetch it
+      refetch();
+    }
+  }, [mounted, token, user, isUserLoading, refetch]);
+
   // ✅ Prevent hydration mismatch
   if (!mounted) {
     return null;
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isUserLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <p>Checking authentication...</p>

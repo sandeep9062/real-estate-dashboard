@@ -25,6 +25,7 @@ const setCookie = (name: string, value: string, days: number) => {
 // Create our baseQuery instance
 const baseQuery = fetchBaseQuery({
   baseUrl: `${process.env.NEXT_PUBLIC_API_URL}`,
+  credentials: "include", // Always include cookies in requests
   prepareHeaders: (headers, { getState }) => {
     // By default, if we have a token in the store, let's use that for authenticated requests
     const token = (getState() as RootState).auth.token;
@@ -78,6 +79,18 @@ export const baseQueryWithAuth = async (
     if (cookieToken) {
       localStorage.setItem("token", cookieToken);
       console.log("BaseQueryWithAuth - Stored login token in localStorage");
+    } else {
+      // If no cookie token, check if token is in response (fallback)
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        console.log(
+          "BaseQueryWithAuth - Stored response token in localStorage",
+        );
+      } else {
+        console.warn(
+          "BaseQueryWithAuth - No token found in cookies or response",
+        );
+      }
     }
   }
 
@@ -102,6 +115,12 @@ export const baseQueryWithAuth = async (
       const newCookieToken = getCookie("accessToken");
       if (newCookieToken) {
         localStorage.setItem("token", newCookieToken);
+      } else {
+        // Try to get token from refresh response
+        const refreshData = refreshResult.data as any;
+        if (refreshData && refreshData.token) {
+          localStorage.setItem("token", refreshData.token);
+        }
       }
 
       // Retry the original request with the new token

@@ -12,6 +12,7 @@ export const authApi = createApi({
         url: "auth/login",
         method: "POST",
         body: credentials,
+        credentials: "include", // Include cookies in the request
       }),
       invalidatesTags: ["User"],
       async onQueryStarted(credentials, { dispatch, queryFulfilled }) {
@@ -30,21 +31,50 @@ export const authApi = createApi({
               return null;
             };
 
-            const token = getCookie("accessToken");
-            if (token) {
-              dispatch(setUser({ user: data.user, token }));
-            } else {
-              // Fallback: try to get token from localStorage if cookies aren't available
-              const localStorageToken = localStorage.getItem("token");
-              if (localStorageToken) {
-                dispatch(
-                  setUser({ user: data.user, token: localStorageToken }),
-                );
+            // Try multiple methods to get the token
+            let token = null;
+
+            // Method 1: Get from cookies (primary method)
+            token = getCookie("accessToken");
+
+            // Method 2: If no cookie, use token from response (fallback)
+            if (!token && data.token) {
+              token = data.token;
+              console.log(
+                "⚠️  Using token from response - cookies may not be set yet",
+              );
+            }
+
+            // Method 3: Check localStorage as last resort
+            if (!token) {
+              token = localStorage.getItem("token");
+              if (token) {
+                console.log("⚠️  Using token from localStorage");
               }
             }
+
+            if (token) {
+              dispatch(setUser({ user: data.user, token }));
+              // Also store in localStorage for consistency
+              localStorage.setItem("token", token);
+              localStorage.setItem("user", JSON.stringify(data.user));
+              console.log(
+                "✅ Login successful - token stored:",
+                token.substring(0, 20) + "...",
+              );
+            } else {
+              console.error(
+                "❌ Login failed - no token found in cookies, response, or localStorage",
+              );
+              throw new Error("Authentication failed - no token received");
+            }
+          } else {
+            console.error("❌ Login failed - no user data in response");
+            throw new Error("Authentication failed - invalid response");
           }
         } catch (error) {
           console.error("Login failed:", error);
+          throw error;
         }
       },
     }),
@@ -53,6 +83,7 @@ export const authApi = createApi({
         url: "auth/register",
         method: "POST",
         body: userInfo,
+        credentials: "include", // Include cookies in the request
       }),
       invalidatesTags: ["User"],
       async onQueryStarted(userInfo, { dispatch, queryFulfilled }) {
@@ -71,26 +102,52 @@ export const authApi = createApi({
               return null;
             };
 
-            const token = getCookie("accessToken");
+            // Try multiple methods to get the token
+            let token = null;
+
+            // Method 1: Get from cookies
+            token = getCookie("accessToken");
+
+            // Method 2: If no cookie, check if token is in response (fallback)
+            if (!token && data.token) {
+              token = data.token;
+            }
+
+            // Method 3: Check localStorage as last resort
+            if (!token) {
+              token = localStorage.getItem("token");
+            }
+
             if (token) {
               dispatch(setUser({ user: data.user, token }));
+              // Also store in localStorage for consistency
+              localStorage.setItem("token", token);
+              localStorage.setItem("user", JSON.stringify(data.user));
+              console.log(
+                "✅ Registration successful - token stored:",
+                token.substring(0, 20) + "...",
+              );
             } else {
-              // Fallback: try to get token from localStorage if cookies aren't available
-              const localStorageToken = localStorage.getItem("token");
-              if (localStorageToken) {
-                dispatch(
-                  setUser({ user: data.user, token: localStorageToken }),
-                );
-              }
+              console.error(
+                "❌ Registration failed - no token found in cookies, response, or localStorage",
+              );
+              throw new Error("Registration failed - no token received");
             }
+          } else {
+            console.error("❌ Registration failed - no user data in response");
+            throw new Error("Registration failed - invalid response");
           }
         } catch (error) {
           console.error("Registration failed:", error);
+          throw error;
         }
       },
     }),
     getCurrentUser: builder.query({
-      query: () => "auth/me",
+      query: () => ({
+        url: "auth/me",
+        credentials: "include", // Include cookies in the request
+      }),
       providesTags: ["User"],
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
         try {
@@ -107,21 +164,32 @@ export const authApi = createApi({
               return null;
             };
 
-            const token = getCookie("accessToken");
+            // Try multiple methods to get the token
+            let token = null;
+
+            // Method 1: Get from cookies
+            token = getCookie("accessToken");
+
+            // Method 2: Check localStorage as fallback
+            if (!token) {
+              token = localStorage.getItem("token");
+            }
+
             if (token) {
               dispatch(setUser({ user: data.user, token }));
+              console.log(
+                "✅ User data refreshed - token found:",
+                token.substring(0, 20) + "...",
+              );
             } else {
-              // Fallback: try to get token from localStorage if cookies aren't available
-              const localStorageToken = localStorage.getItem("token");
-              if (localStorageToken) {
-                dispatch(
-                  setUser({ user: data.user, token: localStorageToken }),
-                );
-              }
+              console.warn(
+                "⚠️  User data fetched but no token found - user may need to login again",
+              );
             }
           }
         } catch (error) {
           console.error("Failed to fetch current user:", error);
+          throw error;
         }
       },
     }),
@@ -137,6 +205,7 @@ export const authApi = createApi({
       query: () => ({
         url: "auth/logout",
         method: "POST",
+        credentials: "include", // Include cookies in the request
       }),
       invalidatesTags: ["User"],
       async onQueryStarted(_, { dispatch, queryFulfilled }) {

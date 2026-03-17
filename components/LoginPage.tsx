@@ -45,14 +45,58 @@ export default function LoginPage({
 
       const result = await loginUser(loginData).unwrap();
 
-      // Store user and token
-      dispatch(loginSuccess({ user: result.user, token: result.token }));
-      localStorage.setItem("token", result.token);
-      localStorage.setItem("user", JSON.stringify(result.user));
+      // The backend sets cookies, so we need to get the token from cookies
+      const getCookie = (name: string): string | null => {
+        if (typeof document === "undefined") return null;
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+          return parts.pop()?.split(";").shift() || null;
+        }
+        return null;
+      };
 
-      toast.success("Login successful!");
-      onLoginSuccess();
-      router.push("/"); // redirect to dashboard
+      const cookieToken = getCookie("accessToken");
+
+      if (cookieToken) {
+        // Store user and token
+        dispatch(loginSuccess({ user: result.user, token: cookieToken }));
+        localStorage.setItem("token", cookieToken);
+        localStorage.setItem("user", JSON.stringify(result.user));
+
+        onLoginSuccess();
+
+        // Check if user has admin role before redirecting to dashboard
+        if (result.user.role === "admin") {
+          toast.success("Login successful!");
+          router.push("/");
+
+          // redirect to dashboard
+        } else {
+          toast.error("Access denied. Admin role required.");
+          setError("Access denied. Admin role required.");
+        }
+      } else {
+        // Fallback to response token if cookies aren't available
+        if (result.token) {
+          dispatch(loginSuccess({ user: result.user, token: result.token }));
+          localStorage.setItem("token", result.token);
+          localStorage.setItem("user", JSON.stringify(result.user));
+
+          toast.success("Login successful!");
+          onLoginSuccess();
+
+          // Check if user has admin role before redirecting to dashboard
+          if (result.user.role === "admin") {
+            router.push("/"); // redirect to dashboard
+          } else {
+            toast.error("Access denied. Admin role required.");
+            setError("Access denied. Admin role required.");
+          }
+        } else {
+          throw new Error("Authentication failed - no token received");
+        }
+      }
     } catch (err: any) {
       setError(err.data?.message || "Login failed");
       toast.error(err.data?.message || "Login failed");
@@ -61,12 +105,21 @@ export default function LoginPage({
 
   return (
     <div
-      className="flex items-center justify-center min-h-screen bg-gray-100 bg-center bg-cover"
+      className="flex items-center justify-center min-h-screen bg-gray-100 bg-center bg-cover relative"
       style={{ backgroundImage: "url('/real-estate-login.jpg')" }}
     >
+      {/* Logo in top-left corner */}
+      <div className="absolute top-6 left-6 z-10">
+        <img
+          src="/propertybulbul.png"
+          alt="PropertyBulbul Logo"
+          className="h-18 w-auto"
+        />
+      </div>
+
       <div className="w-full max-w-sm p-6 sm:p-10 mx-4 sm:mx-0 shadow-xl bg-white/30 backdrop-blur-md rounded-xl">
-        <h2 className="mb-6 text-3xl font-bold text-center text-gray-900">
-          Login
+        <h2 className="mb-6 text-2xl font-bold text-center text-gray-900">
+          Admin Login
         </h2>
         {error && <p className="mb-4 text-center text-red-500">{error}</p>}
 
@@ -111,7 +164,7 @@ export default function LoginPage({
           </button>
         </form>
 
-        <p className="mt-4 text-sm text-center text-gray-700">
+        {/* <p className="mt-4 text-sm text-center text-gray-700">
           Don't have an account?{" "}
           <button
             onClick={toggleAuthMode}
@@ -119,7 +172,7 @@ export default function LoginPage({
           >
             Sign up
           </button>
-        </p>
+        </p> */}
       </div>
     </div>
   );

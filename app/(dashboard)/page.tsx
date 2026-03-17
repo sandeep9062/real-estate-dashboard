@@ -1,7 +1,9 @@
-import { redirect } from 'next/navigation';
+import { redirect } from "next/navigation";
 
 const Index = () => {
-  redirect('/dashboard');
+  // This is a server component, but we need to check auth on client side
+  // The actual auth check will be handled by the AdminLayout component
+  redirect("/dashboard");
 };
 
 export default Index;
