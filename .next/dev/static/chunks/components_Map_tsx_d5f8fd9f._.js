@@ -45,15 +45,26 @@ _c = MapCenterHandler;
 const Map = ({ setLocation, location })=>{
     _s1();
     var _s = __turbopack_context__.k.signature();
-    const [position, setPosition] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(location && location.lat && location.lng ? [
-        location.lat,
-        location.lng
-    ] : [
-        30.751851738730274,
-        76.77228927612306
+    // Use useMemo to prevent unnecessary re-renders when location changes
+    const initialPosition = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMemo"])({
+        "Map.useMemo[initialPosition]": ()=>{
+            return location && location.lat && location.lng ? [
+                location.lat,
+                location.lng
+            ] : [
+                30.751851738730274,
+                76.77228927612306
+            ];
+        }
+    }["Map.useMemo[initialPosition]"], [
+        location?.lat,
+        location?.lng
     ]);
+    const [position, setPosition] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(initialPosition);
+    const [shouldRenderMap, setShouldRenderMap] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const mapRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(null);
-    const [mapKey, setMapKey] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(0);
+    const isInitializedRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(false);
+    const containerRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(null);
     // Update position when location prop changes
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "Map.useEffect": ()=>{
@@ -62,28 +73,45 @@ const Map = ({ setLocation, location })=>{
                     location.lat,
                     location.lng
                 ]);
+                // Only render map after location is available
+                setShouldRenderMap(true);
+            } else {
+                setShouldRenderMap(false);
             }
         }
     }["Map.useEffect"], [
-        location
+        location?.lat,
+        location?.lng
     ]);
-    // Force remount if map becomes corrupted
+    // Cleanup function to prevent duplicate initialization
+    const cleanupMap = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
+        "Map.useCallback[cleanupMap]": ()=>{
+            if (mapRef.current) {
+                try {
+                    // Remove any existing map instance
+                    if (mapRef.current._container) {
+                        mapRef.current.remove();
+                    }
+                    mapRef.current = null;
+                } catch (error) {
+                    console.warn("Error cleaning up map:", error);
+                }
+            }
+            isInitializedRef.current = false;
+        }
+    }["Map.useCallback[cleanupMap]"], []);
+    // Initialize map with proper cleanup
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "Map.useEffect": ()=>{
-            const handleResize = {
-                "Map.useEffect.handleResize": ()=>{
-                    // Force map remount on window resize if needed
-                    setMapKey({
-                        "Map.useEffect.handleResize": (prev)=>prev + 1
-                    }["Map.useEffect.handleResize"]);
-                }
-            }["Map.useEffect.handleResize"];
-            window.addEventListener('resize', handleResize);
             return ({
-                "Map.useEffect": ()=>window.removeEventListener('resize', handleResize)
+                "Map.useEffect": ()=>{
+                    cleanupMap();
+                }
             })["Map.useEffect"];
         }
-    }["Map.useEffect"], []);
+    }["Map.useEffect"], [
+        cleanupMap
+    ]);
     const MapEvents = ()=>{
         _s();
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$leaflet$2f$lib$2f$hooks$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMapEvents"])({
@@ -108,13 +136,69 @@ const Map = ({ setLocation, location })=>{
             __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$leaflet$2f$lib$2f$hooks$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMapEvents"]
         ];
     });
+    // Only render the map when we have valid coordinates
+    if (!shouldRenderMap) {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            ref: containerRef,
+            style: {
+                height: "100%",
+                width: "100%",
+                backgroundColor: "#f3f4f6",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+            },
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    textAlign: "center",
+                    color: "#6b7280"
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            fontSize: "24px",
+                            marginBottom: "8px"
+                        },
+                        children: "🗺️"
+                    }, void 0, false, {
+                        fileName: "[project]/components/Map.tsx",
+                        lineNumber: 108,
+                        columnNumber: 11
+                    }, ("TURBOPACK compile-time value", void 0)),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        children: "Map will load when location is set"
+                    }, void 0, false, {
+                        fileName: "[project]/components/Map.tsx",
+                        lineNumber: 109,
+                        columnNumber: 11
+                    }, ("TURBOPACK compile-time value", void 0))
+                ]
+            }, void 0, true, {
+                fileName: "[project]/components/Map.tsx",
+                lineNumber: 107,
+                columnNumber: 9
+            }, ("TURBOPACK compile-time value", void 0))
+        }, void 0, false, {
+            fileName: "[project]/components/Map.tsx",
+            lineNumber: 96,
+            columnNumber: 7
+        }, ("TURBOPACK compile-time value", void 0));
+    }
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        ref: containerRef,
         style: {
             height: "100%",
             width: "100%"
         },
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$leaflet$2f$lib$2f$MapContainer$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["MapContainer"], {
-            ref: mapRef,
+            ref: (ref)=>{
+                if (ref && !isInitializedRef.current) {
+                    // Clean up any existing map instance before setting new one
+                    cleanupMap();
+                    mapRef.current = ref;
+                    isInitializedRef.current = true;
+                }
+            },
             center: position,
             zoom: 13,
             style: {
@@ -122,13 +206,18 @@ const Map = ({ setLocation, location })=>{
                 width: "100%"
             },
             scrollWheelZoom: false,
+            whenReady: ()=>{
+                if (mapRef.current) {
+                    isInitializedRef.current = true;
+                }
+            },
             children: [
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$leaflet$2f$lib$2f$TileLayer$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TileLayer"], {
                     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 }, void 0, false, {
                     fileName: "[project]/components/Map.tsx",
-                    lineNumber: 76,
+                    lineNumber: 136,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$leaflet$2f$lib$2f$Marker$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Marker"], {
@@ -148,34 +237,34 @@ const Map = ({ setLocation, location })=>{
                     })
                 }, void 0, false, {
                     fileName: "[project]/components/Map.tsx",
-                    lineNumber: 80,
+                    lineNumber: 140,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MapCenterHandler, {
                     position: position
                 }, void 0, false, {
                     fileName: "[project]/components/Map.tsx",
-                    lineNumber: 92,
+                    lineNumber: 155,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MapEvents, {}, void 0, false, {
                     fileName: "[project]/components/Map.tsx",
-                    lineNumber: 93,
+                    lineNumber: 156,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/components/Map.tsx",
-            lineNumber: 69,
+            lineNumber: 117,
             columnNumber: 7
         }, ("TURBOPACK compile-time value", void 0))
-    }, mapKey, false, {
+    }, void 0, false, {
         fileName: "[project]/components/Map.tsx",
-        lineNumber: 68,
+        lineNumber: 116,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
-_s1(Map, "4Ck1qpmtwK3jUU76yJhvFahsC08=");
+_s1(Map, "tgVdoWgOyzoTECbybSr/5pZzYSA=");
 _c1 = Map;
 const __TURBOPACK__default__export__ = Map;
 var _c, _c1;

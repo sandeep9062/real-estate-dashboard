@@ -1546,10 +1546,6 @@
     touch-action: none;
   }
 
-  .resize {
-    resize: both;
-  }
-
   .list-none {
     list-style-type: none;
   }
@@ -2407,10 +2403,6 @@
 
   .fill-yellow-500 {
     fill: var(--color-yellow-500);
-  }
-
-  .object-contain {
-    object-fit: contain;
   }
 
   .object-cover {

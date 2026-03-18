@@ -3,7 +3,7 @@
 
 __turbopack_context__.v((parentImport) => {
     return Promise.all([
-  "static/chunks/node_modules_b3d7cc77._.js",
+  "static/chunks/node_modules_leaflet_dist_leaflet-src_8608e1e4.js",
   "static/chunks/components_Map_tsx_d5f8fd9f._.js",
   "static/chunks/components_Map_tsx_49912488._.js"
 ].map((chunk) => __turbopack_context__.l(chunk))).then(() => {

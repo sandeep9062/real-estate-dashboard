@@ -108,7 +108,10 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
         price: propertyData.price || 0,
         deal: propertyData.deal || "Rent",
         type: propertyData.type || "Residential",
-        propertyCategory: propertyData.propertyCategory || propertyData.category || "Apartment/Flat",
+        propertyCategory:
+          propertyData.propertyCategory ||
+          propertyData.category ||
+          "Apartment/Flat",
         area: propertyData.area || { value: 1000, unit: "sqft" },
         availability: propertyData.availability || "Ready to Move",
         furnishing: propertyData.furnishing || "Un-Furnished",
@@ -224,9 +227,7 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
               <h1 className="text-3xl font-bold text-gray-900">
                 Edit Property
               </h1>
-              <p className="text-gray-500 mt-1">
-                Step {active + 1} of 4
-              </p>
+              <p className="text-gray-500 mt-1">Step {active + 1} of 4</p>
             </div>
             <button
               onClick={() => setOpened(false)}
@@ -240,10 +241,26 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
           <div className="px-6 py-4 border-b">
             <CustomStepper
               steps={[
-                { icon: <MapPin size={18} />, label: 'Location', description: 'Set property location' },
-                { icon: <Image size={18} />, label: 'Images', description: 'Upload property photos' },
-                { icon: <FileText size={18} />, label: 'Details', description: 'Property information' },
-                { icon: <Building size={18} />, label: 'Facilities', description: 'Rooms and amenities' },
+                {
+                  icon: <MapPin size={18} />,
+                  label: "Location",
+                  description: "Set property location",
+                },
+                {
+                  icon: <Image size={18} />,
+                  label: "Images",
+                  description: "Upload property photos",
+                },
+                {
+                  icon: <FileText size={18} />,
+                  label: "Details",
+                  description: "Property information",
+                },
+                {
+                  icon: <Building size={18} />,
+                  label: "Facilities",
+                  description: "Rooms and amenities",
+                },
               ]}
               active={active}
               onStepClick={setActive}
@@ -301,8 +318,8 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
                   Property Updated!
                 </h3>
                 <p className="text-gray-600 text-lg max-w-md mx-auto">
-                  Your property has been successfully updated.
-                  The changes should be reflected in your properties list.
+                  Your property has been successfully updated. The changes
+                  should be reflected in your properties list.
                 </p>
                 <button
                   onClick={() => setOpened(false)}

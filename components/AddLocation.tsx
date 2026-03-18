@@ -134,9 +134,8 @@ const AddLocation = ({
       {/* Map */}
       <div className="h-72 border rounded-xl overflow-hidden">
         <Map
-          key={`map-${propertyDetails?.location?.coordinates?.lat}-${propertyDetails?.location?.coordinates?.lng}`}
           location={propertyDetails?.location?.coordinates}
-          setLocation={(coords) =>
+          setLocation={(coords: { lat: number; lng: number }) =>
             setPropertyDetails((prev: any) => ({
               ...prev,
               location: {

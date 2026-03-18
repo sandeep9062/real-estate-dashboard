@@ -1,10 +1,15 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMapEvents,
+  useMap,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-// Fix for default icon issue with webpack
 interface MapProps {
   setLocation?: (location: { lat: number; lng: number }) => void;
   location?: { lat: number; lng: number };
@@ -24,32 +29,53 @@ const MapCenterHandler = ({ position }: { position: [number, number] }) => {
 };
 
 const Map = ({ setLocation, location }: MapProps) => {
-  const [position, setPosition] = useState<[number, number]>(
-    location && location.lat && location.lng
+  // Use useMemo to prevent unnecessary re-renders when location changes
+  const initialPosition = useMemo<[number, number]>(() => {
+    return location && location.lat && location.lng
       ? [location.lat, location.lng]
-      : [30.751851738730274, 76.77228927612306]
-  );
-  
+      : [30.751851738730274, 76.77228927612306];
+  }, [location?.lat, location?.lng]);
+
+  const [position, setPosition] = useState<[number, number]>(initialPosition);
+  const [shouldRenderMap, setShouldRenderMap] = useState(false);
+
   const mapRef = useRef<any>(null);
-  const [mapKey, setMapKey] = useState(0);
+  const isInitializedRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Update position when location prop changes
   useEffect(() => {
     if (location && location.lat && location.lng) {
       setPosition([location.lat, location.lng]);
+      // Only render map after location is available
+      setShouldRenderMap(true);
+    } else {
+      setShouldRenderMap(false);
     }
-  }, [location]);
+  }, [location?.lat, location?.lng]);
 
-  // Force remount if map becomes corrupted
-  useEffect(() => {
-    const handleResize = () => {
-      // Force map remount on window resize if needed
-      setMapKey(prev => prev + 1);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+  // Cleanup function to prevent duplicate initialization
+  const cleanupMap = useCallback(() => {
+    if (mapRef.current) {
+      try {
+        // Remove any existing map instance
+        if (mapRef.current._container) {
+          mapRef.current.remove();
+        }
+        mapRef.current = null;
+      } catch (error) {
+        console.warn("Error cleaning up map:", error);
+      }
+    }
+    isInitializedRef.current = false;
   }, []);
+
+  // Initialize map with proper cleanup
+  useEffect(() => {
+    return () => {
+      cleanupMap();
+    };
+  }, [cleanupMap]);
 
   const MapEvents = () => {
     useMapEvents({
@@ -64,14 +90,48 @@ const Map = ({ setLocation, location }: MapProps) => {
     return null;
   };
 
+  // Only render the map when we have valid coordinates
+  if (!shouldRenderMap) {
+    return (
+      <div
+        ref={containerRef}
+        style={{
+          height: "100%",
+          width: "100%",
+          backgroundColor: "#f3f4f6",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div style={{ textAlign: "center", color: "#6b7280" }}>
+          <div style={{ fontSize: "24px", marginBottom: "8px" }}>🗺️</div>
+          <div>Map will load when location is set</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div key={mapKey} style={{ height: "100%", width: "100%" }}>
+    <div ref={containerRef} style={{ height: "100%", width: "100%" }}>
       <MapContainer
-        ref={mapRef}
+        ref={(ref) => {
+          if (ref && !isInitializedRef.current) {
+            // Clean up any existing map instance before setting new one
+            cleanupMap();
+            mapRef.current = ref;
+            isInitializedRef.current = true;
+          }
+        }}
         center={position}
         zoom={13}
         style={{ height: "100%", width: "100%" }}
         scrollWheelZoom={false}
+        whenReady={() => {
+          if (mapRef.current) {
+            isInitializedRef.current = true;
+          }
+        }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -81,9 +141,12 @@ const Map = ({ setLocation, location }: MapProps) => {
           position={position}
           icon={
             new L.Icon({
-              iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-              iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-              shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+              iconUrl:
+                "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+              iconRetinaUrl:
+                "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+              shadowUrl:
+                "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
               iconSize: [25, 41],
               iconAnchor: [12, 41],
             })

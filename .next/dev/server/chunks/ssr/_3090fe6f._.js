@@ -628,7 +628,7 @@ const AddLocation = ({ propertyDetails, setPropertyDetails, nextStep })=>{
                                     coordinates: coords
                                 }
                             }))
-                }, `map-${propertyDetails?.location?.coordinates?.lat}-${propertyDetails?.location?.coordinates?.lng}`, false, {
+                }, void 0, false, {
                     fileName: "[project]/components/AddLocation.tsx",
                     lineNumber: 136,
                     columnNumber: 9
@@ -645,12 +645,12 @@ const AddLocation = ({ propertyDetails, setPropertyDetails, nextStep })=>{
                     children: "Next step →"
                 }, void 0, false, {
                     fileName: "[project]/components/AddLocation.tsx",
-                    lineNumber: 152,
+                    lineNumber: 151,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/components/AddLocation.tsx",
-                lineNumber: 151,
+                lineNumber: 150,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
@@ -2876,7 +2876,7 @@ const EditPropertyModal = ({ opened, setOpened, propertyData, onSuccess })=>{
                 onClick: ()=>setOpened(false)
             }, void 0, false, {
                 fileName: "[project]/components/EditPropertyModal.tsx",
-                lineNumber: 214,
+                lineNumber: 217,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2894,7 +2894,7 @@ const EditPropertyModal = ({ opened, setOpened, propertyData, onSuccess })=>{
                                             children: "Edit Property"
                                         }, void 0, false, {
                                             fileName: "[project]/components/EditPropertyModal.tsx",
-                                            lineNumber: 224,
+                                            lineNumber: 227,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2906,13 +2906,13 @@ const EditPropertyModal = ({ opened, setOpened, propertyData, onSuccess })=>{
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/EditPropertyModal.tsx",
-                                            lineNumber: 227,
+                                            lineNumber: 230,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/EditPropertyModal.tsx",
-                                    lineNumber: 223,
+                                    lineNumber: 226,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2923,18 +2923,18 @@ const EditPropertyModal = ({ opened, setOpened, propertyData, onSuccess })=>{
                                         children: "×"
                                     }, void 0, false, {
                                         fileName: "[project]/components/EditPropertyModal.tsx",
-                                        lineNumber: 235,
+                                        lineNumber: 236,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/components/EditPropertyModal.tsx",
-                                    lineNumber: 231,
+                                    lineNumber: 232,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/EditPropertyModal.tsx",
-                            lineNumber: 222,
+                            lineNumber: 225,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2947,51 +2947,51 @@ const EditPropertyModal = ({ opened, setOpened, propertyData, onSuccess })=>{
                                                 size: 18
                                             }, void 0, false, {
                                                 fileName: "[project]/components/EditPropertyModal.tsx",
-                                                lineNumber: 243,
+                                                lineNumber: 245,
                                                 columnNumber: 25
                                             }, void 0),
-                                            label: 'Location',
-                                            description: 'Set property location'
+                                            label: "Location",
+                                            description: "Set property location"
                                         },
                                         {
                                             icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$image$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Image$3e$__["Image"], {
                                                 size: 18
                                             }, void 0, false, {
                                                 fileName: "[project]/components/EditPropertyModal.tsx",
-                                                lineNumber: 244,
+                                                lineNumber: 250,
                                                 columnNumber: 25
                                             }, void 0),
-                                            label: 'Images',
-                                            description: 'Upload property photos'
+                                            label: "Images",
+                                            description: "Upload property photos"
                                         },
                                         {
                                             icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__["FileText"], {
                                                 size: 18
                                             }, void 0, false, {
                                                 fileName: "[project]/components/EditPropertyModal.tsx",
-                                                lineNumber: 245,
+                                                lineNumber: 255,
                                                 columnNumber: 25
                                             }, void 0),
-                                            label: 'Details',
-                                            description: 'Property information'
+                                            label: "Details",
+                                            description: "Property information"
                                         },
                                         {
                                             icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$building$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Building$3e$__["Building"], {
                                                 size: 18
                                             }, void 0, false, {
                                                 fileName: "[project]/components/EditPropertyModal.tsx",
-                                                lineNumber: 246,
+                                                lineNumber: 260,
                                                 columnNumber: 25
                                             }, void 0),
-                                            label: 'Facilities',
-                                            description: 'Rooms and amenities'
+                                            label: "Facilities",
+                                            description: "Rooms and amenities"
                                         }
                                     ],
                                     active: active,
                                     onStepClick: setActive
                                 }, void 0, false, {
                                     fileName: "[project]/components/EditPropertyModal.tsx",
-                                    lineNumber: 241,
+                                    lineNumber: 242,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3003,18 +3003,18 @@ const EditPropertyModal = ({ opened, setOpened, propertyData, onSuccess })=>{
                                         }
                                     }, void 0, false, {
                                         fileName: "[project]/components/EditPropertyModal.tsx",
-                                        lineNumber: 252,
+                                        lineNumber: 269,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/components/EditPropertyModal.tsx",
-                                    lineNumber: 251,
+                                    lineNumber: 268,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/EditPropertyModal.tsx",
-                            lineNumber: 240,
+                            lineNumber: 241,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3026,7 +3026,7 @@ const EditPropertyModal = ({ opened, setOpened, propertyData, onSuccess })=>{
                                     setPropertyDetails: setPropertyDetails
                                 }, void 0, false, {
                                     fileName: "[project]/components/EditPropertyModal.tsx",
-                                    lineNumber: 262,
+                                    lineNumber: 279,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 active === 1 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$UploadImage$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -3036,7 +3036,7 @@ const EditPropertyModal = ({ opened, setOpened, propertyData, onSuccess })=>{
                                     setPropertyDetails: setPropertyDetails
                                 }, void 0, false, {
                                     fileName: "[project]/components/EditPropertyModal.tsx",
-                                    lineNumber: 269,
+                                    lineNumber: 286,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 active === 2 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$BasicDetails$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -3046,7 +3046,7 @@ const EditPropertyModal = ({ opened, setOpened, propertyData, onSuccess })=>{
                                     setPropertyDetails: setPropertyDetails
                                 }, void 0, false, {
                                     fileName: "[project]/components/EditPropertyModal.tsx",
-                                    lineNumber: 277,
+                                    lineNumber: 294,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 active === 3 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$Facilities$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -3059,7 +3059,7 @@ const EditPropertyModal = ({ opened, setOpened, propertyData, onSuccess })=>{
                                     isEditing: true
                                 }, void 0, false, {
                                     fileName: "[project]/components/EditPropertyModal.tsx",
-                                    lineNumber: 285,
+                                    lineNumber: 302,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 active === 4 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3072,12 +3072,12 @@ const EditPropertyModal = ({ opened, setOpened, propertyData, onSuccess })=>{
                                                 children: "✓"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/EditPropertyModal.tsx",
-                                                lineNumber: 298,
+                                                lineNumber: 315,
                                                 columnNumber: 19
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/components/EditPropertyModal.tsx",
-                                            lineNumber: 297,
+                                            lineNumber: 314,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -3085,7 +3085,7 @@ const EditPropertyModal = ({ opened, setOpened, propertyData, onSuccess })=>{
                                             children: "Property Updated!"
                                         }, void 0, false, {
                                             fileName: "[project]/components/EditPropertyModal.tsx",
-                                            lineNumber: 300,
+                                            lineNumber: 317,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3093,7 +3093,7 @@ const EditPropertyModal = ({ opened, setOpened, propertyData, onSuccess })=>{
                                             children: "Your property has been successfully updated. The changes should be reflected in your properties list."
                                         }, void 0, false, {
                                             fileName: "[project]/components/EditPropertyModal.tsx",
-                                            lineNumber: 303,
+                                            lineNumber: 320,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3102,30 +3102,30 @@ const EditPropertyModal = ({ opened, setOpened, propertyData, onSuccess })=>{
                                             children: "Done"
                                         }, void 0, false, {
                                             fileName: "[project]/components/EditPropertyModal.tsx",
-                                            lineNumber: 307,
+                                            lineNumber: 324,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/EditPropertyModal.tsx",
-                                    lineNumber: 296,
+                                    lineNumber: 313,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/EditPropertyModal.tsx",
-                            lineNumber: 260,
+                            lineNumber: 277,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/EditPropertyModal.tsx",
-                    lineNumber: 220,
+                    lineNumber: 223,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/components/EditPropertyModal.tsx",
-                lineNumber: 219,
+                lineNumber: 222,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
