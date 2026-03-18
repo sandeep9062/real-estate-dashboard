@@ -132,7 +132,8 @@ const AddLocation = ({
       </div>
 
       {/* Map */}
-      <div className="h-72 border rounded-xl overflow-hidden">
+
+      {/* <div className="h-72 border rounded-xl overflow-hidden">
         <Map
           location={propertyDetails?.location?.coordinates}
           setLocation={(coords: { lat: number; lng: number }) =>
@@ -145,7 +146,7 @@ const AddLocation = ({
             }))
           }
         />
-      </div>
+      </div> */}
 
       <div className="flex justify-end">
         <Button type="submit">Next step →</Button>
