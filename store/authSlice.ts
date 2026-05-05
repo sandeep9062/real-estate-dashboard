@@ -25,6 +25,8 @@ interface AuthState {
     favProperties: any[];
     bookings: any[];
     ownedProperties: any[];
+    /** From API: false when account uses OAuth only and has no password yet */
+    passwordIsSet?: boolean;
   } | null;
   token: string | null;
 }
@@ -88,6 +90,7 @@ const authSlice = createSlice({
           favProperties: any[];
           bookings: any[];
           ownedProperties: any[];
+          passwordIsSet?: boolean;
         };
         token: string;
       }>,
@@ -118,6 +121,7 @@ const authSlice = createSlice({
           favProperties: any[];
           bookings: any[];
           ownedProperties: any[];
+          passwordIsSet?: boolean;
         };
         token: string;
       }>,

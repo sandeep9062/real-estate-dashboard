@@ -1,10 +1,71 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+
+// Dynamic API URL detection for production vs development
+export const getApiUrl = () => {
+  // First priority: Environment variable
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+
+  // Second priority: Detect production environment (client-side only)
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+
+    // If on production domain, use Render backend URL
+    if (
+      hostname === "www.propertybulbul.com" ||
+      hostname === "propertybulbul.com"
+    ) {
+      return "https://api.propertybulbul.com/api";
+    }
+  }
+
+  // Default: localhost for development
+  return "http://localhost:9000/api";
+};
+
+export async function getPropertyServer(id: string) {
+  const apiUrl = getApiUrl();
+
+  try {
+    const response = await fetch(`${apiUrl}/properties/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+
+    if (response.status === 404) return null;
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "Unknown error");
+      console.error(`API Error [${response.status}]: ${errorText}`);
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    // Log the actual error for debugging
+    console.error("getPropertyServer error:", error);
+
+    // Re-throw with more context if it's a network error
+    if (error instanceof TypeError && error.message.includes("fetch")) {
+      throw new Error(
+        `Unable to connect to API at ${apiUrl}. Please ensure the backend server is running.`,
+      );
+    }
+
+    throw error;
+  }
+}
+
 import { baseQueryWithAuth } from "./api";
 
 export const propertiesApi = createApi({
   reducerPath: "propertiesApi",
   baseQuery: baseQueryWithAuth,
-  tagTypes: ["Property"],
+  tagTypes: ["Property", "VisitReviews"],
   endpoints: (builder) => ({
     getAllProperties: builder.query({
       query: (params) => ({
@@ -22,90 +83,176 @@ export const propertiesApi = createApi({
       providesTags: ["Property"],
     }),
     createProperty: builder.mutation({
-      query: (payload) => {
-        // Supports both:
-        // 1) Plain object payload from the stepper modal (we'll convert to FormData)
-        // 2) Pre-built FormData payload (used by PropertyForm)
-        let body: FormData;
-
-        if (payload instanceof FormData) {
-          body = payload;
-        } else {
-          body = new FormData();
-          const { token: _token, ...propertyData } = payload || {};
-
-          Object.keys(propertyData).forEach((key) => {
-            const value = (propertyData as any)[key];
-
-            if (key === "image") {
-              (value || []).forEach((file: File) => body.append("image", file));
-              return;
-            }
-
-            if (value === undefined || value === null) return;
-
-            if (typeof value === "object") {
-              body.append(key, JSON.stringify(value));
-            } else {
-              body.append(key, String(value));
-            }
-          });
-        }
-
+      query: (property) => {
+        const formData = new FormData();
+        Object.keys(property).forEach((key) => {
+          if (key === "image") {
+            property[key].forEach((file: File) => {
+              formData.append(key, file);
+            });
+          } else if (key === "floorPlanFiles") {
+            (property.floorPlanFiles || []).forEach((file: File) => {
+              formData.append("floorPlan", file);
+            });
+          } else if (
+            typeof property[key] === "object" &&
+            property[key] !== null
+          ) {
+            formData.append(key, JSON.stringify(property[key]));
+          } else {
+            formData.append(key, property[key]);
+          }
+        });
         return {
           url: "/properties",
           method: "POST",
-          body,
+          body: formData,
         };
       },
       invalidatesTags: ["Property"],
     }),
     updateProperty: builder.mutation({
-      query: ({ id, ...payload }) => {
-        // Supports both:
-        // 1) { id, ...plainObject } => converted to FormData
-        // 2) { id, data: FormData } => passed through
-        let body: FormData;
-
-        if ((payload as any)?.data instanceof FormData) {
-          body = (payload as any).data;
-        } else {
-          body = new FormData();
-          Object.keys(payload).forEach((key) => {
-            const value = (payload as any)[key];
-
-            if (key === "image") {
-              (value || []).forEach((file: File | string) => {
-                if (file instanceof File) body.append("image", file);
-              });
-              return;
-            }
-
-            if (value === undefined || value === null) return;
-
-            if (typeof value === "object") {
-              body.append(key, JSON.stringify(value));
-            } else {
-              body.append(key, String(value));
-            }
-          });
-        }
-
+      query: ({ id, ...property }) => {
+        const formData = new FormData();
+        const existingImages = (property.image || []).filter(
+          (img: File | string) => typeof img === "string",
+        );
+        const newImages = (property.image || []).filter(
+          (img: File | string) => img instanceof File,
+        );
+        formData.append("existingImages", JSON.stringify(existingImages));
+        newImages.forEach((file: File) => {
+          formData.append("image", file);
+        });
+        (property.floorPlanFiles || []).forEach((file: File) => {
+          if (file instanceof File) formData.append("floorPlan", file);
+        });
+        Object.keys(property).forEach((key) => {
+          if (key === "image") {
+            // Already handled above
+          } else if (key === "floorPlanFiles") {
+            // Appended above
+          } else if (
+            typeof property[key] === "object" &&
+            property[key] !== null
+          ) {
+            formData.append(key, JSON.stringify(property[key]));
+          } else {
+            formData.append(key, property[key]);
+          }
+        });
         return {
           url: `/properties/${id}`,
           method: "PUT",
-          body,
+          body: formData,
         };
       },
-      invalidatesTags: (result, error, { id }) => [{ type: "Property", id }, "Property"],
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Property", id },
+        "Property",
+      ],
     }),
-
-
-    
     deleteProperty: builder.mutation({
       query: (id) => ({
         url: `/properties/${id}`,
         method: "DELETE",
+      }),
+      invalidatesTags: ["Property"],
+    }),
+    getPropertyBrochure: builder.query({
+      query: (id) => ({
+        url: `/properties/${id}/download-brochure`,
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
+    getCompareProperties: builder.query<any[], string>({
+      query: (idsCsv) => ({
+        url: "/properties/compare",
+        params: { ids: idsCsv },
+      }),
+    }),
+    getSimilarProperties: builder.query<
+      any[],
+      { propertyId: string; limit?: number }
+    >({
+      query: ({ propertyId, limit = 8 }) => ({
+        url: "/properties/similar",
+        params: { propertyId, limit },
+      }),
+    }),
+    recordPropertyView: builder.mutation<{ success: boolean }, string>({
+      query: (id) => ({
+        url: `/properties/${id}/view`,
+        method: "POST",
+      }),
+    }),
+    getPropertyVisitReviewSummary: builder.query<
+      {
+        count: number;
+        avgAgentHelpfulness: number | null;
+        avgListingAccuracy: number | null;
+      },
+      string
+    >({
+      query: (propertyId) => `/properties/${propertyId}/visit-reviews/summary`,
+      providesTags: (result, error, propertyId) => [
+        { type: "VisitReviews", id: propertyId },
+      ],
+    }),
+    getPropertyVisitReviews: builder.query<
+      any[],
+      { propertyId: string; limit?: number }
+    >({
+      query: ({ propertyId, limit = 10 }) => ({
+        url: `/properties/${propertyId}/visit-reviews`,
+        params: { limit },
+      }),
+      providesTags: (result, error, { propertyId }) => [
+        { type: "VisitReviews", id: propertyId },
+      ],
+    }),
+    getBookingReviewStatus: builder.query<
+      { reviewed: boolean; eligible: boolean },
+      string
+    >({
+      query: (bookingId) => `/visit-reviews/booking/${bookingId}/status`,
+    }),
+    submitVisitReview: builder.mutation<
+      unknown,
+      {
+        bookingId: string;
+        agentHelpfulness: number;
+        listingAccuracy: number;
+        comment?: string;
+        propertyId: string;
+      }
+    >({
+      query: ({
+        bookingId,
+        agentHelpfulness,
+        listingAccuracy,
+        comment,
+        propertyId: _propertyId,
+      }) => ({
+        url: "/visit-reviews",
+        method: "POST",
+        body: {
+          bookingId,
+          agentHelpfulness,
+          listingAccuracy,
+          comment,
+        },
+      }),
+      invalidatesTags: (result, error, arg) => [
+        { type: "VisitReviews", id: arg.propertyId },
+        { type: "Property", id: arg.propertyId },
+      ],
+    }),
+    createWhatsAppLead: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: `/properties/${id}/whatsapp-lead`,
+        method: "POST",
+        body,
       }),
       invalidatesTags: ["Property"],
     }),
@@ -119,4 +266,14 @@ export const {
   useCreatePropertyMutation,
   useUpdatePropertyMutation,
   useDeletePropertyMutation,
+  useGetPropertyBrochureQuery,
+  useCreateWhatsAppLeadMutation,
+  useGetComparePropertiesQuery,
+  useLazyGetComparePropertiesQuery,
+  useGetSimilarPropertiesQuery,
+  useRecordPropertyViewMutation,
+  useGetPropertyVisitReviewSummaryQuery,
+  useGetPropertyVisitReviewsQuery,
+  useGetBookingReviewStatusQuery,
+  useSubmitVisitReviewMutation,
 } = propertiesApi;

@@ -27,6 +27,7 @@ interface SidebarProps {
 
 const menuItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+  { title: "Journals", icon: Star, path: "/journals" },
   { title: "Notifications", icon: Bell, path: "/notifications" },
   { title: "Users", icon: Users, path: "/users" },
   { title: "Properties", icon: Building2, path: "/properties" },
@@ -50,7 +51,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     <aside
       className={cn(
         "fixed left-0 top-0  h-screen border-r border-border bg-card transition-all duration-300",
-        isCollapsed ? "w-20" : "w-64"
+        isCollapsed ? "w-20" : "w-64",
       )}
     >
       <div className="flex h-full flex-col">
@@ -77,7 +78,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             <ChevronLeft
               className={cn(
                 "h-5 w-5 transition-transform duration-300",
-                isCollapsed && "rotate-180"
+                isCollapsed && "rotate-180",
               )}
             />
           </Button>
@@ -96,7 +97,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                   "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all",
                   isActive
                     ? "bg-primary text-primary-foreground shadow-lg"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                 )}
               >
                 <Icon className="h-5 w-5 flex-shrink-0" />

@@ -23,6 +23,8 @@ interface FacilitiesType {
   parkings: number;
   bathrooms: number;
   servantRooms: number;
+  balconies?: number;
+  parkingType?: string;
 }
 
 interface PropertyDetailsType {
@@ -39,6 +41,30 @@ interface PropertyDetailsType {
   availability: string;
   furnishing: string;
   postedBy: string;
+  listingAvailability?: string;
+  virtualTourUrl?: string;
+  floorPlanImages?: string[];
+  floorPlanFiles?: File[];
+  nearbyPlaces?: {
+    schools?: string[];
+    metroStations?: string[];
+    hospitals?: string[];
+    malls?: string[];
+  };
+  reraNumber?: string;
+  bulbulVerified?: boolean;
+  ownerVerified?: boolean;
+  visitVerified?: boolean;
+  maintenanceCharge?: number;
+  securityDeposit?: number;
+  lockInMonths?: number;
+  noticePeriodDays?: number;
+  amenities?: string[];
+  ocStatus?: string;
+  ageOfProperty?: number;
+  pricePerSqft?: number;
+  negotiable?: boolean;
+  videoUrl?: string;
   location: {
     address: string;
     city: string;
@@ -79,6 +105,30 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
     availability: "Ready to Move",
     furnishing: "Un-Furnished",
     postedBy: "Owner",
+    listingAvailability: "Available",
+    virtualTourUrl: "",
+    videoUrl: "",
+    floorPlanImages: [],
+    nearbyPlaces: {
+      schools: [],
+      metroStations: [],
+      hospitals: [],
+      malls: [],
+    },
+    reraNumber: "",
+    floorPlanFiles: [],
+    bulbulVerified: false,
+    ownerVerified: false,
+    visitVerified: false,
+    maintenanceCharge: undefined,
+    securityDeposit: undefined,
+    lockInMonths: undefined,
+    noticePeriodDays: undefined,
+    ocStatus: undefined,
+    ageOfProperty: undefined,
+    pricePerSqft: undefined,
+    negotiable: true,
+    amenities: [],
     location: {
       address: "",
       city: "",
@@ -95,6 +145,7 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
       parkings: 0,
       bathrooms: 0,
       servantRooms: 0,
+      balconies: 0,
     },
     userEmail: user?.email,
   });
@@ -116,6 +167,30 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
         availability: propertyData.availability || "Ready to Move",
         furnishing: propertyData.furnishing || "Un-Furnished",
         postedBy: propertyData.postedBy || "Owner",
+        listingAvailability: propertyData.listingAvailability || "Available",
+        virtualTourUrl: propertyData.virtualTourUrl || "",
+        videoUrl: propertyData.videoUrl || "",
+        floorPlanImages: propertyData.floorPlanImages || [],
+        nearbyPlaces: {
+          schools: propertyData.nearbyPlaces?.schools || [],
+          metroStations: propertyData.nearbyPlaces?.metroStations || [],
+          hospitals: propertyData.nearbyPlaces?.hospitals || [],
+          malls: propertyData.nearbyPlaces?.malls || [],
+        },
+        reraNumber: propertyData.reraNumber || "",
+        floorPlanFiles: [],
+        bulbulVerified: !!propertyData.bulbulVerified,
+        ownerVerified: !!propertyData.ownerVerified,
+        visitVerified: !!propertyData.visitVerified,
+        maintenanceCharge: propertyData.maintenanceCharge,
+        securityDeposit: propertyData.securityDeposit,
+        lockInMonths: propertyData.lockInMonths,
+        noticePeriodDays: propertyData.noticePeriodDays,
+        ocStatus: propertyData.ocStatus,
+        ageOfProperty: propertyData.ageOfProperty,
+        pricePerSqft: propertyData.pricePerSqft,
+        negotiable: propertyData.negotiable !== false,
+        amenities: propertyData.amenities || [],
         location: {
           address: propertyData.location?.address || "",
           city: propertyData.location?.city || "",
@@ -130,11 +205,13 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
         commercialPropertyTypes: propertyData.commercialPropertyTypes || [],
         investmentOptions: propertyData.investmentOptions || [],
         image: propertyData.image || [],
-        facilities: propertyData.facilities || {
+        facilities: {
           bedrooms: 0,
           parkings: 0,
           bathrooms: 0,
           servantRooms: 0,
+          balconies: 0,
+          ...propertyData.facilities,
         },
         userEmail: propertyData.userEmail || user?.email,
       });
@@ -154,6 +231,30 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
         availability: "Ready to Move",
         furnishing: "Un-Furnished",
         postedBy: "Owner",
+        listingAvailability: "Available",
+        virtualTourUrl: "",
+        videoUrl: "",
+        floorPlanImages: [],
+        nearbyPlaces: {
+          schools: [],
+          metroStations: [],
+          hospitals: [],
+          malls: [],
+        },
+        reraNumber: "",
+        floorPlanFiles: [],
+        bulbulVerified: false,
+        ownerVerified: false,
+        visitVerified: false,
+        maintenanceCharge: undefined,
+        securityDeposit: undefined,
+        lockInMonths: undefined,
+        noticePeriodDays: undefined,
+        ocStatus: undefined,
+        ageOfProperty: undefined,
+        pricePerSqft: undefined,
+        negotiable: true,
+        amenities: [],
         location: {
           address: "",
           city: "",
@@ -170,6 +271,7 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
           parkings: 0,
           bathrooms: 0,
           servantRooms: 0,
+          balconies: 0,
         },
         userEmail: user?.email,
       });
@@ -205,7 +307,7 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
       }, 2000);
     } catch (error) {
       console.error("Failed to update property:", error);
-      // Here you could add error handling/UI
+      throw error;
     }
   };
 

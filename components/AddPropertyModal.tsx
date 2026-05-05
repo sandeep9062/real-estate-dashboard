@@ -20,6 +20,8 @@ interface FacilitiesType {
   parkings: number;
   bathrooms: number;
   servantRooms: number;
+  balconies?: number;
+  parkingType?: string;
 }
 
 interface PropertyDetailsType {
@@ -36,6 +38,30 @@ interface PropertyDetailsType {
   availability: string;
   furnishing: string;
   postedBy: string;
+  listingAvailability?: string;
+  virtualTourUrl?: string;
+  floorPlanImages?: string[];
+  floorPlanFiles?: File[];
+  nearbyPlaces?: {
+    schools?: string[];
+    metroStations?: string[];
+    hospitals?: string[];
+    malls?: string[];
+  };
+  reraNumber?: string;
+  bulbulVerified?: boolean;
+  ownerVerified?: boolean;
+  visitVerified?: boolean;
+  maintenanceCharge?: number;
+  securityDeposit?: number;
+  lockInMonths?: number;
+  noticePeriodDays?: number;
+  amenities?: string[];
+  ocStatus?: string;
+  ageOfProperty?: number;
+  pricePerSqft?: number;
+  negotiable?: boolean;
+  videoUrl?: string;
   location: {
     address: string;
     city: string;
@@ -74,6 +100,30 @@ const APD: React.FC<AddPropertyModalProps> = ({
     availability: "Ready to Move",
     furnishing: "Un-Furnished",
     postedBy: "Owner",
+    listingAvailability: "Available",
+    virtualTourUrl: "",
+    videoUrl: "",
+    floorPlanImages: [],
+    nearbyPlaces: {
+      schools: [],
+      metroStations: [],
+      hospitals: [],
+      malls: [],
+    },
+    reraNumber: "",
+    floorPlanFiles: [],
+    bulbulVerified: false,
+    ownerVerified: false,
+    visitVerified: false,
+    maintenanceCharge: undefined,
+    securityDeposit: undefined,
+    lockInMonths: undefined,
+    noticePeriodDays: undefined,
+    ocStatus: undefined,
+    ageOfProperty: undefined,
+    pricePerSqft: undefined,
+    negotiable: true,
+    amenities: [],
     location: {
       address: "",
       city: "",
@@ -90,6 +140,7 @@ const APD: React.FC<AddPropertyModalProps> = ({
       parkings: 0,
       bathrooms: 0,
       servantRooms: 0,
+      balconies: 0,
     },
     userEmail: user?.email,
   });

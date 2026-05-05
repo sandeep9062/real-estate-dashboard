@@ -1,4 +1,3 @@
-
 // store/store.ts
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./authSlice";
@@ -7,11 +6,13 @@ import { propertiesApi } from "@/services/propertiesApi";
 import { userApi } from "@/services/userApi";
 import { contactApi } from "@/services/contactApi";
 import { bookingApi } from "@/services/bookingApi";
+import { journalApi } from "@/services/journalApi";
 import { dashboardApi } from "@/services/dashboardApi";
 import { notificationApi } from "@/services/notificationApi";
 const store = configureStore({
   reducer: {
     [authApi.reducerPath]: authApi.reducer,
+    [journalApi.reducerPath]: journalApi.reducer,
     [propertiesApi.reducerPath]: propertiesApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
     [contactApi.reducerPath]: contactApi.reducer,
@@ -27,8 +28,9 @@ const store = configureStore({
       propertiesApi.middleware,
       userApi.middleware,
       bookingApi.middleware,
+      journalApi.middleware,
       dashboardApi.middleware,
-      notificationApi.middleware
+      notificationApi.middleware,
     ),
   devTools: process.env.NODE_ENV !== "production", // ✅ enable Redux DevTools in development
 });

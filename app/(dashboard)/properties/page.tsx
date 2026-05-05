@@ -13,6 +13,7 @@ import {
 } from "@/services/propertiesApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import Swal from "sweetalert2";
+import { toast } from "sonner";
 import AddPropertyModal from "../../../components/AddPropertyModal";
 import EditPropertyModal from "../../../components/EditPropertyModal";
 
@@ -126,9 +127,9 @@ export default function Properties() {
 
     try {
       await deleteProperty(id).unwrap();
-      Swal.fire("Deleted!", `${title} has been removed.`, "success");
+      toast.success(`"${title}" has been removed`);
     } catch (err) {
-      Swal.fire("Error!", "Failed to delete property", "error");
+      toast.error("Failed to delete property");
     }
   };
 

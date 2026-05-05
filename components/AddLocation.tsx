@@ -132,6 +132,7 @@ const AddLocation = ({
       </div>
 
       {/* Map */}
+      {/* map is currently closed */}
 
       {/* <div className="h-72 border rounded-xl overflow-hidden">
         <Map

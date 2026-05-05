@@ -1,12 +1,19 @@
 "use client";
 
-import React from "react";
-import { useForm } from "react-hook-form";
+import React, { useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import {
@@ -29,10 +36,12 @@ interface FacilitiesProps {
 }
 
 const schema = z.object({
-  bedrooms: z.number().min(1, "Must have at least one bedroom"),
+  bedrooms: z.number().min(0, "Cannot be negative"),
   parkings: z.number().min(0),
-  bathrooms: z.number().min(1, "Must have at least one bathroom"),
+  bathrooms: z.number().min(0, "Cannot be negative"),
   servantRooms: z.number().min(0),
+  balconies: z.number().min(0),
+  parkingType: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -46,20 +55,58 @@ const Facilities: React.FC<FacilitiesProps> = ({
   onSave,
   isEditing = false,
 }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    reset,
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      bedrooms: propertyDetails.facilities.bedrooms || 0,
-      parkings: propertyDetails.facilities.parkings || 0,
-      bathrooms: propertyDetails.facilities.bathrooms || 0,
-      servantRooms: propertyDetails.facilities.servantRooms || 0,
+      bedrooms: propertyDetails.facilities?.bedrooms ?? 0,
+      parkings: propertyDetails.facilities?.parkings ?? 0,
+      bathrooms: propertyDetails.facilities?.bathrooms ?? 0,
+      servantRooms: propertyDetails.facilities?.servantRooms ?? 0,
+      balconies: propertyDetails.facilities?.balconies ?? 0,
+      parkingType: propertyDetails.facilities?.parkingType || "__none__",
     },
   });
+
+  const facilitiesKey = JSON.stringify(propertyDetails.facilities ?? {});
+  useEffect(() => {
+    reset({
+      bedrooms: propertyDetails.facilities?.bedrooms ?? 0,
+      parkings: propertyDetails.facilities?.parkings ?? 0,
+      bathrooms: propertyDetails.facilities?.bathrooms ?? 0,
+      servantRooms: propertyDetails.facilities?.servantRooms ?? 0,
+      balconies: propertyDetails.facilities?.balconies ?? 0,
+      parkingType: propertyDetails.facilities?.parkingType || "__none__",
+    });
+  }, [facilitiesKey, reset]);
 
   const user = useSelector(selectUser);
   const token = useSelector(selectToken);
   const { refetch: refetchProperties } = useGetAllPropertiesQuery({});
   const [createProperty, { isLoading }] = useCreatePropertyMutation();
+
+  const buildFacilities = (data: FormData) => {
+    const parking =
+      data.parkingType && data.parkingType !== "__none__"
+        ? data.parkingType
+        : undefined;
+    const merged: Record<string, unknown> = {
+      ...propertyDetails.facilities,
+      bedrooms: data.bedrooms,
+      parkings: data.parkings,
+      bathrooms: data.bathrooms,
+      servantRooms: data.servantRooms,
+      balconies: data.balconies,
+    };
+    if (parking) merged.parkingType = parking;
+    else delete merged.parkingType;
+    return merged;
+  };
 
   const onSubmit = async (data: FormData) => {
     if (!user) {
@@ -67,8 +114,7 @@ const Facilities: React.FC<FacilitiesProps> = ({
       return;
     }
 
-    // First update the propertyDetails with the form data
-    const updatedFacilities = data;
+    const updatedFacilities = buildFacilities(data);
     const updatedPropertyDetails = {
       ...propertyDetails,
       facilities: updatedFacilities,
@@ -76,16 +122,15 @@ const Facilities: React.FC<FacilitiesProps> = ({
     setPropertyDetails(updatedPropertyDetails);
 
     if (isEditing && onSave) {
-      // For editing, call the custom save function with updated data
       try {
         await onSave(updatedPropertyDetails);
+        toast.success("Property details updated");
       } catch (error) {
         console.error("Failed to update property:", error);
         toast.error("Failed to update property");
         return;
       }
     } else {
-      // For adding new property
       const newProperty = {
         ...propertyDetails,
         facilities: updatedFacilities,
@@ -107,6 +152,30 @@ const Facilities: React.FC<FacilitiesProps> = ({
           availability: "Ready to Move",
           furnishing: "Un-Furnished",
           postedBy: "Owner",
+          listingAvailability: "Available",
+          virtualTourUrl: "",
+          videoUrl: "",
+          floorPlanImages: [],
+          nearbyPlaces: {
+            schools: [],
+            metroStations: [],
+            hospitals: [],
+            malls: [],
+          },
+          reraNumber: "",
+          floorPlanFiles: [],
+          bulbulVerified: false,
+          ownerVerified: false,
+          visitVerified: false,
+          maintenanceCharge: undefined,
+          securityDeposit: undefined,
+          lockInMonths: undefined,
+          noticePeriodDays: undefined,
+          ocStatus: undefined,
+          ageOfProperty: undefined,
+          pricePerSqft: undefined,
+          negotiable: true,
+          amenities: [],
           location: {
             address: "",
             city: "",
@@ -123,6 +192,7 @@ const Facilities: React.FC<FacilitiesProps> = ({
             parkings: 0,
             bathrooms: 0,
             servantRooms: 0,
+            balconies: 0,
           },
           userEmail: user.email,
         }));
@@ -140,7 +210,7 @@ const Facilities: React.FC<FacilitiesProps> = ({
     <div className="max-w-full mx-auto my-2">
       <form className="flex flex-col gap-6 mt-8" onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-2">
-          <Label htmlFor="bedrooms">No of Bedrooms *</Label>
+          <Label htmlFor="bedrooms">No of Bedrooms</Label>
           <Input
             id="bedrooms"
             type="number"
@@ -161,7 +231,7 @@ const Facilities: React.FC<FacilitiesProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="bathrooms">No of Bathrooms *</Label>
+          <Label htmlFor="bathrooms">No of Bathrooms</Label>
           <Input
             id="bathrooms"
             type="number"
@@ -178,6 +248,38 @@ const Facilities: React.FC<FacilitiesProps> = ({
             type="number"
             min="0"
             {...register("servantRooms", { valueAsNumber: true })}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="balconies">Balconies</Label>
+          <Input
+            id="balconies"
+            type="number"
+            min="0"
+            {...register("balconies", { valueAsNumber: true })}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Parking type</Label>
+          <Controller
+            name="parkingType"
+            control={control}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Optional" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— Not specified —</SelectItem>
+                  <SelectItem value="None">None</SelectItem>
+                  <SelectItem value="Open">Open</SelectItem>
+                  <SelectItem value="Covered">Covered</SelectItem>
+                  <SelectItem value="Both">Both</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           />
         </div>
 

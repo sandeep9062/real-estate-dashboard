@@ -7,14 +7,29 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useUpdateUserMutation } from "@/services/userApi";
 import { useChangePasswordMutation } from "@/services/authApi";
 import { RootState } from "@/store/store";
+import { setUser } from "@/store/authSlice";
 import { Loader2 } from "lucide-react";
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
+
+function queryErrorMessage(error: unknown, fallback: string) {
+  const e = error as FetchBaseQueryError | undefined;
+  const data = e?.data;
+  if (data && typeof data === "object" && data !== null && "message" in data) {
+    const m = (data as { message?: unknown }).message;
+    if (typeof m === "string" && m.trim()) return m;
+  }
+  if (typeof data === "string" && data.trim()) return data;
+  return fallback;
+}
 
 export default function Settings() {
+  const dispatch = useDispatch();
   const currentUser = useSelector((state: RootState) => state.auth.user);
+  const authToken = useSelector((state: RootState) => state.auth.token);
 
   const [profileData, setProfileData] = useState({
     name: "",
@@ -67,22 +82,28 @@ export default function Settings() {
       }).unwrap();
 
       toast.success("Profile updated successfully");
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to update profile");
+    } catch (error: unknown) {
+      toast.error(queryErrorMessage(error, "Failed to update profile"));
     }
   };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
-    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      toast.error("All password fields are required");
+    const needsCurrentPassword = currentUser?.passwordIsSet !== false;
+
+    if (needsCurrentPassword && !passwordData.currentPassword) {
+      toast.error("Current password is required");
       return;
     }
 
-    if (passwordData.newPassword.length < 6) {
-      toast.error("New password must be at least 6 characters long");
+    if (!passwordData.newPassword || !passwordData.confirmPassword) {
+      toast.error("New password and confirmation are required");
+      return;
+    }
+
+    if (passwordData.newPassword.length < 8) {
+      toast.error("New password must be at least 8 characters long");
       return;
     }
 
@@ -93,11 +114,21 @@ export default function Settings() {
 
     try {
       await changePassword({
-        currentPassword: passwordData.currentPassword,
+        currentPassword: needsCurrentPassword
+          ? passwordData.currentPassword
+          : "",
         newPassword: passwordData.newPassword,
       }).unwrap();
 
-      // Clear the form
+      if (currentUser && authToken) {
+        dispatch(
+          setUser({
+            user: { ...currentUser, passwordIsSet: true },
+            token: authToken,
+          }),
+        );
+      }
+
       setPasswordData({
         currentPassword: "",
         newPassword: "",
@@ -105,8 +136,8 @@ export default function Settings() {
       });
 
       toast.success("Password changed successfully");
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to change password");
+    } catch (error: unknown) {
+      toast.error(queryErrorMessage(error, "Failed to change password"));
     }
   };
 
@@ -182,10 +213,20 @@ export default function Settings() {
         {/* Change Password */}
         <Card className="border-border bg-card">
           <CardHeader>
-            <CardTitle>Change Password</CardTitle>
+            <CardTitle>
+              {currentUser?.passwordIsSet === false
+                ? "Set password"
+                : "Change password"}
+            </CardTitle>
+            {currentUser?.passwordIsSet === false && (
+              <p className="text-sm text-muted-foreground">
+                Your account uses Google sign-in. Create a password if you want to sign in with email as well.
+              </p>
+            )}
           </CardHeader>
           <CardContent>
             <form onSubmit={handlePasswordChange} className="space-y-4">
+              {currentUser?.passwordIsSet !== false && (
               <div className="space-y-2">
                 <Label htmlFor="current-password">Current Password</Label>
                 <Input
@@ -197,6 +238,7 @@ export default function Settings() {
                   className="bg-background"
                 />
               </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="new-password">New Password</Label>
                 <Input
@@ -223,10 +265,12 @@ export default function Settings() {
                 {isPasswordChanging ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Changing...
+                    Saving...
                   </>
+                ) : currentUser?.passwordIsSet === false ? (
+                  "Set password"
                 ) : (
-                  "Change Password"
+                  "Change password"
                 )}
               </Button>
             </form>

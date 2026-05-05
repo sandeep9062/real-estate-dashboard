@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 26, "column": 0}, "map": {"version":3,"sources":["file:///Users/sandeepsaini/Desktop/Real-Estate-Nodejs/real-estate-dashboard/app/%28dashboard%29/page.tsx"],"sourcesContent":["import { redirect } from \"next/navigation\";\n\nconst Index = () => {\n  // This is a server component, but we need to check auth on client side\n  // The actual auth check will be handled by the AdminLayout component\n  redirect(\"/dashboard\");\n};\n\nexport default Index;\n"],"names":[],"mappings":";;;;AAAA;AAAA;;AAEA,MAAM,QAAQ;IACZ,uEAAuE;IACvE,qEAAqE;IACrE,IAAA,iMAAQ,EAAC;AACX;uCAEe"}}]
-}

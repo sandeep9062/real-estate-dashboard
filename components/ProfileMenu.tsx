@@ -101,9 +101,11 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ user }) => {
     try {
       await logout().unwrap();
       dispatch(logoutAction());
+      toast.success("Signed out");
       router.push("/auth");
     } catch (error) {
       console.error("Failed to logout:", error);
+      toast.error("Could not sign out. Please try again.");
     }
   };
 
