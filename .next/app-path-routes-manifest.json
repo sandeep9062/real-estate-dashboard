@@ -1,0 +1,21 @@
+{
+  "/(dashboard)/bookings/details/[id]/page": "/bookings/details/[id]",
+  "/(dashboard)/bookings/page": "/bookings",
+  "/(dashboard)/dashboard/page": "/dashboard",
+  "/(dashboard)/journals/[slug]/page": "/journals/[slug]",
+  "/(dashboard)/journals/edit/[id]/page": "/journals/edit/[id]",
+  "/(dashboard)/journals/new/page": "/journals/new",
+  "/(dashboard)/journals/page": "/journals",
+  "/(dashboard)/notifications/page": "/notifications",
+  "/(dashboard)/page": "/",
+  "/(dashboard)/payments/page": "/payments",
+  "/(dashboard)/properties/page": "/properties",
+  "/(dashboard)/properties/view/[id]/page": "/properties/view/[id]",
+  "/(dashboard)/reviews/page": "/reviews",
+  "/(dashboard)/settings/page": "/settings",
+  "/(dashboard)/users/page": "/users",
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/auth/page": "/auth",
+  "/favicon.ico/route": "/favicon.ico"
+}

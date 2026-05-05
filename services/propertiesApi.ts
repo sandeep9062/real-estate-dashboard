@@ -1,17 +1,14 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithAuth } from "./api";
 
 // Dynamic API URL detection for production vs development
 export const getApiUrl = () => {
-  // First priority: Environment variable
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
 
-  // Second priority: Detect production environment (client-side only)
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
-
-    // If on production domain, use Render backend URL
     if (
       hostname === "www.propertybulbul.com" ||
       hostname === "propertybulbul.com"
@@ -20,7 +17,6 @@ export const getApiUrl = () => {
     }
   }
 
-  // Default: localhost for development
   return "http://localhost:9000/api";
 };
 
@@ -46,43 +42,38 @@ export async function getPropertyServer(id: string) {
 
     return await response.json();
   } catch (error) {
-    // Log the actual error for debugging
     console.error("getPropertyServer error:", error);
 
-    // Re-throw with more context if it's a network error
     if (error instanceof TypeError && error.message.includes("fetch")) {
       throw new Error(
         `Unable to connect to API at ${apiUrl}. Please ensure the backend server is running.`,
       );
     }
-
     throw error;
   }
 }
-
-import { baseQueryWithAuth } from "./api";
 
 export const propertiesApi = createApi({
   reducerPath: "propertiesApi",
   baseQuery: baseQueryWithAuth,
   tagTypes: ["Property", "VisitReviews"],
   endpoints: (builder) => ({
-    getAllProperties: builder.query({
+    getAllProperties: builder.query<any, any>({
       query: (params) => ({
         url: "/properties",
         params,
       }),
       providesTags: ["Property"],
     }),
-    getProperty: builder.query({
+    getProperty: builder.query<any, string>({
       query: (id) => `/properties/${id}`,
       providesTags: (result, error, id) => [{ type: "Property", id }],
     }),
-    getOwnedProperties: builder.query({
+    getOwnedProperties: builder.query<any[], void>({
       query: () => `/properties/owned`,
       providesTags: ["Property"],
     }),
-    createProperty: builder.mutation({
+    createProperty: builder.mutation<any, any>({
       query: (property) => {
         const formData = new FormData();
         Object.keys(property).forEach((key) => {
@@ -111,7 +102,7 @@ export const propertiesApi = createApi({
       },
       invalidatesTags: ["Property"],
     }),
-    updateProperty: builder.mutation({
+    updateProperty: builder.mutation<any, { id: string; [key: string]: any }>({
       query: ({ id, ...property }) => {
         const formData = new FormData();
         const existingImages = (property.image || []).filter(
@@ -129,9 +120,9 @@ export const propertiesApi = createApi({
         });
         Object.keys(property).forEach((key) => {
           if (key === "image") {
-            // Already handled above
+            // Handled above
           } else if (key === "floorPlanFiles") {
-            // Appended above
+            // Handled above
           } else if (
             typeof property[key] === "object" &&
             property[key] !== null
@@ -152,17 +143,18 @@ export const propertiesApi = createApi({
         "Property",
       ],
     }),
-    deleteProperty: builder.mutation({
+    deleteProperty: builder.mutation<void, string>({
       query: (id) => ({
         url: `/properties/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Property"],
     }),
-    getPropertyBrochure: builder.query({
+    getPropertyBrochure: builder.query<Blob, string>({
       query: (id) => ({
         url: `/properties/${id}/download-brochure`,
-        responseHandler: (response) => response.blob(),
+        // Fix: Explicitly type response as Response
+        responseHandler: (response: Response) => response.blob(),
       }),
     }),
     getCompareProperties: builder.query<any[], string>({
@@ -227,13 +219,7 @@ export const propertiesApi = createApi({
         propertyId: string;
       }
     >({
-      query: ({
-        bookingId,
-        agentHelpfulness,
-        listingAccuracy,
-        comment,
-        propertyId: _propertyId,
-      }) => ({
+      query: ({ bookingId, agentHelpfulness, listingAccuracy, comment }) => ({
         url: "/visit-reviews",
         method: "POST",
         body: {
@@ -248,7 +234,10 @@ export const propertiesApi = createApi({
         { type: "Property", id: arg.propertyId },
       ],
     }),
-    createWhatsAppLead: builder.mutation({
+    createWhatsAppLead: builder.mutation<
+      any,
+      { id: string; [key: string]: any }
+    >({
       query: ({ id, ...body }) => ({
         url: `/properties/${id}/whatsapp-lead`,
         method: "POST",

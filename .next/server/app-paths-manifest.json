@@ -1,0 +1,21 @@
+{
+  "/(dashboard)/bookings/details/[id]/page": "app/(dashboard)/bookings/details/[id]/page.js",
+  "/(dashboard)/bookings/page": "app/(dashboard)/bookings/page.js",
+  "/(dashboard)/dashboard/page": "app/(dashboard)/dashboard/page.js",
+  "/(dashboard)/journals/[slug]/page": "app/(dashboard)/journals/[slug]/page.js",
+  "/(dashboard)/journals/edit/[id]/page": "app/(dashboard)/journals/edit/[id]/page.js",
+  "/(dashboard)/journals/new/page": "app/(dashboard)/journals/new/page.js",
+  "/(dashboard)/journals/page": "app/(dashboard)/journals/page.js",
+  "/(dashboard)/notifications/page": "app/(dashboard)/notifications/page.js",
+  "/(dashboard)/page": "app/(dashboard)/page.js",
+  "/(dashboard)/payments/page": "app/(dashboard)/payments/page.js",
+  "/(dashboard)/properties/page": "app/(dashboard)/properties/page.js",
+  "/(dashboard)/properties/view/[id]/page": "app/(dashboard)/properties/view/[id]/page.js",
+  "/(dashboard)/reviews/page": "app/(dashboard)/reviews/page.js",
+  "/(dashboard)/settings/page": "app/(dashboard)/settings/page.js",
+  "/(dashboard)/users/page": "app/(dashboard)/users/page.js",
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/auth/page": "app/auth/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js"
+}

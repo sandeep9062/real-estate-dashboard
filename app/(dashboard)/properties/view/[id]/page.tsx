@@ -11,7 +11,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PropertyView() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id as string;
   const router = useRouter();
 
   const { data: property, error, isLoading } = useGetPropertyQuery(id);

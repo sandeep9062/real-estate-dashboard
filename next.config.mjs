@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    // remotePatterns is the modern way to handle external images
     remotePatterns: [
       {
         protocol: "https",
@@ -13,11 +12,14 @@ const nextConfig = {
         hostname: "res.cloudinary.com",
         pathname: "/**",
       },
+      // You can even add localhost here for consistency:
+      {
+        protocol: "http",
+        hostname: "localhost",
+        pathname: "/**",
+      },
     ],
-    // If you still want to use the older 'domains' style alongside:
-    domains: ["localhost"],
   },
-  // Adding transpilePackages to avoid the 'react-is' error we discussed earlier
   transpilePackages: ["recharts"],
 };
 
