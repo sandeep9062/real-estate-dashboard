@@ -1,28 +1,28 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Save, Loader2, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
-// Importing the RTK Query hooks
 import {
   useGetJournalByIdQuery,
   useUpdateJournalMutation,
 } from "@/services/journalApi";
+import RichTextEditor, { RichTextEditorRef } from "@/components/RichTextEditor";
 
 export default function EditJournalPage() {
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
+  const editorRef = useRef<RichTextEditorRef>(null);
+  const contentInitializedRef = useRef(false);
 
-  // 1. Fetch real journal data using RTK Query
   const {
     data: journal,
     isLoading: fetching,
     isError,
   } = useGetJournalByIdQuery(id);
 
-  // 2. Initialize the update mutation hook
   const [updateJournal, { isLoading: isUpdating }] = useUpdateJournalMutation();
 
   const [formData, setFormData] = useState<{
@@ -45,20 +45,26 @@ export default function EditJournalPage() {
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // 3. Sync fetched data with local form state
+  // Sync fetched data with local form state and push into the editor
   useEffect(() => {
-    if (journal) {
+    if (journal && !contentInitializedRef.current) {
+      const content = journal.content || "";
       setFormData({
         title: journal.title || "",
         slug: journal.slug || "",
         category: journal.category || "Investment",
         targetSector: journal.targetSector || "",
-        excerpt:
-          (journal as any).excerpt || journal.content?.substring(0, 150) || "",
-        content: journal.content || "",
+        excerpt: (journal as any).excerpt || content.substring(0, 150) || "",
+        content,
         coverImage: journal.coverImage || "",
       });
       setImagePreview(journal.coverImage || null);
+
+      // Populate the RichTextEditor with existing content
+      if (editorRef.current && content) {
+        editorRef.current.setContent(content);
+      }
+      contentInitializedRef.current = true;
     }
   }, [journal]);
 
@@ -76,11 +82,19 @@ export default function EditJournalPage() {
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Sync content from the RichTextEditor ref
+    const editorContent = editorRef.current?.getCurrentContent() || "";
+
+    if (!editorContent) {
+      toast({ variant: "destructive", title: "Content cannot be empty" });
+      return;
+    }
+
     try {
-      // 4. Call the mutation from your Redux API
       await updateJournal({
         id,
-        update: formData,
+        update: { ...formData, content: editorContent },
       }).unwrap();
 
       toast({ title: "Journal updated successfully! ✅" });
@@ -147,7 +161,6 @@ export default function EditJournalPage() {
                 value={formData.title}
                 onChange={(e) => {
                   const newTitle = e.target.value;
-                  // Auto-generate slug from title only if slug hasn't been manually edited
                   const autoSlug = newTitle
                     .toLowerCase()
                     .replace(/[^a-z0-9]+/g, "-")
@@ -155,7 +168,7 @@ export default function EditJournalPage() {
                   setFormData((prev) => ({
                     ...prev,
                     title: newTitle,
-                    slug: prev.slug === "" ? autoSlug : prev.slug, // don't overwrite if user already set a slug
+                    slug: prev.slug === "" ? autoSlug : prev.slug,
                   }));
                 }}
               />
@@ -179,16 +192,27 @@ export default function EditJournalPage() {
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                Guide Content
+                Excerpt (Meta Description)
               </label>
               <textarea
-                required
-                rows={18}
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none font-sans text-sm leading-relaxed"
-                value={formData.content}
+                rows={3}
+                placeholder="Briefly describe what this guide is about for SEO..."
+                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none resize-none transition-all"
+                value={formData.excerpt}
                 onChange={(e) =>
-                  setFormData({ ...formData, content: e.target.value })
+                  setFormData({ ...formData, excerpt: e.target.value })
                 }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                Guide Content
+              </label>
+              <RichTextEditor
+                ref={editorRef}
+                content={formData.content}
+                isMarkdown={true}
               />
             </div>
           </div>

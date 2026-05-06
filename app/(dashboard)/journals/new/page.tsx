@@ -1,16 +1,16 @@
 "use client";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, Image as ImageIcon, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
-// RTK Query hook import
 import { useCreateJournalMutation } from "@/services/journalApi";
+import RichTextEditor, { RichTextEditorRef } from "@/components/RichTextEditor";
 
 export default function NewJournalPage() {
   const router = useRouter();
+  const editorRef = useRef<RichTextEditorRef>(null);
 
-  // 1. Initialize the mutation hook
   const [createJournal, { isLoading: loading }] = useCreateJournalMutation();
 
   const [formData, setFormData] = useState<{
@@ -48,19 +48,18 @@ export default function NewJournalPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Simple validation
-    if (!formData.title || !formData.content) {
+    // Sync content from the RichTextEditor ref
+    const editorContent = editorRef.current?.getCurrentContent() || "";
+
+    if (!formData.title || !editorContent) {
       toast({ variant: "destructive", title: "Please fill required fields" });
       return;
     }
 
     try {
-      // 2. Call the mutation to save data to MongoDB
-      await createJournal(formData).unwrap();
+      await createJournal({ ...formData, content: editorContent }).unwrap();
 
       toast({ title: "Journal published successfully! 🚀" });
-
-      // 3. Redirect back to the journals list
       router.push("/journals");
     } catch (error) {
       console.error("Failed to save journal:", error);
@@ -151,15 +150,10 @@ export default function NewJournalPage() {
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">
                 Content
               </label>
-              <textarea
-                required
-                rows={15}
-                placeholder="Write your full guide content here..."
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none font-sans text-sm leading-relaxed"
-                value={formData.content}
-                onChange={(e) =>
-                  setFormData({ ...formData, content: e.target.value })
-                }
+              <RichTextEditor
+                ref={editorRef}
+                content={formData.content}
+                isMarkdown={true}
               />
             </div>
           </div>
