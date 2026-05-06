@@ -27,6 +27,7 @@ export default function EditJournalPage() {
 
   const [formData, setFormData] = useState<{
     title: string;
+    slug: string;
     category: string;
     targetSector: string;
     excerpt: string;
@@ -34,6 +35,7 @@ export default function EditJournalPage() {
     coverImage: string | File;
   }>({
     title: "",
+    slug: "",
     category: "",
     targetSector: "",
     excerpt: "",
@@ -48,6 +50,7 @@ export default function EditJournalPage() {
     if (journal) {
       setFormData({
         title: journal.title || "",
+        slug: journal.slug || "",
         category: journal.category || "Investment",
         targetSector: journal.targetSector || "",
         excerpt:
@@ -142,9 +145,35 @@ export default function EditJournalPage() {
                 type="text"
                 className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all"
                 value={formData.title}
+                onChange={(e) => {
+                  const newTitle = e.target.value;
+                  // Auto-generate slug from title only if slug hasn't been manually edited
+                  const autoSlug = newTitle
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, "-")
+                    .replace(/(^-|-$)/g, "");
+                  setFormData((prev) => ({
+                    ...prev,
+                    title: newTitle,
+                    slug: prev.slug === "" ? autoSlug : prev.slug, // don't overwrite if user already set a slug
+                  }));
+                }}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                Journal Slug (URL-friendly)
+              </label>
+              <input
+                required
+                type="text"
+                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all"
+                value={formData.slug}
                 onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
+                  setFormData({ ...formData, slug: e.target.value })
                 }
+                placeholder="auto-generated-from-title"
               />
             </div>
 

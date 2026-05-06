@@ -24,6 +24,7 @@ export async function getJournalBySlugServer(slug: string) {
 export interface Journal {
   _id: string;
   title: string;
+
   content: string;
   author: string;
   date: string;
@@ -37,6 +38,7 @@ export interface Journal {
 
 export interface JournalInput {
   title?: string;
+  slug?: string;
   content?: string;
   author?: string;
   category?: string;

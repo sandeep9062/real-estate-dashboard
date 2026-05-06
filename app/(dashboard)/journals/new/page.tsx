@@ -15,6 +15,7 @@ export default function NewJournalPage() {
 
   const [formData, setFormData] = useState<{
     title: string;
+    slug: string;
     category: string;
     targetSector: string;
     excerpt: string;
@@ -22,6 +23,7 @@ export default function NewJournalPage() {
     coverImage: string | File;
   }>({
     title: "",
+    slug: "",
     category: "Investment",
     targetSector: "",
     excerpt: "",
@@ -100,8 +102,32 @@ export default function NewJournalPage() {
                 placeholder="e.g. Best Residential Societies in Sector 82, Mohali"
                 className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all"
                 value={formData.title}
+                onChange={(e) => {
+                  const newTitle = e.target.value;
+                  const autoSlug = newTitle
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, "-")
+                    .replace(/(^-|-$)/g, "");
+                  setFormData((prev) => ({
+                    ...prev,
+                    title: newTitle,
+                    slug: prev.slug === "" ? autoSlug : prev.slug,
+                  }));
+                }}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                Slug (URL-friendly)
+              </label>
+              <input
+                type="text"
+                placeholder="auto-generated-from-title"
+                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all"
+                value={formData.slug}
                 onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
+                  setFormData({ ...formData, slug: e.target.value })
                 }
               />
             </div>
