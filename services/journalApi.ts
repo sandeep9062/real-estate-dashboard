@@ -94,7 +94,7 @@ export const journalApi = createApi({
         Object.keys(journalData).forEach((key) => {
           const value = journalData[key as keyof typeof journalData];
           if (key === "coverImage" && value && (value as any) instanceof File) {
-            formData.append("coverImage", value);
+            formData.append("coverImage", value as unknown as Blob);
           } else if (Array.isArray(value) && value !== null) {
             formData.append(key, JSON.stringify(value));
           } else if (typeof value === "object" && value !== null) {
@@ -123,7 +123,7 @@ export const journalApi = createApi({
         Object.keys(update).forEach((key) => {
           const value = update[key as keyof typeof update];
           if (key === "coverImage" && value && (value as any) instanceof File) {
-            formData.append("coverImage", value);
+            formData.append("coverImage", value as unknown as Blob);
           } else if (Array.isArray(value) && value !== null) {
             formData.append(key, JSON.stringify(value));
           } else if (typeof value === "object" && value !== null) {
