@@ -24,7 +24,6 @@ export async function getJournalBySlugServer(slug: string) {
 export interface Journal {
   _id: string;
   title: string;
-
   content: string;
   author: string;
   date: string;
@@ -33,6 +32,9 @@ export interface Journal {
   location?: string;
   coverImage: string;
   slug: string;
+  excerpt: string;
+  metaTitle: string;
+  keywords: string[];
   createdAt: string;
 }
 
@@ -46,6 +48,8 @@ export interface JournalInput {
   location?: string;
   coverImage?: string | File;
   excerpt?: string;
+  metaTitle?: string;
+  keywords?: string[];
 }
 
 export const journalApi = createApi({
@@ -91,10 +95,12 @@ export const journalApi = createApi({
           const value = journalData[key as keyof typeof journalData];
           if (key === "coverImage" && value && (value as any) instanceof File) {
             formData.append("coverImage", value);
+          } else if (Array.isArray(value) && value !== null) {
+            formData.append(key, JSON.stringify(value));
           } else if (typeof value === "object" && value !== null) {
             formData.append(key, JSON.stringify(value));
           } else if (value !== undefined && value !== null) {
-            formData.append(key, value as string | Blob);
+            formData.append(key, value as any);
           }
         });
 
@@ -118,10 +124,12 @@ export const journalApi = createApi({
           const value = update[key as keyof typeof update];
           if (key === "coverImage" && value && (value as any) instanceof File) {
             formData.append("coverImage", value);
+          } else if (Array.isArray(value) && value !== null) {
+            formData.append(key, JSON.stringify(value));
           } else if (typeof value === "object" && value !== null) {
             formData.append(key, JSON.stringify(value));
           } else if (value !== undefined && value !== null) {
-            formData.append(key, value as string | Blob);
+            formData.append(key, value as any);
           }
         });
 

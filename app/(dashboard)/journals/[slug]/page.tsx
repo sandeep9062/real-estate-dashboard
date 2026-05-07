@@ -26,8 +26,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const title = `${journal.title} | PropertyBulbul Journal`;
+  const title = journal.metaTitle
+    ? `${journal.metaTitle} | PropertyBulbul Journal`
+    : `${journal.title} | PropertyBulbul Journal`;
   const description =
+    journal.excerpt?.substring(0, 160) ||
     journal.content?.replace(/<[^>]*>/g, "").substring(0, 160) ||
     `Read ${journal.title} on PropertyBulbul Journal - expert real estate insights for Tricity.`;
   const canonicalUrl = `https://www.propertybulbul.com/journal/${slug}`;
@@ -37,6 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
+    keywords: journal.keywords?.length > 0 ? journal.keywords : undefined,
     alternates: {
       canonical: canonicalUrl,
     },

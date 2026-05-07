@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Save, Loader2, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
+import { X } from "lucide-react";
 import {
   useGetJournalByIdQuery,
   useUpdateJournalMutation,
@@ -31,6 +32,8 @@ export default function EditJournalPage() {
     category: string;
     targetSector: string;
     excerpt: string;
+    metaTitle: string;
+    keywords: string[];
     content: string;
     coverImage: string | File;
   }>({
@@ -39,11 +42,33 @@ export default function EditJournalPage() {
     category: "",
     targetSector: "",
     excerpt: "",
+    metaTitle: "",
+    keywords: [],
     content: "",
     coverImage: "",
   });
 
+  const [keywordInput, setKeywordInput] = useState("");
+
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const addKeyword = () => {
+    const trimmed = keywordInput.trim();
+    if (trimmed && !formData.keywords.includes(trimmed)) {
+      setFormData((prev) => ({
+        ...prev,
+        keywords: [...prev.keywords, trimmed],
+      }));
+    }
+    setKeywordInput("");
+  };
+
+  const removeKeyword = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      keywords: prev.keywords.filter((_, i) => i !== index),
+    }));
+  };
 
   // Sync fetched data with local form state and push into the editor
   useEffect(() => {
@@ -54,7 +79,9 @@ export default function EditJournalPage() {
         slug: journal.slug || "",
         category: journal.category || "Investment",
         targetSector: journal.targetSector || "",
-        excerpt: (journal as any).excerpt || content.substring(0, 150) || "",
+        excerpt: journal.excerpt || content.substring(0, 150) || "",
+        metaTitle: journal.metaTitle || "",
+        keywords: journal.keywords || [],
         content,
         coverImage: journal.coverImage || "",
       });
@@ -188,6 +215,68 @@ export default function EditJournalPage() {
                 }
                 placeholder="auto-generated-from-title"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                Meta Title (Overrides page title for SEO)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Best Investment Guide for Mohali - PropertyBulbul"
+                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all"
+                value={formData.metaTitle}
+                onChange={(e) =>
+                  setFormData({ ...formData, metaTitle: e.target.value })
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                Keywords
+              </label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  placeholder="Type a keyword and press Add"
+                  className="flex-1 px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all"
+                  value={keywordInput}
+                  onChange={(e) => setKeywordInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addKeyword();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={addKeyword}
+                  className="px-4 py-2 bg-[#4161df] text-white rounded-lg text-sm hover:bg-[#3551c0] transition-colors"
+                >
+                  Add
+                </button>
+              </div>
+              {formData.keywords.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {formData.keywords.map((kw, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm"
+                    >
+                      {kw}
+                      <button
+                        type="button"
+                        onClick={() => removeKeyword(idx)}
+                        className="hover:text-red-500 transition-colors"
+                      >
+                        <X size={14} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
