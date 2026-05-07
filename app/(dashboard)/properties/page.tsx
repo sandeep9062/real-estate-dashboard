@@ -41,7 +41,13 @@ export default function Properties() {
     isVerified: "",
   });
 
-  const { data: properties, error, isLoading } = useGetAllPropertiesQuery({});
+  const {
+    data: properties,
+    error,
+    isLoading,
+  } = useGetAllPropertiesQuery({
+    includeInactive: "true",
+  });
   const [deleteProperty] = useDeletePropertyMutation();
   const [updateProperty, { isLoading: togglingActive }] =
     useUpdatePropertyMutation();
