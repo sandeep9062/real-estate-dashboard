@@ -261,9 +261,17 @@ export default function NewJournalPage() {
                 }
               >
                 <option value="Investment">Investment Guide</option>
+                <option value="Locality Guide">Locality Guide</option>
                 <option value="Market News">Market News</option>
                 <option value="Legal">Legal & Documentation</option>
                 <option value="Lifestyle">Tricity Lifestyle</option>
+                <option value="RERA Updates">RERA Updates</option>
+                <option value="Home Buying Guide">Home Buying Guide</option>
+                <option value="NRI Guide">NRI Guide</option>
+                <option value="Rental Guide">Rental Guide</option>
+                <option value="Construction">Construction & Development</option>
+                <option value="Interior & Design">Interior & Design</option>
+                <option value="Property Tax">Property Tax & Finance</option>
               </select>
             </div>
 

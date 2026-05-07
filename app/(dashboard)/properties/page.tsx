@@ -6,10 +6,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   useGetAllPropertiesQuery,
   useDeletePropertyMutation,
+  useUpdatePropertyMutation,
 } from "@/services/propertiesApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import Swal from "sweetalert2";
@@ -36,6 +43,8 @@ export default function Properties() {
 
   const { data: properties, error, isLoading } = useGetAllPropertiesQuery({});
   const [deleteProperty] = useDeletePropertyMutation();
+  const [updateProperty, { isLoading: togglingActive }] =
+    useUpdatePropertyMutation();
 
   // FILTERED PROPERTIES
   const filteredProperties = useMemo(() => {
@@ -56,7 +65,12 @@ export default function Properties() {
       }
 
       // Type filter
-      if (filters.type && filters.type !== "any" && property.type !== filters.type) return false;
+      if (
+        filters.type &&
+        filters.type !== "any" &&
+        property.type !== filters.type
+      )
+        return false;
 
       // Category filter
       if (filters.category && filters.category !== "any") {
@@ -65,16 +79,36 @@ export default function Properties() {
       }
 
       // Availability filter
-      if (filters.availability && filters.availability !== "any" && property.availability !== filters.availability) return false;
+      if (
+        filters.availability &&
+        filters.availability !== "any" &&
+        property.availability !== filters.availability
+      )
+        return false;
 
       // Deal filter
-      if (filters.deal && filters.deal !== "any" && property.deal !== filters.deal) return false;
+      if (
+        filters.deal &&
+        filters.deal !== "any" &&
+        property.deal !== filters.deal
+      )
+        return false;
 
       // Furnishing filter
-      if (filters.furnishing && filters.furnishing !== "any" && property.furnishing !== filters.furnishing) return false;
+      if (
+        filters.furnishing &&
+        filters.furnishing !== "any" &&
+        property.furnishing !== filters.furnishing
+      )
+        return false;
 
       // PostedBy filter
-      if (filters.postedBy && filters.postedBy !== "any" && property.postedBy !== filters.postedBy) return false;
+      if (
+        filters.postedBy &&
+        filters.postedBy !== "any" &&
+        property.postedBy !== filters.postedBy
+      )
+        return false;
 
       // Verified filter
       if (filters.isVerified && filters.isVerified !== "any") {
@@ -102,7 +136,9 @@ export default function Properties() {
 
   // COUNT ACTIVE FILTERS
   const activeFiltersCount = useMemo(() => {
-    return Object.values(filters).filter(Boolean).length + (searchQuery ? 1 : 0);
+    return (
+      Object.values(filters).filter(Boolean).length + (searchQuery ? 1 : 0)
+    );
   }, [filters, searchQuery]);
 
   // OPEN ADD PROPERTY MODAL
@@ -135,7 +171,9 @@ export default function Properties() {
 
   // EDIT PROPERTY
   const handleEdit = (id: string) => {
-    const propertyToEdit = properties?.find((property: any) => property._id === id);
+    const propertyToEdit = properties?.find(
+      (property: any) => property._id === id,
+    );
     if (propertyToEdit) {
       setSelectedProperty(propertyToEdit);
       setEditModalOpened(true);
@@ -145,6 +183,33 @@ export default function Properties() {
   // VIEW PROPERTY DETAILS
   const handleView = (id: string) => {
     router.push(`/properties/view/${id}`);
+  };
+
+  // TOGGLE ACTIVE STATUS
+  const handleToggleActive = async (property: any) => {
+    const newStatus = !property.isActive;
+    try {
+      await updateProperty({
+        id: property._id,
+        isActive: newStatus,
+        title: property.title,
+        type: property.type,
+        price: property.price,
+        description: property.description,
+        location: property.location,
+        category: property.category,
+        availability: property.availability,
+        deal: property.deal,
+        furnishing: property.furnishing,
+        postedBy: property.postedBy,
+        image: property.image || [],
+      }).unwrap();
+      toast.success(
+        `Property ${newStatus ? "activated" : "deactivated"} successfully`,
+      );
+    } catch (err) {
+      toast.error("Failed to toggle property status");
+    }
   };
 
   // LOADING UI
@@ -241,7 +306,10 @@ export default function Properties() {
                 <Filter className="h-4 w-4" />
                 Filters
                 {activeFiltersCount > 0 && (
-                  <Badge variant="secondary" className="ml-1 bg-blue-500 text-white">
+                  <Badge
+                    variant="secondary"
+                    className="ml-1 bg-blue-500 text-white"
+                  >
                     {activeFiltersCount}
                   </Badge>
                 )}
@@ -264,8 +332,15 @@ export default function Properties() {
             {showFilters && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-200">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Property Type</label>
-                  <Select value={filters.type} onValueChange={(value) => setFilters({ ...filters, type: value })}>
+                  <label className="text-sm font-medium text-slate-700">
+                    Property Type
+                  </label>
+                  <Select
+                    value={filters.type}
+                    onValueChange={(value) =>
+                      setFilters({ ...filters, type: value })
+                    }
+                  >
                     <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Any Type" />
                     </SelectTrigger>
@@ -278,42 +353,71 @@ export default function Properties() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Category</label>
-                  <Select value={filters.category} onValueChange={(value) => setFilters({ ...filters, category: value })}>
+                  <label className="text-sm font-medium text-slate-700">
+                    Category
+                  </label>
+                  <Select
+                    value={filters.category}
+                    onValueChange={(value) =>
+                      setFilters({ ...filters, category: value })
+                    }
+                  >
                     <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Any Category" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="any">Any Category</SelectItem>
-                      <SelectItem value="Apartment/Flat">Apartment/Flat</SelectItem>
+                      <SelectItem value="Apartment/Flat">
+                        Apartment/Flat
+                      </SelectItem>
                       <SelectItem value="House/Villa">House/Villa</SelectItem>
                       <SelectItem value="Land/Plot">Land/Plot</SelectItem>
                       <SelectItem value="Retail">Retail</SelectItem>
                       <SelectItem value="Office">Office</SelectItem>
                       <SelectItem value="Industrial">Industrial</SelectItem>
                       <SelectItem value="Warehouse">Warehouse</SelectItem>
-                      <SelectItem value="Shop/Showroom">Shop/Showroom</SelectItem>
+                      <SelectItem value="Shop/Showroom">
+                        Shop/Showroom
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Availability</label>
-                  <Select value={filters.availability} onValueChange={(value) => setFilters({ ...filters, availability: value })}>
+                  <label className="text-sm font-medium text-slate-700">
+                    Availability
+                  </label>
+                  <Select
+                    value={filters.availability}
+                    onValueChange={(value) =>
+                      setFilters({ ...filters, availability: value })
+                    }
+                  >
                     <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Any Status" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="any">Any Status</SelectItem>
-                      <SelectItem value="Ready to Move">Ready to Move</SelectItem>
-                      <SelectItem value="Under Construction">Under Construction</SelectItem>
+                      <SelectItem value="Ready to Move">
+                        Ready to Move
+                      </SelectItem>
+                      <SelectItem value="Under Construction">
+                        Under Construction
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Deal Type</label>
-                  <Select value={filters.deal} onValueChange={(value) => setFilters({ ...filters, deal: value })}>
+                  <label className="text-sm font-medium text-slate-700">
+                    Deal Type
+                  </label>
+                  <Select
+                    value={filters.deal}
+                    onValueChange={(value) =>
+                      setFilters({ ...filters, deal: value })
+                    }
+                  >
                     <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Any Deal" />
                     </SelectTrigger>
@@ -326,23 +430,39 @@ export default function Properties() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Furnishing</label>
-                  <Select value={filters.furnishing} onValueChange={(value) => setFilters({ ...filters, furnishing: value })}>
+                  <label className="text-sm font-medium text-slate-700">
+                    Furnishing
+                  </label>
+                  <Select
+                    value={filters.furnishing}
+                    onValueChange={(value) =>
+                      setFilters({ ...filters, furnishing: value })
+                    }
+                  >
                     <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Any" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="any">Any</SelectItem>
                       <SelectItem value="Furnished">Furnished</SelectItem>
-                      <SelectItem value="Semi Furnished">Semi Furnished</SelectItem>
+                      <SelectItem value="Semi Furnished">
+                        Semi Furnished
+                      </SelectItem>
                       <SelectItem value="Un-Furnished">Un-Furnished</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Posted By</label>
-                  <Select value={filters.postedBy} onValueChange={(value) => setFilters({ ...filters, postedBy: value })}>
+                  <label className="text-sm font-medium text-slate-700">
+                    Posted By
+                  </label>
+                  <Select
+                    value={filters.postedBy}
+                    onValueChange={(value) =>
+                      setFilters({ ...filters, postedBy: value })
+                    }
+                  >
                     <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Any" />
                     </SelectTrigger>
@@ -356,8 +476,15 @@ export default function Properties() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Verification</label>
-                  <Select value={filters.isVerified} onValueChange={(value) => setFilters({ ...filters, isVerified: value })}>
+                  <label className="text-sm font-medium text-slate-700">
+                    Verification
+                  </label>
+                  <Select
+                    value={filters.isVerified}
+                    onValueChange={(value) =>
+                      setFilters({ ...filters, isVerified: value })
+                    }
+                  >
                     <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Any" />
                     </SelectTrigger>
@@ -370,7 +497,11 @@ export default function Properties() {
                 </div>
 
                 <div className="flex items-end">
-                  <Button onClick={clearFilters} variant="outline" className="w-full">
+                  <Button
+                    onClick={clearFilters}
+                    variant="outline"
+                    className="w-full"
+                  >
                     Clear Filters
                   </Button>
                 </div>
@@ -383,7 +514,8 @@ export default function Properties() {
       {/* RESULTS COUNT */}
       <div className="flex items-center justify-between text-sm text-slate-600">
         <span>
-          Showing {filteredProperties.length} of {properties?.length || 0} properties
+          Showing {filteredProperties.length} of {properties?.length || 0}{" "}
+          properties
         </span>
         <span className="hidden sm:inline">
           {activeFiltersCount > 0 && `${activeFiltersCount} filters applied`}
@@ -416,6 +548,23 @@ export default function Properties() {
                   alt={property.title}
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                 />
+
+                {/* Active Toggle - Left Top */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleActive(property);
+                  }}
+                  disabled={togglingActive}
+                  className={`absolute left-2 top-2 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider transition-all border-2 ${
+                    property.isActive === false
+                      ? "bg-red-100 text-red-700 border-red-400 hover:bg-red-200"
+                      : "bg-green-100 text-green-700 border-green-400 hover:bg-green-200"
+                  }`}
+                >
+                  {property.isActive === false ? "Inactive" : "Active"}
+                </button>
 
                 <Badge
                   className={`absolute right-2 top-2 ${
