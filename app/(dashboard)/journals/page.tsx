@@ -102,71 +102,77 @@ export default function JournalsDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredJournals.map((journal) => (
-                  <tr
-                    key={journal._id}
-                    className="hover:bg-slate-50/50 transition-colors group"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
-                        <div className="relative size-12 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shrink-0">
-                          <Image
-                            src={journal.coverImage}
-                            alt={journal.title}
-                            fill
-                            className="object-cover"
-                          />
+                {[...filteredJournals]
+                  .sort(
+                    (a, b) =>
+                      new Date(b.createdAt).getTime() -
+                      new Date(a.createdAt).getTime(),
+                  )
+                  .map((journal) => (
+                    <tr
+                      key={journal._id}
+                      className="hover:bg-slate-50/50 transition-colors group"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          <div className="relative size-12 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shrink-0">
+                            <Image
+                              src={journal.coverImage}
+                              alt={journal.title}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-slate-900 truncate max-w-[200px] md:max-w-xs">
+                              {journal.title}
+                            </p>
+                            <p className="text-xs text-slate-500 truncate italic">
+                              /{journal.slug}
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-semibold text-slate-900 truncate max-w-[200px] md:max-w-xs">
-                            {journal.title}
-                          </p>
-                          <p className="text-xs text-slate-500 truncate italic">
-                            /{journal.slug}
-                          </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 w-fit">
+                            {journal.category}
+                          </span>
+                          <span className="text-xs text-slate-600 font-medium">
+                            {journal.targetSector}
+                          </span>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 w-fit">
-                          {journal.category}
-                        </span>
-                        <span className="text-xs text-slate-600 font-medium">
-                          {journal.targetSector}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
-                      {new Date(journal.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link
-                          href={`/journals/${journal.slug}`}
-                          className="p-2 text-slate-400 hover:text-[#4161df] transition-colors"
-                          title="View Live"
-                        >
-                          <ExternalLink size={18} />
-                        </Link>
-                        <Link
-                          href={`/journals/edit/${journal._id}`}
-                          className="p-2 text-slate-400 hover:text-amber-600 transition-colors"
-                          title="Edit"
-                        >
-                          <Edit2 size={18} />
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(journal._id)}
-                          className="p-2 text-slate-400 hover:text-red-600 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-500">
+                        {new Date(journal.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <Link
+                            href={`/journals/${journal.slug}`}
+                            className="p-2 text-slate-400 hover:text-[#4161df] transition-colors"
+                            title="View Live"
+                          >
+                            <ExternalLink size={18} />
+                          </Link>
+                          <Link
+                            href={`/journals/edit/${journal._id}`}
+                            className="p-2 text-slate-400 hover:text-amber-600 transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 size={18} />
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(journal._id)}
+                            className="p-2 text-slate-400 hover:text-red-600 transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
