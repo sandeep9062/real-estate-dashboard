@@ -5,6 +5,7 @@ export interface DashboardStats {
   totalProperties: number;
   totalUsers: number;
   totalBookings: number;
+  totalJournals: number;
   todayBookings: number;
 
   totalRevenue: number;
