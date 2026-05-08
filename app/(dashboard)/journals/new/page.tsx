@@ -40,12 +40,19 @@ export default function NewJournalPage() {
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const addKeyword = () => {
-    const trimmed = keywordInput.trim();
-    if (trimmed && !formData.keywords.includes(trimmed)) {
+  const parseKeywords = (input: string) => {
+    return input
+      .split(",")
+      .map((kw) => kw.trim())
+      .filter((kw) => kw.length > 0);
+  };
+
+  const addKeywords = () => {
+    const newKeywords = parseKeywords(keywordInput);
+    if (newKeywords.length > 0) {
       setFormData((prev) => ({
         ...prev,
-        keywords: [...prev.keywords, trimmed],
+        keywords: [...new Set([...prev.keywords, ...newKeywords])],
       }));
     }
     setKeywordInput("");
@@ -178,20 +185,20 @@ export default function NewJournalPage() {
               <div className="flex gap-2 mb-2">
                 <input
                   type="text"
-                  placeholder="Type a keyword and press Add"
+                  placeholder="Type keywords separated by comma, then press Add"
                   className="flex-1 px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all"
                   value={keywordInput}
                   onChange={(e) => setKeywordInput(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      addKeyword();
+                      addKeywords();
                     }
                   }}
                 />
                 <button
                   type="button"
-                  onClick={addKeyword}
+                  onClick={addKeywords}
                   className="px-4 py-2 bg-[#4161df] text-white rounded-lg text-sm hover:bg-[#3551c0] transition-colors"
                 >
                   Add
