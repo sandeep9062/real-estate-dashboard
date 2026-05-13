@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 13, "column": 0}, "map": {"version":3,"sources":["file:///Users/sandeepsaini/Desktop/Real-Estate-Nodejs/real-estate-dashboard/app/favicon.ico.mjs%20%28structured%20image%20object%29"],"sourcesContent":["import src from \"IMAGE\";\nexport default { src, width: 512, height: 512 }\n"],"names":["src","width","height"],"mappings":";;;;AAAA;;uCACe;IAAEA,KAAAA,mIAAG;IAAEC,OAAO;IAAKC,QAAQ;AAAI"}},
-    {"offset": {"line": 28, "column": 0}, "map": {"version":3,"sources":["file:///Users/sandeepsaini/Desktop/Real-Estate-Nodejs/real-estate-dashboard/app/%28dashboard%29/page.tsx"],"sourcesContent":["import { redirect } from \"next/navigation\";\n\nconst Index = () => {\n  // This is a server component, but we need to check auth on client side\n  // The actual auth check will be handled by the AdminLayout component\n  redirect(\"/dashboard\");\n};\n\nexport default Index;\n"],"names":["Index"],"mappings":";;;;AAAA;AAAA;;AAEA,MAAMA,QAAQ;IACZ,uEAAuE;IACvE,qEAAqE;IACrE,IAAA,iMAAQ,EAAC;AACX;uCAEeA"}}]
-}

@@ -42,12 +42,13 @@ export default function Properties() {
   });
 
   const {
-    data: properties,
+    data: propertiesResponse,
     error,
     isLoading,
   } = useGetAllPropertiesQuery({
     includeInactive: "true",
   });
+  const properties = propertiesResponse?.data ?? [];
   const [deleteProperty] = useDeletePropertyMutation();
   const [updateProperty, { isLoading: togglingActive }] =
     useUpdatePropertyMutation();

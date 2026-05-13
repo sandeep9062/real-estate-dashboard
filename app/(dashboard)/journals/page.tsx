@@ -20,7 +20,8 @@ import {
 export default function JournalsDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: journals = [], isLoading, isError } = useGetJournalsQuery({});
+  const { data, isLoading, isError } = useGetJournalsQuery({});
+  const journals = data?.journals ?? [];
   const [deleteJournal] = useDeleteJournalMutation();
 
   const handleDelete = async (id: string) => {

@@ -52,13 +52,24 @@ export interface JournalInput {
   keywords?: string[];
 }
 
+export interface PaginatedJournalsResponse {
+  journals: Journal[];
+  currentPage: number;
+  totalPages: number;
+  total: number;
+  hasNextPage: boolean;
+}
+
 export const journalApi = createApi({
   reducerPath: "journalApi",
   baseQuery: baseQueryWithAuth,
   tagTypes: ["Journal"],
   endpoints: (builder) => ({
     // Fetch all journals with optional filtering (category, sector, etc.)
-    getJournals: builder.query<Journal[], Record<string, any> | undefined>({
+    getJournals: builder.query<
+      PaginatedJournalsResponse,
+      Record<string, any> | undefined
+    >({
       query: (params) => ({
         url: "/v1/journals",
         params, // Handles ?category=Locality Guide&sector=Sector 115
@@ -66,10 +77,13 @@ export const journalApi = createApi({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ _id }: { _id: string }) => ({
-                type: "Journal" as const,
-                id: _id,
-              })),
+              ...result.journals.map(
+                ({ _id }: { _id: string }) =>
+                  ({
+                    type: "Journal" as const,
+                    id: _id,
+                  }) as const,
+              ),
               { type: "Journal", id: "LIST" },
             ]
           : [{ type: "Journal", id: "LIST" }],
