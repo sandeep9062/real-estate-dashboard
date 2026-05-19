@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Plus,
   Search,
@@ -8,6 +8,10 @@ import {
   ExternalLink,
   FileText,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -15,14 +19,20 @@ import { toast } from "@/hooks/use-toast";
 import {
   useGetJournalsQuery,
   useDeleteJournalMutation,
+  useUpdateJournalMutation,
 } from "@/services/journalApi";
 
 export default function JournalsDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const limit = 10;
 
-  const { data, isLoading, isError } = useGetJournalsQuery({});
+  const { data, isLoading, isError } = useGetJournalsQuery({ page, limit });
   const journals = data?.journals ?? [];
+  const totalPages = data?.totalPages ?? 0;
+  const total = data?.total ?? 0;
   const [deleteJournal] = useDeleteJournalMutation();
+  const [updateJournal] = useUpdateJournalMutation();
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this journal?")) {
@@ -35,12 +45,39 @@ export default function JournalsDashboard() {
     }
   };
 
-  const filteredJournals = journals.filter(
-    (j) =>
-      j.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      j.targetSector.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      j.category.toLowerCase().includes(searchTerm.toLowerCase()),
+  const handleToggleActive = async (journal: any) => {
+    const newActiveState = !journal.isActive;
+    try {
+      await updateJournal({
+        id: journal._id,
+        update: { isActive: newActiveState },
+      }).unwrap();
+      toast({
+        title: `Journal ${newActiveState ? "activated" : "deactivated"} successfully`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: `Failed to ${newActiveState ? "activate" : "deactivate"} journal`,
+      });
+    }
+  };
+
+  const filteredJournals = useMemo(
+    () =>
+      journals.filter(
+        (j) =>
+          j.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          j.targetSector.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          j.category.toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
+    [journals, searchTerm],
   );
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setPage(newPage);
+  };
 
   return (
     <div className="p-4 md:p-8 space-y-6 bg-gray-50 min-h-screen">
@@ -164,6 +201,21 @@ export default function JournalsDashboard() {
                             <Edit2 size={18} />
                           </Link>
                           <button
+                            onClick={() => handleToggleActive(journal)}
+                            className={`p-2 transition-colors ${
+                              journal.isActive
+                                ? "text-green-500 hover:text-green-700"
+                                : "text-slate-400 hover:text-green-600"
+                            }`}
+                            title={journal.isActive ? "Deactivate" : "Activate"}
+                          >
+                            {journal.isActive ? (
+                              <Eye size={18} />
+                            ) : (
+                              <EyeOff size={18} />
+                            )}
+                          </button>
+                          <button
                             onClick={() => handleDelete(journal._id)}
                             className="p-2 text-slate-400 hover:text-red-600 transition-colors"
                             title="Delete"
@@ -179,6 +231,60 @@ export default function JournalsDashboard() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {!isLoading && totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
+          <p className="text-sm text-slate-500">
+            Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of{" "}
+            {total} journals
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              className="inline-flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => {
+                if (totalPages <= 7) return true;
+                if (p === 1 || p === totalPages) return true;
+                if (Math.abs(p - page) <= 1) return true;
+                return false;
+              })
+              .map((p, idx, arr) => (
+                <React.Fragment key={p}>
+                  {idx > 0 && p - arr[idx - 1] > 1 && (
+                    <span className="px-2 py-2 text-sm text-slate-400">
+                      ...
+                    </span>
+                  )}
+                  <button
+                    onClick={() => handlePageChange(p)}
+                    className={`inline-flex items-center justify-center size-9 text-sm font-medium rounded-lg border transition-colors ${
+                      p === page
+                        ? "bg-[#4161df] text-white border-[#4161df]"
+                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                </React.Fragment>
+              ))}
+            <button
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page === totalPages}
+              className="inline-flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Empty State */}
       {!isLoading && filteredJournals.length === 0 && (

@@ -31,6 +31,7 @@ const menuItems = [
   { title: "Notifications", icon: Bell, path: "/notifications" },
   { title: "Users", icon: Users, path: "/users" },
   { title: "Properties", icon: Building2, path: "/properties" },
+  { title: "Projects", icon: Building2, path: "/projects" },
   { title: "Bookings", icon: Calendar, path: "/bookings" },
   { title: "Payments", icon: CreditCard, path: "/payments" },
   { title: "Reviews", icon: Star, path: "/reviews" },

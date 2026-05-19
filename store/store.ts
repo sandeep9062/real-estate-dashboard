@@ -9,6 +9,8 @@ import { bookingApi } from "@/services/bookingApi";
 import { journalApi } from "@/services/journalApi";
 import { dashboardApi } from "@/services/dashboardApi";
 import { notificationApi } from "@/services/notificationApi";
+import { projectsApi } from "@/services/projectsApi";
+
 const store = configureStore({
   reducer: {
     [authApi.reducerPath]: authApi.reducer,
@@ -19,6 +21,7 @@ const store = configureStore({
     [bookingApi.reducerPath]: bookingApi.reducer,
     [dashboardApi.reducerPath]: dashboardApi.reducer,
     [notificationApi.reducerPath]: notificationApi.reducer,
+    [projectsApi.reducerPath]: projectsApi.reducer,
     auth: authReducer,
   },
   middleware: (getDefaultMiddleware) =>
@@ -31,8 +34,9 @@ const store = configureStore({
       journalApi.middleware,
       dashboardApi.middleware,
       notificationApi.middleware,
+      projectsApi.middleware,
     ),
-  devTools: process.env.NODE_ENV !== "production", // ✅ enable Redux DevTools in development
+  devTools: process.env.NODE_ENV !== "production",
 });
 
 export type RootState = ReturnType<typeof store.getState>;

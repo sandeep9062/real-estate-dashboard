@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -40,6 +48,10 @@ export default function Properties() {
     postedBy: "",
     isVerified: "",
   });
+
+  // PAGINATION
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
 
   const {
     data: propertiesResponse,
@@ -126,6 +138,55 @@ export default function Properties() {
       return true;
     });
   }, [properties, searchQuery, filters]);
+
+  // PAGINATION LOGIC
+  const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
+
+  const paginatedProperties = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredProperties.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredProperties, currentPage, itemsPerPage]);
+
+  // RESET TO PAGE 1 WHEN FILTERS CHANGE
+  useMemo(() => {
+    if (currentPage > Math.ceil(filteredProperties.length / itemsPerPage)) {
+      setCurrentPage(1);
+    }
+  }, [filteredProperties.length, currentPage, itemsPerPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // GENERATE PAGE NUMBERS TO DISPLAY
+  const getPageNumbers = () => {
+    const pages: (number | "ellipsis")[] = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages + 2) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      let start = Math.max(2, currentPage - 1);
+      let end = Math.min(totalPages - 1, currentPage + 1);
+
+      if (currentPage <= 2) {
+        start = 2;
+        end = Math.min(totalPages - 1, start + 2);
+      } else if (currentPage >= totalPages - 1) {
+        end = totalPages - 1;
+        start = Math.max(2, end - 2);
+      }
+
+      if (start > 2) pages.push("ellipsis");
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (end < totalPages - 1) pages.push("ellipsis");
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
 
   // CLEAR FILTERS
   const clearFilters = () => {
@@ -521,8 +582,14 @@ export default function Properties() {
       {/* RESULTS COUNT */}
       <div className="flex items-center justify-between text-sm text-slate-600">
         <span>
-          Showing {filteredProperties.length} of {properties?.length || 0}{" "}
-          properties
+          Showing{" "}
+          {filteredProperties.length > 0
+            ? `${(currentPage - 1) * itemsPerPage + 1}–${Math.min(
+                currentPage * itemsPerPage,
+                filteredProperties.length,
+              )}`
+            : "0"}{" "}
+          of {filteredProperties.length} properties
         </span>
         <span className="hidden sm:inline">
           {activeFiltersCount > 0 && `${activeFiltersCount} filters applied`}
@@ -543,7 +610,7 @@ export default function Properties() {
             </Button>
           </div>
         ) : (
-          filteredProperties.map((property: any) => (
+          paginatedProperties.map((property: any) => (
             <Card
               key={property._id}
               className="group overflow-hidden border border-border bg-card hover:shadow-lg transition-all"
@@ -637,6 +704,68 @@ export default function Properties() {
           ))
         )}
       </div>
+
+      {/* PAGINATION */}
+      {totalPages > 1 && (
+        <Pagination className="mt-8">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (currentPage > 1) handlePageChange(currentPage - 1);
+                }}
+                className={
+                  currentPage <= 1
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+
+            {getPageNumbers().map((page, index) =>
+              page === "ellipsis" ? (
+                <PaginationItem key={`ellipsis-${index}`}>
+                  <span className="flex h-9 w-9 items-center justify-center text-sm text-muted-foreground">
+                    ...
+                  </span>
+                </PaginationItem>
+              ) : (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    href="#"
+                    isActive={currentPage === page}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePageChange(page);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ),
+            )}
+
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (currentPage < totalPages)
+                    handlePageChange(currentPage + 1);
+                }}
+                className={
+                  currentPage >= totalPages
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 }

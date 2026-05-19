@@ -27,6 +27,7 @@ export interface Journal {
   content: string;
   author: string;
   date: string;
+  isActive: boolean;
   category: string;
   targetSector: string;
   location?: string;
@@ -48,6 +49,7 @@ export interface JournalInput {
   location?: string;
   coverImage?: string | File;
   excerpt?: string;
+  isActive?: boolean;
   metaTitle?: string;
   keywords?: string[];
 }
@@ -65,14 +67,14 @@ export const journalApi = createApi({
   baseQuery: baseQueryWithAuth,
   tagTypes: ["Journal"],
   endpoints: (builder) => ({
-    // Fetch all journals with optional filtering (category, sector, etc.)
+    // Fetch all journals (active + inactive) — for admin dashboard
     getJournals: builder.query<
       PaginatedJournalsResponse,
       Record<string, any> | undefined
     >({
       query: (params) => ({
-        url: "/v1/journals",
-        params, // Handles ?category=Locality Guide&sector=Sector 115
+        url: "/v1/journals/all",
+        params, // Handles ?page=1&limit=10&category=Locality Guide
       }),
       providesTags: (result) =>
         result
