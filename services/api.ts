@@ -29,7 +29,8 @@ const baseQuery = fetchBaseQuery({
   prepareHeaders: (headers, { getState }) => {
     // By default, if we have a token in the store, let's use that for authenticated requests
     const token = (getState() as RootState).auth.token;
-    const localStorageToken = localStorage.getItem("token");
+    const localStorageToken =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
     const cookieToken = getCookie("accessToken");
 
     console.log("BaseQuery - Store token:", token);
@@ -60,7 +61,11 @@ export const baseQueryWithAuth = async (
 ) => {
   // First, check if we have a token from cookies and store it in localStorage for consistency
   const cookieToken = getCookie("accessToken");
-  if (cookieToken && !localStorage.getItem("token")) {
+  if (
+    cookieToken &&
+    typeof window !== "undefined" &&
+    !localStorage.getItem("token")
+  ) {
     localStorage.setItem("token", cookieToken);
     console.log("BaseQueryWithAuth - Stored cookie token in localStorage");
   }
@@ -72,17 +77,23 @@ export const baseQueryWithAuth = async (
   const data = result.data as any;
   if (data && data.user && !data.token) {
     // Store user data in localStorage for development/testing
-    localStorage.setItem("user", JSON.stringify(data.user));
+    if (typeof window !== "undefined") {
+      localStorage.setItem("user", JSON.stringify(data.user));
+    }
 
     // Try to get token from cookies and store it in localStorage for consistency
     const cookieToken = getCookie("accessToken");
     if (cookieToken) {
-      localStorage.setItem("token", cookieToken);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("token", cookieToken);
+      }
       console.log("BaseQueryWithAuth - Stored login token in localStorage");
     } else {
       // If no cookie token, check if token is in response (fallback)
       if (data.token) {
-        localStorage.setItem("token", data.token);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("token", data.token);
+        }
         console.log(
           "BaseQueryWithAuth - Stored response token in localStorage",
         );
@@ -114,12 +125,16 @@ export const baseQueryWithAuth = async (
       // Store the new token
       const newCookieToken = getCookie("accessToken");
       if (newCookieToken) {
-        localStorage.setItem("token", newCookieToken);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("token", newCookieToken);
+        }
       } else {
         // Try to get token from refresh response
         const refreshData = refreshResult.data as any;
         if (refreshData && refreshData.token) {
-          localStorage.setItem("token", refreshData.token);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("token", refreshData.token);
+          }
         }
       }
 
@@ -130,8 +145,10 @@ export const baseQueryWithAuth = async (
         "BaseQueryWithAuth - Token refresh failed, redirecting to login",
       );
       // Token refresh failed, clear authentication state
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
 
       // Clear cookies
       if (typeof document !== "undefined") {

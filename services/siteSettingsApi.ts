@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-const getToken = () => localStorage.getItem("token");
+const getToken = () =>
+  typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
 export const siteSettingsApi = createApi({
   reducerPath: "siteSettingsApi",
