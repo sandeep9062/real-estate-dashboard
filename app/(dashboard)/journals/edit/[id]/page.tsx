@@ -9,7 +9,12 @@ import {
   useGetJournalByIdQuery,
   useUpdateJournalMutation,
 } from "@/services/journalApi";
-import RichTextEditor, { RichTextEditorRef } from "@/components/RichTextEditor";
+import dynamic from "next/dynamic";
+import type { RichTextEditorRef } from "@/components/RichTextEditor";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
 
 export default function EditJournalPage() {
   const params = useParams();

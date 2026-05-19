@@ -6,7 +6,12 @@ import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
 import { useCreateJournalMutation } from "@/services/journalApi";
 import { X } from "lucide-react";
-import RichTextEditor, { RichTextEditorRef } from "@/components/RichTextEditor";
+import dynamic from "next/dynamic";
+import type { RichTextEditorRef } from "@/components/RichTextEditor";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+});
 
 export default function NewJournalPage() {
   const router = useRouter();
