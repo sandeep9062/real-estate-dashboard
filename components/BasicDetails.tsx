@@ -68,6 +68,13 @@ const schema = z.object({
   propertyCategory: z.string(),
   areaValue: z.number().min(0, "Area cannot be negative"),
   areaUnit: z.string(),
+  carpetAreaValue: z.number().min(0).optional().or(z.literal("")).optional(),
+  superBuiltUpAreaValue: z
+    .number()
+    .min(0)
+    .optional()
+    .or(z.literal(""))
+    .optional(),
   availability: z.string(),
   furnishing: z.string(),
   postedBy: z.string(),
@@ -103,7 +110,7 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
   setPropertyDetails,
 }) => {
   const [selectedType, setSelectedType] = useState(
-    propertyDetails.type || "Residential"
+    propertyDetails.type || "Residential",
   );
 
   const {
@@ -156,38 +163,89 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
 
   // Set form values when propertyDetails changes (for editing existing properties)
   useEffect(() => {
-    setValue('title', propertyDetails.title || "");
-    setValue('description', propertyDetails.description || "");
-    setValue('price', propertyDetails.price || 0);
-    setValue('deal', propertyDetails.deal || "Rent");
-    setValue('type', propertyDetails.type || "Residential");
-    setValue('propertyCategory', propertyDetails.propertyCategory || "Apartment/Flat");
-    setValue('areaValue', propertyDetails.area?.value || 1000);
-    setValue('areaUnit', propertyDetails.area?.unit || "sqft");
-    setValue('availability', propertyDetails.availability || "Ready to Move");
-    setValue('furnishing', propertyDetails.furnishing || "Un-Furnished");
-    setValue('postedBy', propertyDetails.postedBy || "Owner");
-    setValue('commercialPropertyTypes', propertyDetails.commercialPropertyTypes || []);
-    setValue('investmentOptions', propertyDetails.investmentOptions || []);
-    setValue('listingAvailability', propertyDetails.listingAvailability || "Available");
-    setValue('virtualTourUrl', propertyDetails.virtualTourUrl || "");
-    setValue('schoolsText', (propertyDetails.nearbyPlaces?.schools || []).join("\n"));
-    setValue('metroStationsText', (propertyDetails.nearbyPlaces?.metroStations || []).join("\n"));
-    setValue('hospitalsText', (propertyDetails.nearbyPlaces?.hospitals || []).join("\n"));
-    setValue('mallsText', (propertyDetails.nearbyPlaces?.malls || []).join("\n"));
-    setValue('reraNumber', propertyDetails.reraNumber || "");
-    setValue('bulbulVerified', !!propertyDetails.bulbulVerified);
-    setValue('ownerVerified', !!propertyDetails.ownerVerified);
-    setValue('visitVerified', !!propertyDetails.visitVerified);
-    setValue('maintenanceCharge', propertyDetails.maintenanceCharge != null ? String(propertyDetails.maintenanceCharge) : "");
-    setValue('securityDeposit', propertyDetails.securityDeposit != null ? String(propertyDetails.securityDeposit) : "");
-    setValue('lockInMonths', propertyDetails.lockInMonths != null ? String(propertyDetails.lockInMonths) : "");
-    setValue('noticePeriodDays', propertyDetails.noticePeriodDays != null ? String(propertyDetails.noticePeriodDays) : "");
-    setValue('ocStatus', propertyDetails.ocStatus || "__none__");
-    setValue('ageOfProperty', propertyDetails.ageOfProperty != null ? String(propertyDetails.ageOfProperty) : "");
-    setValue('pricePerSqft', propertyDetails.pricePerSqft != null ? String(propertyDetails.pricePerSqft) : "");
-    setValue('negotiable', propertyDetails.negotiable !== false);
-    setValue('amenities', propertyDetails.amenities || []);
+    setValue("title", propertyDetails.title || "");
+    setValue("description", propertyDetails.description || "");
+    setValue("price", propertyDetails.price || 0);
+    setValue("deal", propertyDetails.deal || "Rent");
+    setValue("type", propertyDetails.type || "Residential");
+    setValue(
+      "propertyCategory",
+      propertyDetails.propertyCategory || "Apartment/Flat",
+    );
+    setValue("areaValue", propertyDetails.area?.value || 1000);
+    setValue("areaUnit", propertyDetails.area?.unit || "sqft");
+    setValue("availability", propertyDetails.availability || "Ready to Move");
+    setValue("furnishing", propertyDetails.furnishing || "Un-Furnished");
+    setValue("postedBy", propertyDetails.postedBy || "Owner");
+    setValue(
+      "commercialPropertyTypes",
+      propertyDetails.commercialPropertyTypes || [],
+    );
+    setValue("investmentOptions", propertyDetails.investmentOptions || []);
+    setValue(
+      "listingAvailability",
+      propertyDetails.listingAvailability || "Available",
+    );
+    setValue("virtualTourUrl", propertyDetails.virtualTourUrl || "");
+    setValue(
+      "schoolsText",
+      (propertyDetails.nearbyPlaces?.schools || []).join("\n"),
+    );
+    setValue(
+      "metroStationsText",
+      (propertyDetails.nearbyPlaces?.metroStations || []).join("\n"),
+    );
+    setValue(
+      "hospitalsText",
+      (propertyDetails.nearbyPlaces?.hospitals || []).join("\n"),
+    );
+    setValue(
+      "mallsText",
+      (propertyDetails.nearbyPlaces?.malls || []).join("\n"),
+    );
+    setValue("reraNumber", propertyDetails.reraNumber || "");
+    setValue("bulbulVerified", !!propertyDetails.bulbulVerified);
+    setValue("ownerVerified", !!propertyDetails.ownerVerified);
+    setValue("visitVerified", !!propertyDetails.visitVerified);
+    setValue(
+      "maintenanceCharge",
+      propertyDetails.maintenanceCharge != null
+        ? String(propertyDetails.maintenanceCharge)
+        : "",
+    );
+    setValue(
+      "securityDeposit",
+      propertyDetails.securityDeposit != null
+        ? String(propertyDetails.securityDeposit)
+        : "",
+    );
+    setValue(
+      "lockInMonths",
+      propertyDetails.lockInMonths != null
+        ? String(propertyDetails.lockInMonths)
+        : "",
+    );
+    setValue(
+      "noticePeriodDays",
+      propertyDetails.noticePeriodDays != null
+        ? String(propertyDetails.noticePeriodDays)
+        : "",
+    );
+    setValue("ocStatus", propertyDetails.ocStatus || "__none__");
+    setValue(
+      "ageOfProperty",
+      propertyDetails.ageOfProperty != null
+        ? String(propertyDetails.ageOfProperty)
+        : "",
+    );
+    setValue(
+      "pricePerSqft",
+      propertyDetails.pricePerSqft != null
+        ? String(propertyDetails.pricePerSqft)
+        : "",
+    );
+    setValue("negotiable", propertyDetails.negotiable !== false);
+    setValue("amenities", propertyDetails.amenities || []);
   }, [propertyDetails, setValue]);
 
   const onSubmit = (data: FormData) => {
@@ -205,7 +263,22 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
       deal: data.deal,
       type: data.type,
       propertyCategory: data.propertyCategory,
-      area: { value: data.areaValue, unit: data.areaUnit },
+      area: {
+        value: data.areaValue,
+        unit: data.areaUnit,
+        carpetArea: data.carpetAreaValue
+          ? {
+              value: Number(data.carpetAreaValue),
+              unit: data.areaUnit,
+            }
+          : undefined,
+        superBuiltUpArea: data.superBuiltUpAreaValue
+          ? {
+              value: Number(data.superBuiltUpAreaValue),
+              unit: data.areaUnit,
+            }
+          : undefined,
+      },
       availability: data.availability,
       furnishing: data.furnishing,
       postedBy: data.postedBy,
@@ -348,7 +421,7 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
                               field.onChange([...current, type]);
                             } else {
                               field.onChange(
-                                current.filter((t: string) => t !== type)
+                                current.filter((t: string) => t !== type),
                               );
                             }
                           }}
@@ -384,7 +457,7 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
                               field.onChange([...current, option]);
                             } else {
                               field.onChange(
-                                current.filter((o: string) => o !== option)
+                                current.filter((o: string) => o !== option),
                               );
                             }
                           }}
@@ -443,10 +516,7 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
               name="areaUnit"
               control={control}
               render={({ field }) => (
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value}
-                >
+                <Select onValueChange={field.onChange} value={field.value}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -526,27 +596,53 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
         </div>
 
         <div className="border-t pt-6 mt-6 space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Pricing & terms</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Pricing & terms
+          </h3>
           <p className="text-sm text-gray-500">
-            {deal === "Rent" ? "Price is monthly rent (₹)." : "Price is total asking amount (₹)."}
+            {deal === "Rent"
+              ? "Price is monthly rent (₹)."
+              : "Price is total asking amount (₹)."}
           </p>
           {deal === "Rent" && (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="maintenanceCharge">Monthly maintenance (₹)</Label>
-                <Input id="maintenanceCharge" type="number" min={0} {...register("maintenanceCharge")} />
+                <Label htmlFor="maintenanceCharge">
+                  Monthly maintenance (₹)
+                </Label>
+                <Input
+                  id="maintenanceCharge"
+                  type="number"
+                  min={0}
+                  {...register("maintenanceCharge")}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="securityDeposit">Security deposit (₹)</Label>
-                <Input id="securityDeposit" type="number" min={0} {...register("securityDeposit")} />
+                <Input
+                  id="securityDeposit"
+                  type="number"
+                  min={0}
+                  {...register("securityDeposit")}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lockInMonths">Lock-in (months)</Label>
-                <Input id="lockInMonths" type="number" min={0} {...register("lockInMonths")} />
+                <Input
+                  id="lockInMonths"
+                  type="number"
+                  min={0}
+                  {...register("lockInMonths")}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="noticePeriodDays">Notice period (days)</Label>
-                <Input id="noticePeriodDays" type="number" min={0} {...register("noticePeriodDays")} />
+                <Input
+                  id="noticePeriodDays"
+                  type="number"
+                  min={0}
+                  {...register("noticePeriodDays")}
+                />
               </div>
             </div>
           )}
@@ -554,7 +650,12 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="pricePerSqft">Price per sqft (₹)</Label>
-                <Input id="pricePerSqft" type="number" min={0} {...register("pricePerSqft")} />
+                <Input
+                  id="pricePerSqft"
+                  type="number"
+                  min={0}
+                  {...register("pricePerSqft")}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Occupancy certificate (OC)</Label>
@@ -570,7 +671,9 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
                         <SelectItem value="__none__">—</SelectItem>
                         <SelectItem value="Available">OC available</SelectItem>
                         <SelectItem value="Applied">OC applied</SelectItem>
-                        <SelectItem value="Not issued">Not issued yet</SelectItem>
+                        <SelectItem value="Not issued">
+                          Not issued yet
+                        </SelectItem>
                         <SelectItem value="NA">Not applicable</SelectItem>
                       </SelectContent>
                     </Select>
@@ -581,7 +684,12 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
           )}
           <div className="space-y-2">
             <Label htmlFor="ageOfProperty">Age of property (years)</Label>
-            <Input id="ageOfProperty" type="number" min={0} {...register("ageOfProperty")} />
+            <Input
+              id="ageOfProperty"
+              type="number"
+              min={0}
+              {...register("ageOfProperty")}
+            />
           </div>
           <div className="flex items-center space-x-2">
             <Controller
@@ -612,7 +720,10 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
                         onCheckedChange={(checked) => {
                           const cur = field.value || [];
                           if (checked) field.onChange([...cur, item]);
-                          else field.onChange(cur.filter((x: string) => x !== item));
+                          else
+                            field.onChange(
+                              cur.filter((x: string) => x !== item),
+                            );
                         }}
                       />
                       <Label htmlFor={`am-${item}`}>{item}</Label>
@@ -629,7 +740,8 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
             Trust, media & neighborhood
           </h3>
           <p className="text-sm text-gray-500">
-            Listing status and rich media sync to the public site. Verification toggles are saved for admin workflows.
+            Listing status and rich media sync to the public site. Verification
+            toggles are saved for admin workflows.
           </p>
 
           <div className="space-y-2">
@@ -656,7 +768,11 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="reraNumber">RERA registration ID</Label>
-            <Input id="reraNumber" {...register("reraNumber")} placeholder="Optional" />
+            <Input
+              id="reraNumber"
+              {...register("reraNumber")}
+              placeholder="Optional"
+            />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
@@ -706,7 +822,11 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="virtualTourUrl">Virtual tour URL</Label>
-            <Input id="virtualTourUrl" {...register("virtualTourUrl")} placeholder="https://…" />
+            <Input
+              id="virtualTourUrl"
+              {...register("virtualTourUrl")}
+              placeholder="https://…"
+            />
           </div>
 
           <FloorPlanUploadSection
@@ -726,11 +846,19 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
           </div>
           <div className="space-y-2">
             <Label htmlFor="metroStationsText">Nearby — metro / transit</Label>
-            <Textarea id="metroStationsText" rows={2} {...register("metroStationsText")} />
+            <Textarea
+              id="metroStationsText"
+              rows={2}
+              {...register("metroStationsText")}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="hospitalsText">Nearby — hospitals</Label>
-            <Textarea id="hospitalsText" rows={2} {...register("hospitalsText")} />
+            <Textarea
+              id="hospitalsText"
+              rows={2}
+              {...register("hospitalsText")}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="mallsText">Nearby — malls & shopping</Label>

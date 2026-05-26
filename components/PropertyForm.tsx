@@ -43,8 +43,8 @@ export default function PropertyForm({ defaultValues, mode, id }: any) {
     if (defaultValues?.image?.length) {
       setImagePreviews(
         defaultValues.image.map((img: string) =>
-          typeof img === "string" ? img : URL.createObjectURL(img)
-        )
+          typeof img === "string" ? img : URL.createObjectURL(img),
+        ),
       );
     }
   }, [defaultValues]);
@@ -58,11 +58,17 @@ export default function PropertyForm({ defaultValues, mode, id }: any) {
   const onSubmit = async (values: any) => {
     try {
       const formData = new FormData();
-      ["title", "description", "deal", "type", "propertyCategory", "availability", "furnishing"].forEach(
-        (key) => {
-          formData.append(key, values[key]);
-        }
-      );
+      [
+        "title",
+        "description",
+        "deal",
+        "type",
+        "propertyCategory",
+        "availability",
+        "furnishing",
+      ].forEach((key) => {
+        formData.append(key, values[key]);
+      });
 
       formData.append("price", values.price.toString());
       formData.append("area[value]", values.area.value.toString());
@@ -79,10 +85,13 @@ export default function PropertyForm({ defaultValues, mode, id }: any) {
       });
 
       Object.entries(values.facilities || {}).forEach(([key, val]: any) => {
-        if (val !== undefined) formData.append(`facilities[${key}]`, val.toString());
+        if (val !== undefined)
+          formData.append(`facilities[${key}]`, val.toString());
       });
 
-      values.amenities?.forEach((item: string) => formData.append("amenities[]", item));
+      values.amenities?.forEach((item: string) =>
+        formData.append("amenities[]", item),
+      );
       values.image?.forEach((file: File) => formData.append("image", file));
 
       if (isEdit) {
@@ -105,14 +114,25 @@ export default function PropertyForm({ defaultValues, mode, id }: any) {
     >
       {/* Basic Info */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold border-b pb-2">Basic Information</h2>
+        <h2 className="text-xl font-semibold border-b pb-2">
+          Basic Information
+        </h2>
         <div>
           <Label>Title</Label>
-          <Input {...form.register("title")} placeholder="Beautiful 3BHK Flat" className="mt-1" />
+          <Input
+            {...form.register("title")}
+            placeholder="Beautiful 3BHK Flat"
+            className="mt-1"
+          />
         </div>
         <div>
           <Label>Description</Label>
-          <Textarea {...form.register("description")} rows={4} placeholder="Detailed description" className="mt-1" />
+          <Textarea
+            {...form.register("description")}
+            rows={4}
+            placeholder="Detailed description"
+            className="mt-1"
+          />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Controller
@@ -142,7 +162,9 @@ export default function PropertyForm({ defaultValues, mode, id }: any) {
 
       {/* Property Details */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold border-b pb-2">Property Details</h2>
+        <h2 className="text-xl font-semibold border-b pb-2">
+          Property Details
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Controller
             control={form.control}
@@ -175,9 +197,15 @@ export default function PropertyForm({ defaultValues, mode, id }: any) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input {...form.register("price", { valueAsNumber: true })} placeholder="Price" />
+          <Input
+            {...form.register("price", { valueAsNumber: true })}
+            placeholder="Price"
+          />
           <div className="flex gap-2">
-            <Input {...form.register("area.value", { valueAsNumber: true })} placeholder="Area" />
+            <Input
+              {...form.register("area.value", { valueAsNumber: true })}
+              placeholder="Area (Built-up)"
+            />
             <Controller
               control={form.control}
               name="area.unit"
@@ -192,6 +220,20 @@ export default function PropertyForm({ defaultValues, mode, id }: any) {
                   <option value="acre">acre</option>
                 </select>
               )}
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            {...form.register("area.carpetArea.value", { valueAsNumber: true })}
+            placeholder="Carpet Area (RERA)"
+          />
+          <div className="flex gap-2">
+            <Input
+              {...form.register("area.superBuiltUpArea.value", {
+                valueAsNumber: true,
+              })}
+              placeholder="Super Built-up Area"
             />
           </div>
         </div>
@@ -213,10 +255,24 @@ export default function PropertyForm({ defaultValues, mode, id }: any) {
       <div className="space-y-4">
         <h2 className="text-xl font-semibold border-b pb-2">Facilities</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input {...form.register("facilities.bedrooms", { valueAsNumber: true })} placeholder="Bedrooms" />
-          <Input {...form.register("facilities.bathrooms", { valueAsNumber: true })} placeholder="Bathrooms" />
-          <Input {...form.register("facilities.servantRooms", { valueAsNumber: true })} placeholder="Servant Rooms" />
-          <Input {...form.register("facilities.parkings", { valueAsNumber: true })} placeholder="Parkings" />
+          <Input
+            {...form.register("facilities.bedrooms", { valueAsNumber: true })}
+            placeholder="Bedrooms"
+          />
+          <Input
+            {...form.register("facilities.bathrooms", { valueAsNumber: true })}
+            placeholder="Bathrooms"
+          />
+          <Input
+            {...form.register("facilities.servantRooms", {
+              valueAsNumber: true,
+            })}
+            placeholder="Servant Rooms"
+          />
+          <Input
+            {...form.register("facilities.parkings", { valueAsNumber: true })}
+            placeholder="Parkings"
+          />
         </div>
         <Controller
           control={form.control}
@@ -244,7 +300,11 @@ export default function PropertyForm({ defaultValues, mode, id }: any) {
                 onCheckedChange={(checked) => {
                   const current = form.watch("amenities") || [];
                   if (checked) form.setValue("amenities", [...current, item]);
-                  else form.setValue("amenities", current.filter((a: string) => a !== item));
+                  else
+                    form.setValue(
+                      "amenities",
+                      current.filter((a: string) => a !== item),
+                    );
                 }}
               />
               {item}
@@ -259,7 +319,11 @@ export default function PropertyForm({ defaultValues, mode, id }: any) {
         <Input type="file" multiple onChange={handleImageChange} />
         <div className="flex gap-3 mt-2 flex-wrap">
           {imagePreviews.map((src, i) => (
-            <img key={i} src={src} className="w-24 h-24 object-cover rounded-md border" />
+            <img
+              key={i}
+              src={src}
+              className="w-24 h-24 object-cover rounded-md border"
+            />
           ))}
         </div>
       </div>

@@ -16,6 +16,22 @@ export const propertySchema = z.object({
   area: z.object({
     value: z.number(),
     unit: z.enum(["sqft", "sqyard", "sqm", "marla", "kanal", "acre"]),
+    carpetArea: z
+      .object({
+        value: z.number().optional(),
+        unit: z
+          .enum(["sqft", "sqyard", "sqm", "marla", "kanal", "acre"])
+          .optional(),
+      })
+      .optional(),
+    superBuiltUpArea: z
+      .object({
+        value: z.number().optional(),
+        unit: z
+          .enum(["sqft", "sqyard", "sqm", "marla", "kanal", "acre"])
+          .optional(),
+      })
+      .optional(),
   }),
 
   location: z.object({
