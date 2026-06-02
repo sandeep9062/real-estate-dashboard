@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { ColumnDef } from "@tanstack/react-table";
 import {
   Users,
   Building2,
@@ -15,6 +16,8 @@ import {
   CreditCard,
   Filter,
   Newspaper,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +41,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useGetDashboardStatsQuery } from "@/services/dashboardApi";
+import { useGetAllPropertiesQuery } from "@/services/propertiesApi";
+import { DataTable } from "@/components/ui/data-table";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -45,6 +50,11 @@ export default function Dashboard() {
   const [dateFilter, setDateFilter] = useState("30days");
 
   const { data: analyticsData, error, isLoading } = useGetDashboardStatsQuery();
+
+  // Fetch all properties for the table section
+  const { data: propertiesResponse, isLoading: propertiesLoading } =
+    useGetAllPropertiesQuery({ includeInactive: "true", limit: "500" });
+  const properties = (propertiesResponse?.data ?? []) as any[];
 
   // FILTER PERIODS
   const periodOptions = [
@@ -452,6 +462,162 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* All Properties */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+              <Building2 className="h-5 w-5 text-muted-foreground" />
+              All Properties
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Complete list of all properties in the system
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push("/properties")}
+          >
+            <Eye className="h-4 w-4 mr-1" />
+            Manage Properties
+          </Button>
+        </CardHeader>
+        <CardContent className="p-0">
+          <DataTable
+            columns={[
+              {
+                accessorKey: "title",
+                header: "Title",
+                enableSorting: true,
+                cell: ({ row }) => (
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-14 rounded overflow-hidden flex-shrink-0 bg-muted">
+                      <img
+                        src={row.original.image?.[0] || "/placeholder.png"}
+                        alt={row.original.title}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="font-medium line-clamp-1">
+                        {row.original.title}
+                      </p>
+                      {row.original.location?.city && (
+                        <p className="text-xs text-muted-foreground">
+                          {row.original.location.city}
+                          {row.original.location.state &&
+                            `, ${row.original.location.state}`}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                accessorKey: "type",
+                header: "Type",
+                enableSorting: true,
+                cell: ({ row }) => (
+                  <Badge
+                    variant="outline"
+                    className="border-primary text-primary"
+                  >
+                    {row.getValue("type")}
+                  </Badge>
+                ),
+              },
+              {
+                accessorKey: "deal",
+                header: "Deal",
+                enableSorting: true,
+                cell: ({ row }) => (
+                  <Badge variant="secondary">{row.getValue("deal")}</Badge>
+                ),
+              },
+              {
+                accessorKey: "price",
+                header: "Price",
+                enableSorting: true,
+                cell: ({ row }) => (
+                  <span className="font-semibold">
+                    ₹{Number(row.getValue("price")).toLocaleString("en-IN")}
+                  </span>
+                ),
+              },
+              {
+                accessorKey: "availability",
+                header: "Avail.",
+                enableSorting: true,
+                cell: ({ row }) => {
+                  const availability = row.getValue("availability") as string;
+                  return (
+                    <Badge
+                      className={
+                        availability === "Ready to Move"
+                          ? "bg-green-500"
+                          : "bg-yellow-500"
+                      }
+                    >
+                      {availability}
+                    </Badge>
+                  );
+                },
+              },
+              {
+                accessorKey: "isActive",
+                header: "Status",
+                enableSorting: true,
+                cell: ({ row }) => (
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase border-2 ${
+                      row.original.isActive === false
+                        ? "bg-red-100 text-red-700 border-red-400"
+                        : "bg-green-100 text-green-700 border-green-400"
+                    }`}
+                  >
+                    {row.original.isActive === false ? "Inactive" : "Active"}
+                  </span>
+                ),
+              },
+              {
+                id: "actions",
+                header: "Actions",
+                enableSorting: false,
+                cell: ({ row }) => (
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() =>
+                        router.push(`/properties/view/${row.original._id}`)
+                      }
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => router.push(`/properties`)}
+                    >
+                      <Edit className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ),
+              },
+            ]}
+            data={properties}
+            isLoading={propertiesLoading}
+            loadingRows={10}
+            pageSize={10}
+            globalSearch
+            searchPlaceholder="Search properties..."
+          />
+        </CardContent>
+      </Card>
 
       {/* Quick Actions */}
       <Card>

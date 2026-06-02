@@ -50,6 +50,7 @@
     "@react-google-maps/api": "^2.20.7",
     "@reduxjs/toolkit": "^2.9.2",
     "@tabler/icons-react": "^3.41.1",
+    "@tanstack/react-table": "^8.21.3",
     "@types/lodash": "^4.17.20",
     "axios": "^1.13.2",
     "class-variance-authority": "^0.7.1",

@@ -1,19 +1,12 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Edit, Trash2 } from "lucide-react";
 import { useSelector } from "react-redux";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "@/components/ui/data-table";
+import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -31,14 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { toast } from "sonner";
 import {
   useGetUsersQuery,
@@ -47,7 +32,6 @@ import {
   useAddUserMutation,
   User,
 } from "@/services/userApi";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,10 +44,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { selectIsAuthenticated, selectUser } from "@/store/authSlice";
 
-const ITEMS_PER_PAGE = 10;
-
 export default function Users() {
-  const [currentPage, setCurrentPage] = useState(1);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
@@ -89,11 +70,6 @@ export default function Users() {
   const [deleteUser] = useDeleteUserMutation();
   const [updateUser] = useUpdateUserMutation();
   const [addUser] = useAddUserMutation();
-
-  console.log("Users page - isAuthenticated:", isAuthenticated);
-  console.log("Users page - userRole:", userRole);
-  console.log("Users page - users data:", users);
-  console.log("Users page - error:", error);
 
   // Redirect if not authenticated or not admin
   if (typeof window !== "undefined" && !isAuthenticated) {
@@ -175,71 +151,87 @@ export default function Users() {
     }
   };
 
-  const { currentUsers, totalPages } = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const paginated =
-      users?.slice(startIndex, startIndex + ITEMS_PER_PAGE) || [];
-    return {
-      currentUsers: paginated,
-      totalPages: Math.ceil((users?.length || 0) / ITEMS_PER_PAGE),
-    };
-  }, [users, currentPage]);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="mt-2 h-4 w-80" />
+  const columns: ColumnDef<User>[] = [
+    {
+      accessorKey: "name",
+      header: "Name",
+      enableSorting: true,
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">{row.getValue("email")}</span>
+      ),
+    },
+    {
+      accessorKey: "phone",
+      header: "Phone",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">
+          {row.getValue("phone") || "—"}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "role",
+      header: "Role",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <Badge variant="outline" className="border-primary text-primary">
+          {row.getValue("role")}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "isActive",
+      header: "Status",
+      enableSorting: true,
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <div className="flex items-center space-x-2">
+            <Switch
+              id={`status-${user._id}`}
+              checked={user.isActive}
+              onCheckedChange={(status) => handleStatusChange(user, status)}
+            />
+            <Label htmlFor={`status-${user._id}`}>
+              {user.isActive ? "Active" : "Inactive"}
+            </Label>
           </div>
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <Card className="border-border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border hover:bg-transparent">
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
-                <TableRow key={index} className="border-border">
-                  <TableCell>
-                    <Skeleton className="h-5 w-32" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-48" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-32" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-6 w-20" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-6 w-24" />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Skeleton className="h-8 w-8" />
-                      <Skeleton className="h-8 w-8" />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
-        <Skeleton className="h-10 w-full" />
-      </div>
-    );
-  }
+        );
+      },
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      enableSorting: false,
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleEditOpen(user)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDeleteOpen(user)}
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
 
   if (error) {
     return (
@@ -250,6 +242,15 @@ export default function Users() {
       </div>
     );
   }
+
+  const toolbar = (
+    <Button
+      className="bg-primary hover:bg-primary/90"
+      onClick={() => setIsAddUserOpen(true)}
+    >
+      Add New User
+    </Button>
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -262,259 +263,74 @@ export default function Users() {
             Manage all users in the system
           </p>
         </div>
-        <Button
-          className="bg-primary hover:bg-primary/90"
-          onClick={() => setIsAddUserOpen(true)}
-        >
-          Add New User
-        </Button>
       </div>
 
-      <Card className="border-border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-border hover:bg-transparent">
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {currentUsers.map((user: User) => (
-              <TableRow key={user._id} className="border-border">
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {user.email}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {user.phone}
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant="outline"
-                    className="border-primary text-primary"
-                  >
-                    {user.role}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id={`status-${user._id}`}
-                      checked={user.isActive}
-                      onCheckedChange={(status) =>
-                        handleStatusChange(user, status)
-                      }
-                    />
-                    <Label htmlFor={`status-${user._id}`}>
-                      {user.isActive ? "Active" : "Inactive"}
-                    </Label>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditOpen(user)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteOpen(user)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+      <DataTable
+        columns={columns}
+        data={users || []}
+        isLoading={isLoading}
+        loadingRows={10}
+        globalSearch
+        searchPlaceholder="Search users..."
+        toolbar={toolbar}
+        pageSize={10}
+      />
 
-      {totalPages > 1 && (
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                className={
-                  currentPage === 1 ? "pointer-events-none opacity-50" : ""
-                }
-              />
-            </PaginationItem>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <PaginationItem key={page}>
-                <PaginationLink
-                  onClick={() => setCurrentPage(page)}
-                  isActive={currentPage === page}
-                >
-                  {page}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-            <PaginationItem>
-              <PaginationNext
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                className={
-                  currentPage === totalPages
-                    ? "pointer-events-none opacity-50"
-                    : ""
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      )}
-
-      <div>
-        {/* Edit User Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit User</DialogTitle>
-            </DialogHeader>
-            {selectedUser && (
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={selectedUser.name}
-                    onChange={(e) =>
-                      setSelectedUser({ ...selectedUser, name: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="email" className="text-right">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    value={selectedUser.email}
-                    onChange={(e) =>
-                      setSelectedUser({
-                        ...selectedUser,
-                        email: e.target.value,
-                      })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="phone" className="text-right">
-                    Phone
-                  </Label>
-                  <Input
-                    id="phone"
-                    value={selectedUser.phone}
-                    onChange={(e) =>
-                      setSelectedUser({
-                        ...selectedUser,
-                        phone: e.target.value,
-                      })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="role" className="text-right">
-                    Role
-                  </Label>
-                  <Select
-                    value={selectedUser.role}
-                    onValueChange={(value) =>
-                      setSelectedUser({ ...selectedUser, role: value })
-                    }
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsEditDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleSaveChanges}>Save Changes</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        {/* Add User Dialog */}
-        <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New User</DialogTitle>
-            </DialogHeader>
+      {/* Edit User Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+          </DialogHeader>
+          {selectedUser && (
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="new-name" className="text-right">
+                <Label htmlFor="name" className="text-right">
                   Name
                 </Label>
                 <Input
-                  id="new-name"
-                  value={newUser.name}
+                  id="name"
+                  value={selectedUser.name}
                   onChange={(e) =>
-                    setNewUser({ ...newUser, name: e.target.value })
+                    setSelectedUser({ ...selectedUser, name: e.target.value })
                   }
                   className="col-span-3"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="new-email" className="text-right">
+                <Label htmlFor="email" className="text-right">
                   Email
                 </Label>
                 <Input
-                  id="new-email"
-                  value={newUser.email}
+                  id="email"
+                  value={selectedUser.email}
                   onChange={(e) =>
-                    setNewUser({ ...newUser, email: e.target.value })
+                    setSelectedUser({ ...selectedUser, email: e.target.value })
                   }
                   className="col-span-3"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="new-phone" className="text-right">
+                <Label htmlFor="phone" className="text-right">
                   Phone
                 </Label>
                 <Input
-                  id="new-phone"
-                  value={newUser.phone}
+                  id="phone"
+                  value={selectedUser.phone}
                   onChange={(e) =>
-                    setNewUser({ ...newUser, phone: e.target.value })
+                    setSelectedUser({ ...selectedUser, phone: e.target.value })
                   }
                   className="col-span-3"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="new-role" className="text-right">
+                <Label htmlFor="role" className="text-right">
                   Role
                 </Label>
                 <Select
-                  value={newUser.role}
+                  value={selectedUser.role}
                   onValueChange={(value) =>
-                    setNewUser({ ...newUser, role: value })
+                    setSelectedUser({ ...selectedUser, role: value })
                   }
                 >
                   <SelectTrigger className="col-span-3">
@@ -527,36 +343,115 @@ export default function Users() {
                 </Select>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddUserOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateUser}>Create User</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        {/* Delete User Dialog */}
-        <AlertDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the
-                user.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteConfirm}>
-                Continue
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveChanges}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add User Dialog */}
+      <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="new-name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="new-name"
+                value={newUser.name}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, name: e.target.value })
+                }
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="new-email" className="text-right">
+                Email
+              </Label>
+              <Input
+                id="new-email"
+                value={newUser.email}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, email: e.target.value })
+                }
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="new-phone" className="text-right">
+                Phone
+              </Label>
+              <Input
+                id="new-phone"
+                value={newUser.phone}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, phone: e.target.value })
+                }
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="new-role" className="text-right">
+                Role
+              </Label>
+              <Select
+                value={newUser.role}
+                onValueChange={(value) =>
+                  setNewUser({ ...newUser, role: value })
+                }
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddUserOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateUser}>Create User</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              user.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

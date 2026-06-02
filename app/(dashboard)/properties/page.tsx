@@ -1,19 +1,13 @@
 "use client";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "@/components/ui/data-table";
 import { Edit, Eye, Trash2, Search, Filter, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-} from "@/components/ui/pagination";
 import {
   Select,
   SelectContent,
@@ -26,11 +20,32 @@ import {
   useDeletePropertyMutation,
   useUpdatePropertyMutation,
 } from "@/services/propertiesApi";
-import { Skeleton } from "@/components/ui/skeleton";
 import Swal from "sweetalert2";
 import { toast } from "sonner";
 import AddPropertyModal from "../../../components/AddPropertyModal";
 import EditPropertyModal from "../../../components/EditPropertyModal";
+
+interface PropertyRow {
+  _id: string;
+  title: string;
+  type: string;
+  category: string;
+  propertyCategory?: string;
+  price: number;
+  availability: string;
+  deal: string;
+  furnishing: string;
+  postedBy: string;
+  isVerified: boolean;
+  isActive: boolean;
+  image: string[];
+  description: string;
+  location: {
+    city: string;
+    state: string;
+    address: string;
+  };
+}
 
 export default function Properties() {
   const router = useRouter();
@@ -49,18 +64,15 @@ export default function Properties() {
     isVerified: "",
   });
 
-  // PAGINATION
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9;
-
   const {
     data: propertiesResponse,
     error,
     isLoading,
   } = useGetAllPropertiesQuery({
     includeInactive: "true",
+    limit: "500",
   });
-  const properties = propertiesResponse?.data ?? [];
+  const properties = (propertiesResponse?.data ?? []) as PropertyRow[];
   const [deleteProperty] = useDeletePropertyMutation();
   const [updateProperty, { isLoading: togglingActive }] =
     useUpdatePropertyMutation();
@@ -69,7 +81,7 @@ export default function Properties() {
   const filteredProperties = useMemo(() => {
     if (!properties) return [];
 
-    return properties.filter((property: any) => {
+    return properties.filter((property: PropertyRow) => {
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -79,7 +91,6 @@ export default function Properties() {
           property.location?.city?.toLowerCase().includes(query) ||
           property.location?.state?.toLowerCase().includes(query) ||
           property.location?.address?.toLowerCase().includes(query);
-
         if (!matchesSearch) return false;
       }
 
@@ -139,81 +150,7 @@ export default function Properties() {
     });
   }, [properties, searchQuery, filters]);
 
-  // PAGINATION LOGIC
-  const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
-
-  const paginatedProperties = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredProperties.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredProperties, currentPage, itemsPerPage]);
-
-  // RESET TO PAGE 1 WHEN FILTERS CHANGE
-  useMemo(() => {
-    if (currentPage > Math.ceil(filteredProperties.length / itemsPerPage)) {
-      setCurrentPage(1);
-    }
-  }, [filteredProperties.length, currentPage, itemsPerPage]);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  // GENERATE PAGE NUMBERS TO DISPLAY
-  const getPageNumbers = () => {
-    const pages: (number | "ellipsis")[] = [];
-    const maxVisiblePages = 5;
-
-    if (totalPages <= maxVisiblePages + 2) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1);
-      let start = Math.max(2, currentPage - 1);
-      let end = Math.min(totalPages - 1, currentPage + 1);
-
-      if (currentPage <= 2) {
-        start = 2;
-        end = Math.min(totalPages - 1, start + 2);
-      } else if (currentPage >= totalPages - 1) {
-        end = totalPages - 1;
-        start = Math.max(2, end - 2);
-      }
-
-      if (start > 2) pages.push("ellipsis");
-      for (let i = start; i <= end; i++) pages.push(i);
-      if (end < totalPages - 1) pages.push("ellipsis");
-      pages.push(totalPages);
-    }
-
-    return pages;
-  };
-
-  // CLEAR FILTERS
-  const clearFilters = () => {
-    setFilters({
-      type: "",
-      category: "",
-      availability: "",
-      deal: "",
-      furnishing: "",
-      postedBy: "",
-      isVerified: "",
-    });
-    setSearchQuery("");
-  };
-
-  // COUNT ACTIVE FILTERS
-  const activeFiltersCount = useMemo(() => {
-    return (
-      Object.values(filters).filter(Boolean).length + (searchQuery ? 1 : 0)
-    );
-  }, [filters, searchQuery]);
-
-  // OPEN ADD PROPERTY MODAL
-  const handleAddPropertyClick = () => {
-    console.log("Add Property clicked, setting modal to true");
-    setModalOpened(true);
-  };
+  // RESET PAGE WHEN FILTERS CHANGE (DataTable handles pagination internally)
 
   // DELETE PROPERTY
   const handleDelete = async (id: string, title: string) => {
@@ -240,7 +177,7 @@ export default function Properties() {
   // EDIT PROPERTY
   const handleEdit = (id: string) => {
     const propertyToEdit = properties?.find(
-      (property: any) => property._id === id,
+      (property: PropertyRow) => property._id === id,
     );
     if (propertyToEdit) {
       setSelectedProperty(propertyToEdit);
@@ -254,7 +191,7 @@ export default function Properties() {
   };
 
   // TOGGLE ACTIVE STATUS
-  const handleToggleActive = async (property: any) => {
+  const handleToggleActive = async (property: PropertyRow) => {
     const newStatus = !property.isActive;
     try {
       await updateProperty({
@@ -280,36 +217,347 @@ export default function Properties() {
     }
   };
 
-  // LOADING UI
-  if (isLoading) {
+  const columns: ColumnDef<PropertyRow>[] = [
+    {
+      accessorKey: "title",
+      header: "Title",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-14 rounded overflow-hidden flex-shrink-0 bg-muted">
+            <img
+              src={row.original.image?.[0] || "/placeholder.png"}
+              alt={row.original.title}
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <div>
+            <p className="font-medium line-clamp-1">{row.original.title}</p>
+            {row.original.location?.city && (
+              <p className="text-xs text-muted-foreground">
+                {row.original.location.city}
+                {row.original.location.state &&
+                  `, ${row.original.location.state}`}
+              </p>
+            )}
+          </div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "type",
+      header: "Type",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <Badge variant="outline" className="border-primary text-primary">
+          {row.getValue("type")}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "deal",
+      header: "Deal",
+      enableSorting: true,
+    },
+    {
+      accessorKey: "price",
+      header: "Price",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <span className="font-semibold">
+          ₹{Number(row.getValue("price")).toLocaleString("en-IN")}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "availability",
+      header: "Availability",
+      enableSorting: true,
+      cell: ({ row }) => {
+        const availability = row.getValue("availability") as string;
+        return (
+          <Badge
+            className={
+              availability === "Ready to Move"
+                ? "bg-green-500"
+                : "bg-yellow-500"
+            }
+          >
+            {availability}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "isVerified",
+      header: "Verified",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <Badge
+          variant={row.getValue("isVerified") ? "default" : "secondary"}
+          className={
+            row.getValue("isVerified")
+              ? "bg-green-500/20 text-green-600"
+              : "bg-gray-500/20 text-gray-500"
+          }
+        >
+          {row.getValue("isVerified") ? "Verified" : "Unverified"}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "isActive",
+      header: "Status",
+      enableSorting: true,
+      cell: ({ row }) => {
+        const property = row.original;
+        return (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleActive(property);
+            }}
+            disabled={togglingActive}
+            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider transition-all border-2 ${
+              property.isActive === false
+                ? "bg-red-100 text-red-700 border-red-400 hover:bg-red-200"
+                : "bg-green-100 text-green-700 border-green-400 hover:bg-green-200"
+            }`}
+          >
+            {property.isActive === false ? "Inactive" : "Active"}
+          </button>
+        );
+      },
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      enableSorting: false,
+      cell: ({ row }) => {
+        const property = row.original;
+        return (
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handleView(property._id)}
+            >
+              <Eye className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handleEdit(property._id)}
+            >
+              <Edit className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              onClick={() => handleDelete(property._id, property.title)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  // ACTIVE FILTERS COUNT
+  const activeFiltersCount = useMemo(() => {
     return (
-      <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-9 w-72" />
-          <Skeleton className="h-10 w-36" />
-        </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <Skeleton className="h-48 w-full" />
-              <CardContent className="p-4 space-y-2">
-                <Skeleton className="h-5 w-3/4" />
-                <div className="flex justify-between">
-                  <Skeleton className="h-5 w-1/4" />
-                  <Skeleton className="h-5 w-1/4" />
-                </div>
-                <Skeleton className="h-9 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+      Object.values(filters).filter(Boolean).length + (searchQuery ? 1 : 0)
     );
-  }
+  }, [filters, searchQuery]);
+
+  // CLEAR FILTERS
+  const clearFilters = () => {
+    setFilters({
+      type: "",
+      category: "",
+      availability: "",
+      deal: "",
+      furnishing: "",
+      postedBy: "",
+      isVerified: "",
+    });
+    setSearchQuery("");
+  };
+
+  const filterPanel = showFilters ? (
+    <Card className="border-slate-200">
+      <CardContent className="p-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">
+              Property Type
+            </label>
+            <Select
+              value={filters.type}
+              onValueChange={(value) => setFilters({ ...filters, type: value })}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Any Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any Type</SelectItem>
+                <SelectItem value="Residential">Residential</SelectItem>
+                <SelectItem value="Commercial">Commercial</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">
+              Category
+            </label>
+            <Select
+              value={filters.category}
+              onValueChange={(value) =>
+                setFilters({ ...filters, category: value })
+              }
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Any Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any Category</SelectItem>
+                <SelectItem value="Apartment/Flat">Apartment/Flat</SelectItem>
+                <SelectItem value="House/Villa">House/Villa</SelectItem>
+                <SelectItem value="Land/Plot">Land/Plot</SelectItem>
+                <SelectItem value="Retail">Retail</SelectItem>
+                <SelectItem value="Office">Office</SelectItem>
+                <SelectItem value="Industrial">Industrial</SelectItem>
+                <SelectItem value="Warehouse">Warehouse</SelectItem>
+                <SelectItem value="Shop/Showroom">Shop/Showroom</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">
+              Availability
+            </label>
+            <Select
+              value={filters.availability}
+              onValueChange={(value) =>
+                setFilters({ ...filters, availability: value })
+              }
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Any Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any Status</SelectItem>
+                <SelectItem value="Ready to Move">Ready to Move</SelectItem>
+                <SelectItem value="Under Construction">
+                  Under Construction
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">
+              Deal Type
+            </label>
+            <Select
+              value={filters.deal}
+              onValueChange={(value) => setFilters({ ...filters, deal: value })}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Any Deal" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any Deal</SelectItem>
+                <SelectItem value="Rent">Rent</SelectItem>
+                <SelectItem value="Sale">Sale</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">
+              Furnishing
+            </label>
+            <Select
+              value={filters.furnishing}
+              onValueChange={(value) =>
+                setFilters({ ...filters, furnishing: value })
+              }
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Any" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any</SelectItem>
+                <SelectItem value="Furnished">Furnished</SelectItem>
+                <SelectItem value="Semi Furnished">Semi Furnished</SelectItem>
+                <SelectItem value="Un-Furnished">Un-Furnished</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">
+              Posted By
+            </label>
+            <Select
+              value={filters.postedBy}
+              onValueChange={(value) =>
+                setFilters({ ...filters, postedBy: value })
+              }
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Any" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any</SelectItem>
+                <SelectItem value="Owner">Owner</SelectItem>
+                <SelectItem value="Agent">Agent</SelectItem>
+                <SelectItem value="Builder">Builder</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">
+              Verification
+            </label>
+            <Select
+              value={filters.isVerified}
+              onValueChange={(value) =>
+                setFilters({ ...filters, isVerified: value })
+              }
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Any" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any</SelectItem>
+                <SelectItem value="verified">Verified</SelectItem>
+                <SelectItem value="unverified">Unverified</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-end">
+            <Button onClick={clearFilters} variant="outline" className="w-full">
+              Clear Filters
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  ) : null;
 
   if (error) return <div>Error loading properties.</div>;
 
-  // MAIN PAGE
   return (
     <div className="space-y-6 animate-fade-in">
       {/* HEADER */}
@@ -324,7 +572,7 @@ export default function Properties() {
         </div>
 
         <button
-          onClick={handleAddPropertyClick}
+          onClick={() => setModalOpened(true)}
           className="bg-primary text-white px-4 py-2 rounded-md hover:bg-white hover:text-primary transition border border-primary"
         >
           Add Property
@@ -336,23 +584,20 @@ export default function Properties() {
 
       {selectedProperty && (
         <EditPropertyModal
-          key={selectedProperty._id} // Force re-mount when different property is selected
+          key={selectedProperty._id}
           opened={editModalOpened}
           setOpened={setEditModalOpened}
           propertyData={selectedProperty}
           onSuccess={() => {
-            // Refresh the properties list after successful edit
-            // This will be handled by RTK Query invalidation
             setSelectedProperty(null);
           }}
         />
       )}
 
-      {/* SEARCH AND FILTERS */}
+      {/* SEARCH + FILTER TOGGLE */}
       <Card className="bg-gradient-to-r from-slate-50 to-blue-50 border-slate-200">
         <CardContent className="p-6">
           <div className="space-y-4">
-            {/* SEARCH BAR */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
@@ -364,7 +609,6 @@ export default function Properties() {
               />
             </div>
 
-            {/* FILTER TOGGLE */}
             <div className="flex items-center justify-between">
               <Button
                 variant="outline"
@@ -395,377 +639,20 @@ export default function Properties() {
                 </Button>
               )}
             </div>
-
-            {/* FILTER OPTIONS */}
-            {showFilters && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-200">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Property Type
-                  </label>
-                  <Select
-                    value={filters.type}
-                    onValueChange={(value) =>
-                      setFilters({ ...filters, type: value })
-                    }
-                  >
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Any Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any Type</SelectItem>
-                      <SelectItem value="Residential">Residential</SelectItem>
-                      <SelectItem value="Commercial">Commercial</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Category
-                  </label>
-                  <Select
-                    value={filters.category}
-                    onValueChange={(value) =>
-                      setFilters({ ...filters, category: value })
-                    }
-                  >
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Any Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any Category</SelectItem>
-                      <SelectItem value="Apartment/Flat">
-                        Apartment/Flat
-                      </SelectItem>
-                      <SelectItem value="House/Villa">House/Villa</SelectItem>
-                      <SelectItem value="Land/Plot">Land/Plot</SelectItem>
-                      <SelectItem value="Retail">Retail</SelectItem>
-                      <SelectItem value="Office">Office</SelectItem>
-                      <SelectItem value="Industrial">Industrial</SelectItem>
-                      <SelectItem value="Warehouse">Warehouse</SelectItem>
-                      <SelectItem value="Shop/Showroom">
-                        Shop/Showroom
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Availability
-                  </label>
-                  <Select
-                    value={filters.availability}
-                    onValueChange={(value) =>
-                      setFilters({ ...filters, availability: value })
-                    }
-                  >
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Any Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any Status</SelectItem>
-                      <SelectItem value="Ready to Move">
-                        Ready to Move
-                      </SelectItem>
-                      <SelectItem value="Under Construction">
-                        Under Construction
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Deal Type
-                  </label>
-                  <Select
-                    value={filters.deal}
-                    onValueChange={(value) =>
-                      setFilters({ ...filters, deal: value })
-                    }
-                  >
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Any Deal" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any Deal</SelectItem>
-                      <SelectItem value="Rent">Rent</SelectItem>
-                      <SelectItem value="Sale">Sale</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Furnishing
-                  </label>
-                  <Select
-                    value={filters.furnishing}
-                    onValueChange={(value) =>
-                      setFilters({ ...filters, furnishing: value })
-                    }
-                  >
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Any" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any</SelectItem>
-                      <SelectItem value="Furnished">Furnished</SelectItem>
-                      <SelectItem value="Semi Furnished">
-                        Semi Furnished
-                      </SelectItem>
-                      <SelectItem value="Un-Furnished">Un-Furnished</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Posted By
-                  </label>
-                  <Select
-                    value={filters.postedBy}
-                    onValueChange={(value) =>
-                      setFilters({ ...filters, postedBy: value })
-                    }
-                  >
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Any" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any</SelectItem>
-                      <SelectItem value="Owner">Owner</SelectItem>
-                      <SelectItem value="Agent">Agent</SelectItem>
-                      <SelectItem value="Builder">Builder</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Verification
-                  </label>
-                  <Select
-                    value={filters.isVerified}
-                    onValueChange={(value) =>
-                      setFilters({ ...filters, isVerified: value })
-                    }
-                  >
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Any" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any</SelectItem>
-                      <SelectItem value="verified">Verified</SelectItem>
-                      <SelectItem value="unverified">Unverified</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-end">
-                  <Button
-                    onClick={clearFilters}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* RESULTS COUNT */}
-      <div className="flex items-center justify-between text-sm text-slate-600">
-        <span>
-          Showing{" "}
-          {filteredProperties.length > 0
-            ? `${(currentPage - 1) * itemsPerPage + 1}–${Math.min(
-                currentPage * itemsPerPage,
-                filteredProperties.length,
-              )}`
-            : "0"}{" "}
-          of {filteredProperties.length} properties
-        </span>
-        <span className="hidden sm:inline">
-          {activeFiltersCount > 0 && `${activeFiltersCount} filters applied`}
-        </span>
-      </div>
+      {filterPanel}
 
-      {/* PROPERTIES GRID */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredProperties.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <div className="text-slate-400 mb-4">
-              <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium">No properties found</h3>
-              <p>Try adjusting your search or filters</p>
-            </div>
-            <Button onClick={clearFilters} variant="outline">
-              Clear all filters
-            </Button>
-          </div>
-        ) : (
-          paginatedProperties.map((property: any) => (
-            <Card
-              key={property._id}
-              className="group overflow-hidden border border-border bg-card hover:shadow-lg transition-all"
-            >
-              {/* IMAGE */}
-              <div className="relative aspect-video overflow-hidden bg-muted">
-                <img
-                  src={property.image?.[0] || "/placeholder.png"}
-                  alt={property.title}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-
-                {/* Active Toggle - Left Top */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleToggleActive(property);
-                  }}
-                  disabled={togglingActive}
-                  className={`absolute left-2 top-2 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider transition-all border-2 ${
-                    property.isActive === false
-                      ? "bg-red-100 text-red-700 border-red-400 hover:bg-red-200"
-                      : "bg-green-100 text-green-700 border-green-400 hover:bg-green-200"
-                  }`}
-                >
-                  {property.isActive === false ? "Inactive" : "Active"}
-                </button>
-
-                <Badge
-                  className={`absolute right-2 top-2 ${
-                    property.availability === "Ready to Move"
-                      ? "bg-green-500"
-                      : "bg-yellow-500"
-                  }`}
-                >
-                  {property.availability}
-                </Badge>
-              </div>
-
-              {/* DETAILS */}
-              <CardContent className="p-4">
-                <h3 className="mb-2 font-semibold text-foreground line-clamp-1">
-                  {property.title}
-                </h3>
-
-                <div className="mb-3 flex items-center justify-between">
-                  <Badge
-                    variant="outline"
-                    className="border-primary text-primary"
-                  >
-                    {property.type}
-                  </Badge>
-
-                  <span className="text-lg font-bold text-black">
-                    ₹{property.price}
-                  </span>
-                </div>
-
-                {/* BUTTONS */}
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => handleView(property._id)}
-                  >
-                    <Eye className="mr-1 h-3 w-3" /> View
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => handleEdit(property._id)}
-                  >
-                    <Edit className="mr-1 h-3 w-3" /> Edit
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 border-destructive text-destructive hover:bg-destructive hover:text-white"
-                    onClick={() => handleDelete(property._id, property.title)}
-                  >
-                    <Trash2 className="mr-1 h-3 w-3" /> Delete
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-
-      {/* PAGINATION */}
-      {totalPages > 1 && (
-        <Pagination className="mt-8">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (currentPage > 1) handlePageChange(currentPage - 1);
-                }}
-                className={
-                  currentPage <= 1
-                    ? "pointer-events-none opacity-50"
-                    : "cursor-pointer"
-                }
-              />
-            </PaginationItem>
-
-            {getPageNumbers().map((page, index) =>
-              page === "ellipsis" ? (
-                <PaginationItem key={`ellipsis-${index}`}>
-                  <span className="flex h-9 w-9 items-center justify-center text-sm text-muted-foreground">
-                    ...
-                  </span>
-                </PaginationItem>
-              ) : (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    href="#"
-                    isActive={currentPage === page}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(page);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ),
-            )}
-
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (currentPage < totalPages)
-                    handlePageChange(currentPage + 1);
-                }}
-                className={
-                  currentPage >= totalPages
-                    ? "pointer-events-none opacity-50"
-                    : "cursor-pointer"
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      )}
+      {/* TABLE */}
+      <DataTable
+        columns={columns}
+        data={filteredProperties}
+        isLoading={isLoading}
+        loadingRows={10}
+        pageSize={50}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Navbar from "./Navbar";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { RootState } from "@/store/store";
 import { useGetCurrentUserQuery } from "@/services/authApi";
 import { setUser } from "@/store/authSlice";
+import { useTokenRefresh } from "@/hooks/useTokenRefresh";
 
 // ✅ Make Sidebar client-only
 const Sidebar = dynamic(() => import("./Sidebar"), { ssr: false });
@@ -25,6 +26,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   const router = useRouter();
   const dispatch = useDispatch();
+
+  // ✅ Proactive token refresh - keeps the session alive by refreshing
+  //    the access token every 12 minutes (before the 15-minute expiry)
+  useTokenRefresh();
 
   // Fetch current user if we have a token but no user data
   const {
@@ -54,21 +59,52 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   // ✅ Handle user data updates from API
   useEffect(() => {
-    if (currentUserData?.user && !user) {
-      // If we got user data from API but don't have it in state, update state
-      dispatch(setUser({ user: currentUserData.user, token: token || "" }));
+    if (currentUserData?.user) {
+      // If we got user data from API, update state (preserve existing token)
+      dispatch(
+        setUser({
+          user: currentUserData.user,
+          token: token || "",
+        }),
+      );
     }
   }, [currentUserData, user, token, dispatch]);
 
-  // ✅ Handle authentication errors
+  // ✅ Handle authentication errors - try refresh before logging out
   useEffect(() => {
-    if (error) {
-      console.error("Authentication error:", error);
-      // Clear auth state and redirect to login
-      dispatch({ type: "auth/clearAuthState" });
-      router.replace("/auth");
+    if (error && isAuthenticated) {
+      console.error("Authentication error, attempting refresh:", error);
+
+      // Attempt to refresh the token before logging out
+      const attemptRefreshThenLogout = async () => {
+        try {
+          const API_URL =
+            process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000/api";
+          const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
+            method: "POST",
+            credentials: "include",
+          });
+
+          if (refreshResponse.ok) {
+            const refreshData = await refreshResponse.json();
+            if (refreshData.success) {
+              // Refresh successful - refetch user data
+              refetch();
+              return;
+            }
+          }
+        } catch (refreshError) {
+          console.warn("Refresh during error handling failed:", refreshError);
+        }
+
+        // If refresh didn't work, clear auth state and redirect
+        dispatch({ type: "auth/clearAuthState" });
+        router.replace("/auth");
+      };
+
+      attemptRefreshThenLogout();
     }
-  }, [error, dispatch, router]);
+  }, [error, dispatch, router, isAuthenticated, refetch]);
 
   // ✅ Check authentication status on mount
   useEffect(() => {

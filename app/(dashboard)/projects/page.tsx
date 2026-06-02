@@ -1,6 +1,8 @@
 "use client";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "@/components/ui/data-table";
 import { Edit, Trash2, Search, Filter, X, Plus, Eye } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,10 +20,37 @@ import {
   useDeleteProjectMutation,
   useUpdateProjectMutation,
 } from "@/services/projectsApi";
-import { Skeleton } from "@/components/ui/skeleton";
 import Swal from "sweetalert2";
 import { toast } from "sonner";
 import Link from "next/link";
+
+interface ProjectRow {
+  _id: string;
+  name: string;
+  slug: string;
+  description: string;
+  projectType: string;
+  constructionStatus: string;
+  reraNumber?: string;
+  isActive: boolean;
+  isFeatured: boolean;
+  isVerified: boolean;
+  location?: {
+    city?: string;
+    sector?: string;
+    address?: string;
+  };
+  developer?: {
+    name?: string;
+  };
+  pricing?: {
+    from?: number;
+    to?: number;
+  };
+  media?: {
+    images?: string[];
+  };
+}
 
 export default function ProjectsList() {
   const router = useRouter();
@@ -37,9 +66,9 @@ export default function ProjectsList() {
   });
 
   const { data: projectsResponse, error, isLoading } = useGetProjectsQuery({});
-  const projects = Array.isArray(projectsResponse)
-    ? projectsResponse
-    : (projectsResponse?.data ?? []);
+  const projects: ProjectRow[] = Array.isArray(projectsResponse)
+    ? (projectsResponse as ProjectRow[])
+    : ((projectsResponse as any)?.data ?? []);
   const [deleteProject] = useDeleteProjectMutation();
   const [updateProject, { isLoading: togglingActive }] =
     useUpdateProjectMutation();
@@ -48,7 +77,7 @@ export default function ProjectsList() {
   const filteredProjects = useMemo(() => {
     if (!projects) return [];
 
-    return projects.filter((project: any) => {
+    return projects.filter((project: ProjectRow) => {
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -152,7 +181,7 @@ export default function ProjectsList() {
   };
 
   // TOGGLE ACTIVE STATUS
-  const handleToggleActive = async (project: any) => {
+  const handleToggleActive = async (project: ProjectRow) => {
     const newStatus = !project.isActive;
     try {
       await updateProject({
@@ -167,36 +196,309 @@ export default function ProjectsList() {
     }
   };
 
-  // LOADING UI
-  if (isLoading) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-9 w-72" />
-          <Skeleton className="h-10 w-36" />
+  const columns: ColumnDef<ProjectRow>[] = [
+    {
+      accessorKey: "name",
+      header: "Name",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-14 rounded overflow-hidden flex-shrink-0 bg-muted">
+            <img
+              src={row.original.media?.images?.[0] || "/placeholder.png"}
+              alt={row.original.name}
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <div>
+            <p className="font-medium line-clamp-1">{row.original.name}</p>
+            {row.original.developer?.name && (
+              <p className="text-xs text-muted-foreground">
+                {row.original.developer.name}
+              </p>
+            )}
+          </div>
         </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <Skeleton className="h-48 w-full" />
-              <CardContent className="p-4 space-y-2">
-                <Skeleton className="h-5 w-3/4" />
-                <div className="flex justify-between">
-                  <Skeleton className="h-5 w-1/4" />
-                  <Skeleton className="h-5 w-1/4" />
-                </div>
-                <Skeleton className="h-9 w-full" />
-              </CardContent>
-            </Card>
-          ))}
+      ),
+    },
+    {
+      accessorKey: "projectType",
+      header: "Type",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <Badge variant="outline" className="border-primary text-primary">
+          {row.getValue("projectType")}
+        </Badge>
+      ),
+    },
+    {
+      id: "location",
+      header: "Location",
+      enableSorting: false,
+      cell: ({ row }) => {
+        const loc = row.original.location;
+        if (!loc?.city) return "—";
+        return (
+          <span className="text-muted-foreground">
+            {loc.city}
+            {loc.sector && ` - ${loc.sector}`}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "constructionStatus",
+      header: "Status",
+      enableSorting: true,
+      cell: ({ row }) => {
+        const status = row.getValue("constructionStatus") as string;
+        const colorMap: Record<string, string> = {
+          "Ready to Move": "bg-green-500",
+          "Under Construction": "bg-yellow-500",
+          "Newly Launched": "bg-blue-500",
+          Upcoming: "bg-purple-500",
+        };
+        return (
+          <Badge className={colorMap[status] || "bg-gray-500"}>{status}</Badge>
+        );
+      },
+    },
+    {
+      id: "pricing",
+      header: "Price Range",
+      enableSorting: false,
+      cell: ({ row }) => {
+        const pricing = row.original.pricing;
+        if (!pricing?.from) return "—";
+        const from = (pricing.from / 10000000).toFixed(2);
+        const to = pricing.to ? (pricing.to / 10000000).toFixed(2) : null;
+        return (
+          <span className="font-semibold">
+            ₹{from} Cr{to ? ` - ₹${to} Cr` : ""}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "isActive",
+      header: "Active",
+      enableSorting: true,
+      cell: ({ row }) => {
+        const project = row.original;
+        return (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleActive(project);
+            }}
+            disabled={togglingActive}
+            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider transition-all border-2 ${
+              project.isActive === false
+                ? "bg-red-100 text-red-700 border-red-400 hover:bg-red-200"
+                : "bg-green-100 text-green-700 border-green-400 hover:bg-green-200"
+            }`}
+          >
+            {project.isActive === false ? "Inactive" : "Active"}
+          </button>
+        );
+      },
+    },
+    {
+      accessorKey: "isVerified",
+      header: "Verified",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <Badge
+          variant={row.getValue("isVerified") ? "default" : "secondary"}
+          className={
+            row.getValue("isVerified")
+              ? "bg-green-500/20 text-green-600"
+              : "bg-gray-500/20 text-gray-500"
+          }
+        >
+          {row.getValue("isVerified") ? "Yes" : "No"}
+        </Badge>
+      ),
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      enableSorting: false,
+      cell: ({ row }) => {
+        const project = row.original;
+        return (
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() =>
+                router.push(`/projects/edit-project/${project.slug}`)
+              }
+            >
+              <Edit className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              onClick={() => handleDelete(project._id, project.name)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const filterPanel = showFilters ? (
+    <Card className="border-slate-200">
+      <CardContent className="p-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">
+              Project Type
+            </label>
+            <Select
+              value={filters.projectType}
+              onValueChange={(value) =>
+                setFilters({ ...filters, projectType: value })
+              }
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Any Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any Type</SelectItem>
+                <SelectItem value="Residential">Residential</SelectItem>
+                <SelectItem value="Commercial">Commercial</SelectItem>
+                <SelectItem value="Mixed-Use">Mixed-Use</SelectItem>
+                <SelectItem value="Industrial">Industrial</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">
+              Construction Status
+            </label>
+            <Select
+              value={filters.constructionStatus}
+              onValueChange={(value) =>
+                setFilters({ ...filters, constructionStatus: value })
+              }
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Any Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any Status</SelectItem>
+                <SelectItem value="Ready to Move">Ready to Move</SelectItem>
+                <SelectItem value="Under Construction">
+                  Under Construction
+                </SelectItem>
+                <SelectItem value="Newly Launched">Newly Launched</SelectItem>
+                <SelectItem value="Upcoming">Upcoming</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">City</label>
+            <Select
+              value={filters.city}
+              onValueChange={(value) => setFilters({ ...filters, city: value })}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Any City" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any City</SelectItem>
+                <SelectItem value="Chandigarh">Chandigarh</SelectItem>
+                <SelectItem value="Mohali">Mohali</SelectItem>
+                <SelectItem value="Panchkula">Panchkula</SelectItem>
+                <SelectItem value="Zirakpur">Zirakpur</SelectItem>
+                <SelectItem value="New Chandigarh">New Chandigarh</SelectItem>
+                <SelectItem value="Kharar">Kharar</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">Status</label>
+            <Select
+              value={filters.isActive}
+              onValueChange={(value) =>
+                setFilters({ ...filters, isActive: value })
+              }
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Any" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">
+              Featured
+            </label>
+            <Select
+              value={filters.isFeatured}
+              onValueChange={(value) =>
+                setFilters({ ...filters, isFeatured: value })
+              }
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Any" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any</SelectItem>
+                <SelectItem value="featured">Featured</SelectItem>
+                <SelectItem value="not-featured">Not Featured</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">
+              Verified
+            </label>
+            <Select
+              value={filters.isVerified}
+              onValueChange={(value) =>
+                setFilters({ ...filters, isVerified: value })
+              }
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Any" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any</SelectItem>
+                <SelectItem value="verified">Verified</SelectItem>
+                <SelectItem value="unverified">Unverified</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-end">
+            <Button onClick={clearFilters} variant="outline" className="w-full">
+              Clear Filters
+            </Button>
+          </div>
         </div>
-      </div>
-    );
-  }
+      </CardContent>
+    </Card>
+  ) : null;
 
   if (error) return <div>Error loading projects.</div>;
 
-  // MAIN PAGE
   return (
     <div className="space-y-6 animate-fade-in">
       {/* HEADER */}
@@ -265,156 +567,11 @@ export default function ProjectsList() {
                 </Button>
               )}
             </div>
-
-            {/* FILTER OPTIONS */}
-            {showFilters && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t border-slate-200">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Project Type
-                  </label>
-                  <Select
-                    value={filters.projectType}
-                    onValueChange={(value) =>
-                      setFilters({ ...filters, projectType: value })
-                    }
-                  >
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Any Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any Type</SelectItem>
-                      <SelectItem value="Residential">Residential</SelectItem>
-                      <SelectItem value="Commercial">Commercial</SelectItem>
-                      <SelectItem value="Mixed-Use">Mixed-Use</SelectItem>
-                      <SelectItem value="Industrial">Industrial</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Construction Status
-                  </label>
-                  <Select
-                    value={filters.constructionStatus}
-                    onValueChange={(value) =>
-                      setFilters({ ...filters, constructionStatus: value })
-                    }
-                  >
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Any Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any Status</SelectItem>
-                      <SelectItem value="Ready to Move">
-                        Ready to Move
-                      </SelectItem>
-                      <SelectItem value="Under Construction">
-                        Under Construction
-                      </SelectItem>
-                      <SelectItem value="Newly Launched">
-                        Newly Launched
-                      </SelectItem>
-                      <SelectItem value="Upcoming">Upcoming</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    City
-                  </label>
-                  <Select
-                    value={filters.city}
-                    onValueChange={(value) =>
-                      setFilters({ ...filters, city: value })
-                    }
-                  >
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Any City" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any City</SelectItem>
-                      <SelectItem value="Chandigarh">Chandigarh</SelectItem>
-                      <SelectItem value="Mohali">Mohali</SelectItem>
-                      <SelectItem value="Panchkula">Panchkula</SelectItem>
-                      <SelectItem value="Zirakpur">Zirakpur</SelectItem>
-                      <SelectItem value="New Chandigarh">
-                        New Chandigarh
-                      </SelectItem>
-                      <SelectItem value="Kharar">Kharar</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Status
-                  </label>
-                  <Select
-                    value={filters.isActive}
-                    onValueChange={(value) =>
-                      setFilters({ ...filters, isActive: value })
-                    }
-                  >
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Any" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Featured
-                  </label>
-                  <Select
-                    value={filters.isFeatured}
-                    onValueChange={(value) =>
-                      setFilters({ ...filters, isFeatured: value })
-                    }
-                  >
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Any" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any</SelectItem>
-                      <SelectItem value="featured">Featured</SelectItem>
-                      <SelectItem value="not-featured">Not Featured</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Verified
-                  </label>
-                  <Select
-                    value={filters.isVerified}
-                    onValueChange={(value) =>
-                      setFilters({ ...filters, isVerified: value })
-                    }
-                  >
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Any" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="any">Any</SelectItem>
-                      <SelectItem value="verified">Verified</SelectItem>
-                      <SelectItem value="unverified">Unverified</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
+
+      {filterPanel}
 
       {/* RESULTS COUNT */}
       <div className="flex items-center justify-between text-sm text-slate-600">
@@ -426,135 +583,15 @@ export default function ProjectsList() {
         </span>
       </div>
 
-      {/* PROJECTS GRID */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredProjects.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <div className="text-slate-400 mb-4">
-              <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium">No projects found</h3>
-              <p>Try adjusting your search or filters</p>
-            </div>
-            <Button onClick={clearFilters} variant="outline">
-              Clear all filters
-            </Button>
-          </div>
-        ) : (
-          filteredProjects.map((project: any) => (
-            <Card
-              key={project._id}
-              className="group overflow-hidden border border-border bg-card hover:shadow-lg transition-all"
-            >
-              {/* IMAGE */}
-              <div className="relative aspect-video overflow-hidden bg-muted">
-                <img
-                  src={project.media?.images?.[0] || "/placeholder.png"}
-                  alt={project.name}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-
-                {/* Active Toggle - Left Top */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleToggleActive(project);
-                  }}
-                  disabled={togglingActive}
-                  className={`absolute left-2 top-2 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider transition-all border-2 ${
-                    project.isActive === false
-                      ? "bg-red-100 text-red-700 border-red-400 hover:bg-red-200"
-                      : "bg-green-100 text-green-700 border-green-400 hover:bg-green-200"
-                  }`}
-                >
-                  {project.isActive === false ? "Inactive" : "Active"}
-                </button>
-
-                <Badge
-                  className={`absolute right-2 top-2 ${
-                    project.constructionStatus === "Ready to Move"
-                      ? "bg-green-500"
-                      : project.constructionStatus === "Under Construction"
-                        ? "bg-yellow-500"
-                        : project.constructionStatus === "Newly Launched"
-                          ? "bg-blue-500"
-                          : "bg-purple-500"
-                  }`}
-                >
-                  {project.constructionStatus}
-                </Badge>
-              </div>
-
-              {/* DETAILS */}
-              <CardContent className="p-4">
-                <h3 className="mb-1 font-semibold text-foreground line-clamp-1">
-                  {project.name}
-                </h3>
-
-                {/* Developer name */}
-                {project.developer?.name && (
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {project.developer.name}
-                  </p>
-                )}
-
-                {/* Location */}
-                {project.location?.city && (
-                  <p className="text-xs text-muted-foreground mb-2">
-                    {project.location.city}
-                    {project.location.sector && ` - ${project.location.sector}`}
-                  </p>
-                )}
-
-                <div className="mb-3 flex items-center justify-between">
-                  <Badge
-                    variant="outline"
-                    className="border-primary text-primary"
-                  >
-                    {project.projectType}
-                  </Badge>
-
-                  <span className="text-lg font-bold text-black">
-                    ₹{(project.pricing?.from / 10000000).toFixed(2)} Cr
-                    {project.pricing?.to &&
-                      ` - ₹${(project.pricing.to / 10000000).toFixed(2)} Cr`}
-                  </span>
-                </div>
-
-                {/* RERA Number */}
-                {project.reraNumber && (
-                  <p className="text-[10px] text-muted-foreground mb-2">
-                    RERA: {project.reraNumber}
-                  </p>
-                )}
-
-                {/* BUTTONS */}
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() =>
-                      router.push(`/projects/edit-project/${project.slug}`)
-                    }
-                  >
-                    <Edit className="mr-1 h-3 w-3" /> Edit
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 border-destructive text-destructive hover:bg-destructive hover:text-white"
-                    onClick={() => handleDelete(project._id, project.name)}
-                  >
-                    <Trash2 className="mr-1 h-3 w-3" /> Delete
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+      {/* TABLE */}
+      <DataTable
+        columns={columns}
+        data={filteredProjects}
+        isLoading={isLoading}
+        loadingRows={10}
+        hidePagination
+        pageSize={filteredProjects.length || 10}
+      />
     </div>
   );
 }

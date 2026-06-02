@@ -179,10 +179,11 @@ interface RichTextEditorProps {
   content?: string; // Accept either markdown or HTML content
   isStreaming?: boolean;
   isMarkdown?: boolean; // Flag to indicate if content is markdown
+  onChange?: () => void; // Callback when editor content changes
 }
 
 const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
-  ({ content = "", isStreaming = false, isMarkdown = true }, ref) => {
+  ({ content = "", isStreaming = false, isMarkdown = true, onChange }, ref) => {
     const editorRef = useRef<LexicalEditor | null>(null);
     const prevContentRef = useRef<string>("");
     const editorContainerRef = useRef<HTMLDivElement | null>(null);
@@ -349,7 +350,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
                 ErrorBoundary={LexicalErrorBoundary}
               />
               <HistoryPlugin />
-              <EditorCapturePlugin editorRef={editorRef} />
+              <EditorCapturePlugin editorRef={editorRef} onChange={onChange} />
             </div>
           </LexicalComposer>
         </div>

@@ -5,39 +5,36 @@
    =================================================================== */
 
 /* --- Heading 1 --- */
-/* Frontend: <h1 className="text-4xl font-extrabold my-6" /> */
 .editor-heading-h1 {
-  font-size: 2.25rem;       /* text-4xl */
+  font-size: 2.25rem;
   line-height: 2.5rem;
-  font-weight: 800;         /* font-extrabold */
-  margin-top: 1.5rem;       /* my-6 */
+  font-weight: 800;
+  margin-top: 1.5rem;
   margin-bottom: 1.5rem;
-  color: #1e293b;           /* slate-800 for readability */
+  color: #1e293b;
   letter-spacing: -0.02em;
 }
 
 /* --- Heading 2 --- */
-/* Frontend: <h2 className="text-3xl font-bold my-5 border-b pb-2" /> */
 .editor-heading-h2 {
-  font-size: 1.875rem;      /* text-3xl */
+  font-size: 1.875rem;
   line-height: 2.25rem;
-  font-weight: 700;         /* font-bold */
-  margin-top: 1.25rem;      /* my-5 */
+  font-weight: 700;
+  margin-top: 1.25rem;
   margin-bottom: 1.25rem;
-  padding-bottom: 0.5rem;   /* pb-2 */
-  border-bottom: 1px solid #e2e8f0; /* border-b slate-200 */
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
   color: #1e293b;
 }
 
 /* --- Heading 3 --- */
-/* Frontend: <h3 className="text-2xl font-semibold my-4" /> */
 .editor-heading-h3 {
-  font-size: 1.5rem;        /* text-2xl */
+  font-size: 1.5rem;
   line-height: 2rem;
-  font-weight: 600;         /* font-semibold */
-  margin-top: 1rem;         /* my-4 */
+  font-weight: 600;
+  margin-top: 1rem;
   margin-bottom: 1rem;
-  color: #334155;           /* slate-700 */
+  color: #334155;
 }
 
 /* --- Heading 4 --- */
@@ -61,50 +58,47 @@
 }
 
 /* --- Paragraph --- */
-/* Frontend: <p className="text-gray-700 leading-relaxed my-4" /> */
 .editor-paragraph {
-  color: #374151;           /* text-gray-700 */
-  line-height: 1.625;       /* leading-relaxed */
-  margin-top: 1rem;         /* my-4 */
-  margin-bottom: 1rem;
+  color: #374151;
+  line-height: 1.75;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
   font-size: 1rem;
 }
 
 /* --- Unordered List --- */
-/* Frontend: <ul className="list-disc ml-6 my-4 space-y-2" /> */
 .editor-list-ul {
-  list-style-type: disc;    /* list-disc */
-  margin-left: 1.5rem;      /* ml-6 */
-  margin-top: 1rem;         /* my-4 */
-  margin-bottom: 1rem;
+  list-style-type: disc;
+  margin-left: 1.5rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
   padding-left: 0;
 }
 
 .editor-list-ul > .editor-listitem {
-  margin-top: 0.5rem;       /* space-y-2 (applied between items) */
-  margin-bottom: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 
 /* --- Ordered List --- */
 .editor-list-ol {
   list-style-type: decimal;
   margin-left: 1.5rem;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
   padding-left: 0;
 }
 
 .editor-list-ol > .editor-listitem {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 
 /* --- List Item --- */
-/* Frontend: <li className="text-gray-700" /> */
 .editor-listitem {
-  color: #374151;           /* text-gray-700 */
+  color: #374151;
   font-size: 1rem;
-  line-height: 1.625;
+  line-height: 1.75;
 }
 
 /* --- Nested List Item --- */
@@ -136,41 +130,51 @@
 
 /* --- Editor Input Area --- */
 .editor-input {
-  min-height: 400px;
+  min-height: 500px;
   resize: vertical;
-  padding: 1.25rem 1.5rem;
+  padding: 1.5rem 2rem;
   outline: none;
   font-size: 1rem;
-  line-height: 1.625;
+  line-height: 1.75;
   color: #1e293b;
   background: #ffffff;
   tab-size: 1;
+  caret-color: #4161df;
 }
 
 .editor-input:focus {
   outline: none;
 }
 
+.editor-input p:first-child {
+  margin-top: 0;
+}
+
 .editor-placeholder {
-  color: #94a3b8;
+  color: #cbd5e1;
   overflow: hidden;
   position: absolute;
   text-overflow: ellipsis;
-  top: 1.25rem;
-  left: 1.5rem;
+  top: 1.5rem;
+  left: 2rem;
   font-size: 1rem;
   user-select: none;
   display: inline-block;
   pointer-events: none;
+  font-style: italic;
 }
 
 /* --- Editor Container --- */
 .editor-container {
-  border-radius: 0.75rem;
-  border: 1px solid #e2e8f0;
+  border-radius: 0;
+  border: none;
   background: #ffffff;
   position: relative;
   overflow: hidden;
+}
+
+.editor-container:focus-within {
+  box-shadow: none;
 }
 
 .editor-content-area {
@@ -180,7 +184,25 @@
 
 /* --- Rich Text Editor Wrapper --- */
 .rich-text-editor-wrapper .editor-container {
-  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  box-shadow: none;
+}
+
+/* Smooth scrollbar for editor */
+.editor-input::-webkit-scrollbar {
+  width: 6px;
+}
+
+.editor-input::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.editor-input::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 3px;
+}
+
+.editor-input::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
 }
 
 /* Ensure proper spacing in nested content */
@@ -193,14 +215,14 @@
 }
 
 .editor-input p {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .editor-input ul,
 .editor-input ol {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 /* Code block styling */
@@ -245,4 +267,16 @@
   margin: 1.5rem 0;
   color: #475569;
   font-style: italic;
+}
+
+/* Selection styling */
+.editor-input ::selection {
+  background-color: rgba(65, 97, 223, 0.15);
+  color: inherit;
+}
+
+/* Improve focus indicator for the content area */
+.editor-content-area:focus-within .editor-input {
+  background-color: #fafbfc;
+  transition: background-color 0.2s ease;
 }

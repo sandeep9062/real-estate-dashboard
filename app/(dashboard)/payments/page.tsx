@@ -1,16 +1,77 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+"use client";
+
+import { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { payments } from "@/lib/mockData";
 
-export default function Payments() {
+interface Payment {
+  id: string;
+  amount: string;
+  method: string;
+  date: string;
+  property: string;
+  user: string;
+  status: string;
+}
+
+const columns: ColumnDef<Payment>[] = [
+  {
+    accessorKey: "amount",
+    header: "Amount",
+    enableSorting: true,
+    cell: ({ row }) => (
+      <span className="font-bold text-accent">{row.getValue("amount")}</span>
+    ),
+  },
+  {
+    accessorKey: "method",
+    header: "Method",
+    enableSorting: true,
+    cell: ({ row }) => (
+      <Badge variant="outline" className="border-primary text-primary">
+        {row.getValue("method")}
+      </Badge>
+    ),
+  },
+  {
+    accessorKey: "date",
+    header: "Date",
+    enableSorting: true,
+  },
+  {
+    accessorKey: "property",
+    header: "Property",
+    enableSorting: true,
+  },
+  {
+    accessorKey: "user",
+    header: "User",
+    enableSorting: true,
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    enableSorting: true,
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      return (
+        <Badge
+          variant={status === "Success" ? "default" : "destructive"}
+          className={
+            status === "Success"
+              ? "bg-green-500/20 text-green-500 hover:bg-green-500/30"
+              : ""
+          }
+        >
+          {status}
+        </Badge>
+      );
+    },
+  },
+];
+
+export default function PaymentsPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -18,55 +79,13 @@ export default function Payments() {
         <p className="text-muted-foreground">View all payment transactions</p>
       </div>
 
-      <Card className="border-border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-border hover:bg-transparent">
-              <TableHead>Amount</TableHead>
-              <TableHead>Method</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Property</TableHead>
-              <TableHead>User</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {payments.map((payment) => (
-              <TableRow key={payment.id} className="border-border">
-                <TableCell className="font-bold text-accent">
-                  {payment.amount}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="border-primary text-primary">
-                    {payment.method}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {payment.date}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {payment.property}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {payment.user}
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={payment.status === "Success" ? "default" : "destructive"}
-                    className={
-                      payment.status === "Success"
-                        ? "bg-green-500/20 text-green-500 hover:bg-green-500/30"
-                        : ""
-                    }
-                  >
-                    {payment.status}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+      <DataTable
+        columns={columns}
+        data={payments}
+        globalSearch
+        searchPlaceholder="Search payments..."
+        pageSize={10}
+      />
     </div>
   );
 }

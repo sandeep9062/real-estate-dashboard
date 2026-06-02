@@ -1,5 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import type { BaseQueryApi, BaseQueryFn } from "@reduxjs/toolkit/query/react";
 import { RootState } from "../store/store";
+import { setUser } from "../store/authSlice";
 
 // Helper function to get cookie value
 const getCookie = (name: string): string | null => {
@@ -13,13 +15,17 @@ const getCookie = (name: string): string | null => {
   return null;
 };
 
-// Helper function to set cookie (for development/testing)
-const setCookie = (name: string, value: string, days: number) => {
-  if (typeof document === "undefined") return;
+// Token refresh mutex to prevent concurrent refresh attempts
+let isRefreshing = false;
+let refreshSubscribers: Array<(token: string) => void> = [];
 
-  const expires = new Date();
-  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+const onRefreshed = (token: string) => {
+  refreshSubscribers.forEach((callback) => callback(token));
+  refreshSubscribers = [];
+};
+
+const addRefreshSubscriber = (callback: (token: string) => void) => {
+  refreshSubscribers.push(callback);
 };
 
 // Create our baseQuery instance
@@ -33,33 +39,53 @@ const baseQuery = fetchBaseQuery({
       typeof window !== "undefined" ? localStorage.getItem("token") : null;
     const cookieToken = getCookie("accessToken");
 
-    console.log("BaseQuery - Store token:", token);
-    console.log("BaseQuery - LocalStorage token:", localStorageToken);
-    console.log("BaseQuery - Cookie token:", cookieToken);
-
     // Use token from store first, fallback to localStorage, then cookies
     const finalToken = token || localStorageToken || cookieToken;
 
     if (finalToken) {
       headers.set("authorization", `Bearer ${finalToken}`);
-      console.log("BaseQuery - Setting authorization header");
-    } else {
-      console.log(
-        "BaseQuery - No token found, request will be unauthenticated",
-      );
     }
 
     return headers;
   },
 });
 
+/**
+ * Store tokens from login/refresh responses in both localStorage and Redux
+ */
+const storeAuthResult = async (
+  api: BaseQueryApi,
+  data: { user?: any; token?: string } | undefined,
+) => {
+  if (!data || !data.user) return null;
+
+  const cookieToken = getCookie("accessToken");
+  const responseToken = data.token;
+  const newToken = cookieToken || responseToken;
+
+  if (newToken) {
+    // Update localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem("token", newToken);
+      localStorage.setItem("user", JSON.stringify(data.user));
+    }
+
+    // Update Redux store
+    api.dispatch(setUser({ user: data.user, token: newToken }));
+
+    return newToken;
+  }
+
+  return null;
+};
+
 // Enhanced base query that also handles token storage from responses
-export const baseQueryWithAuth = async (
+export const baseQueryWithAuth: BaseQueryFn = async (
   args: any,
-  api: any,
+  api: BaseQueryApi,
   extraOptions: any,
 ) => {
-  // First, check if we have a token from cookies and store it in localStorage for consistency
+  // Sync cookie token to localStorage if needed
   const cookieToken = getCookie("accessToken");
   if (
     cookieToken &&
@@ -67,106 +93,102 @@ export const baseQueryWithAuth = async (
     !localStorage.getItem("token")
   ) {
     localStorage.setItem("token", cookieToken);
-    console.log("BaseQueryWithAuth - Stored cookie token in localStorage");
   }
 
   const result = await baseQuery(args, api, extraOptions);
 
-  // If this is a login/register response and we have a user, store the user data
-  // Note: The backend sets tokens as cookies, not in the response body
+  // If this is a login/register/refresh response with user data, store it
   const data = result.data as any;
-  if (data && data.user && !data.token) {
-    // Store user data in localStorage for development/testing
-    if (typeof window !== "undefined") {
-      localStorage.setItem("user", JSON.stringify(data.user));
-    }
-
-    // Try to get token from cookies and store it in localStorage for consistency
-    const cookieToken = getCookie("accessToken");
-    if (cookieToken) {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("token", cookieToken);
-      }
-      console.log("BaseQueryWithAuth - Stored login token in localStorage");
-    } else {
-      // If no cookie token, check if token is in response (fallback)
-      if (data.token) {
-        if (typeof window !== "undefined") {
-          localStorage.setItem("token", data.token);
-        }
-        console.log(
-          "BaseQueryWithAuth - Stored response token in localStorage",
-        );
-      } else {
-        console.warn(
-          "BaseQueryWithAuth - No token found in cookies or response",
-        );
-      }
-    }
+  if (data && data.user) {
+    await storeAuthResult(api, data);
   }
 
   // Handle token expiration - if we get a 401, try to refresh the token
   if (result.error && result.error.status === 401) {
     console.log("BaseQueryWithAuth - Token expired, attempting refresh");
 
-    // Try to refresh the token
-    const refreshResult = await baseQuery(
-      { url: "auth/refresh", method: "POST" },
-      api,
-      extraOptions,
-    );
+    if (!isRefreshing) {
+      isRefreshing = true;
 
-    if (refreshResult.data) {
-      // Token refresh successful, retry the original request
-      console.log(
-        "BaseQueryWithAuth - Token refreshed, retrying original request",
-      );
+      try {
+        // Try to refresh the token
+        const refreshResult = await baseQuery(
+          { url: "auth/refresh", method: "POST" },
+          api,
+          extraOptions,
+        );
 
-      // Store the new token
-      const newCookieToken = getCookie("accessToken");
-      if (newCookieToken) {
-        if (typeof window !== "undefined") {
-          localStorage.setItem("token", newCookieToken);
-        }
-      } else {
-        // Try to get token from refresh response
         const refreshData = refreshResult.data as any;
-        if (refreshData && refreshData.token) {
-          if (typeof window !== "undefined") {
-            localStorage.setItem("token", refreshData.token);
+
+        if (refreshData && refreshData.success !== false) {
+          // Token refresh successful
+          const newCookieToken = getCookie("accessToken");
+          const newToken = newCookieToken || refreshData.token;
+
+          if (newToken) {
+            // Store in localStorage
+            if (typeof window !== "undefined") {
+              localStorage.setItem("token", newToken);
+              if (refreshData.user) {
+                localStorage.setItem("user", JSON.stringify(refreshData.user));
+                api.dispatch(
+                  setUser({ user: refreshData.user, token: newToken }),
+                );
+              }
+            }
+
+            // Notify all queued requests that refresh completed
+            onRefreshed(newToken);
+
+            // Retry the original request with the new token
+            isRefreshing = false;
+            return baseQuery(args, api, extraOptions);
           }
         }
-      }
 
-      // Retry the original request with the new token
-      return baseQuery(args, api, extraOptions);
+        // Token refresh failed
+        isRefreshing = false;
+        refreshSubscribers = [];
+        console.log(
+          "BaseQueryWithAuth - Token refresh failed, redirecting to login",
+        );
+
+        // Clear authentication state
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+        }
+
+        // Clear cookies
+        if (typeof document !== "undefined") {
+          document.cookie =
+            "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=propertybulbul.com";
+          document.cookie =
+            "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=propertybulbul.com";
+          document.cookie =
+            "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+          document.cookie =
+            "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+        }
+
+        // Redirect to login page
+        if (typeof window !== "undefined") {
+          window.location.href = "/auth";
+        }
+      } catch (refreshError) {
+        isRefreshing = false;
+        refreshSubscribers = [];
+        console.error("BaseQueryWithAuth - Refresh error:", refreshError);
+      }
     } else {
-      console.log(
-        "BaseQueryWithAuth - Token refresh failed, redirecting to login",
-      );
-      // Token refresh failed, clear authentication state
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-      }
-
-      // Clear cookies
-      if (typeof document !== "undefined") {
-        document.cookie =
-          "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=propertybulbul.com";
-        document.cookie =
-          "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=propertybulbul.com";
-        // Also clear without domain for localhost development
-        document.cookie =
-          "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
-        document.cookie =
-          "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
-      }
-
-      // Redirect to login page
-      if (typeof window !== "undefined") {
-        window.location.href = "/auth";
-      }
+      // Another refresh is already in progress, queue this request
+      console.log("BaseQueryWithAuth - Refresh in progress, queuing request");
+      return new Promise((resolve) => {
+        addRefreshSubscriber((newToken: string) => {
+          // Retry the original request with the new token
+          resolve(baseQuery(args, api, extraOptions));
+        });
+      });
     }
   }
 
