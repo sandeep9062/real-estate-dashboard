@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -184,6 +184,20 @@ export default function Users() {
           {row.getValue("role")}
         </Badge>
       ),
+    },
+    {
+      accessorKey: "propertyCount",
+      header: "Properties",
+      enableSorting: true,
+      cell: ({ row }) => {
+        const count = row.getValue<number>("propertyCount") || 0;
+        return (
+          <div className="flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium">{count}</span>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "isActive",

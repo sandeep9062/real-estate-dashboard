@@ -21,6 +21,7 @@ export interface User {
   favProperties: any[];
   bookings: any[];
   ownedProperties: any[];
+  propertyCount?: number;
 }
 
 interface UpdateUserPayload {
@@ -56,7 +57,7 @@ export const userApi = createApi({
         url: `/users`,
         method: "POST",
         body: data,
-      }), 
+      }),
       invalidatesTags: ["User"],
     }),
 
@@ -71,7 +72,10 @@ export const userApi = createApi({
         "User",
         { type: "User", id },
       ],
-      async onQueryStarted({ id, data }, { dispatch, getState, queryFulfilled }) {
+      async onQueryStarted(
+        { id, data },
+        { dispatch, getState, queryFulfilled },
+      ) {
         const state = getState() as RootState;
         const currentUser = state.auth.user;
         const token = state.auth.token || "";
@@ -116,10 +120,7 @@ export const userApi = createApi({
     }),
 
     // ✅ Book a property visit
-    bookVisit: builder.mutation<
-      User,
-      { propertyId: string; date: string }
-    >({
+    bookVisit: builder.mutation<User, { propertyId: string; date: string }>({
       query: ({ propertyId, date }) => ({
         url: `/users/bookings`,
         method: "POST",
@@ -128,7 +129,7 @@ export const userApi = createApi({
       invalidatesTags: ["User"],
       async onQueryStarted(
         { propertyId, date },
-        { dispatch, getState, queryFulfilled }
+        { dispatch, getState, queryFulfilled },
       ) {
         const state = getState() as RootState;
         const currentUser = state.auth.user;
@@ -144,7 +145,7 @@ export const userApi = createApi({
           setUser({
             user: optimistic,
             token,
-          })
+          }),
         );
 
         try {
@@ -172,7 +173,7 @@ export const userApi = createApi({
         const optimistic = {
           ...currentUser,
           bookings: (currentUser.bookings || []).filter(
-            (b: any) => b?.id !== propertyId
+            (b: any) => b?.id !== propertyId,
           ),
         } as User as any;
 
@@ -207,22 +208,22 @@ export const userApi = createApi({
             if (draft) {
               const cardId = card._id || card.id;
               const isFavourited = draft.favProperties.some((fav: any) => {
-                const favId = typeof fav === "string" ? fav : fav?._id || fav?.id;
+                const favId =
+                  typeof fav === "string" ? fav : fav?._id || fav?.id;
                 return favId === cardId;
               });
 
               if (isFavourited) {
-                draft.favProperties = draft.favProperties.filter(
-                  (fav: any) => {
-                    const favId = typeof fav === "string" ? fav : fav?._id || fav?.id;
-                    return favId !== cardId;
-                  }
-                );
+                draft.favProperties = draft.favProperties.filter((fav: any) => {
+                  const favId =
+                    typeof fav === "string" ? fav : fav?._id || fav?.id;
+                  return favId !== cardId;
+                });
               } else {
                 draft.favProperties.push(card);
               }
             }
-          })
+          }),
         );
 
         try {
@@ -231,7 +232,7 @@ export const userApi = createApi({
             setUser({
               user: updatedUser,
               token: localStorage.getItem("token") || "",
-            })
+            }),
           );
         } catch {
           patchResult.undo();
