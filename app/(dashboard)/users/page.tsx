@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
-import { Edit, Trash2, Building2 } from "lucide-react";
+import { Edit, Trash2, Building2, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -152,6 +152,29 @@ export default function Users() {
   };
 
   const columns: ColumnDef<User>[] = [
+    {
+      id: "avatar",
+      header: "",
+      enableSorting: false,
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <div className="flex items-center justify-center">
+            {user.image ? (
+              <img
+                src={user.image}
+                alt={user.name}
+                className="h-8 w-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                <UserIcon className="h-4 w-4 text-muted-foreground" />
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
     {
       accessorKey: "name",
       header: "Name",
@@ -353,6 +376,9 @@ export default function Users() {
                   <SelectContent>
                     <SelectItem value="user">User</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="agent">Agent</SelectItem>
+                    <SelectItem value="landlord">Landlord</SelectItem>
+                    <SelectItem value="builder">Builder</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
