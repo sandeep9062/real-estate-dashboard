@@ -18,6 +18,7 @@ import { Eye, Users, MessageCircle, FileText, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
+  firstImageUrl,
   useGetAllLeadsQuery,
   type AdminLead,
   type LeadPropertyLocation,
@@ -140,16 +141,33 @@ export default function Leads() {
       header: "Property",
       cell: ({ row }) => {
         const property = row.original.property;
+        // Property.image is an array of URLs — render only the first one.
+        const imageUrl = firstImageUrl(property?.image);
         return (
-          <div className="max-w-[220px]">
-            <p className="font-medium truncate">
-              {property?.title || "Deleted property"}
-            </p>
-            <p className="text-xs text-muted-foreground truncate">
-              {formatLocation(property?.location) ||
-                property?.deal ||
-                "—"}
-            </p>
+          <div className="flex items-center gap-3">
+            {imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={imageUrl}
+                alt={property?.title || "Property"}
+                className="h-10 w-14 shrink-0 rounded-md border border-border/60 bg-muted object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-md border border-border/60 bg-muted text-muted-foreground">
+                <FileText className="h-4 w-4" aria-hidden />
+              </span>
+            )}
+            <div className="max-w-[220px] min-w-0">
+              <p className="font-medium truncate">
+                {property?.title || "Deleted property"}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {formatLocation(property?.location) ||
+                  property?.deal ||
+                  "—"}
+              </p>
+            </div>
           </div>
         );
       },

@@ -36,7 +36,8 @@ export interface AdminLead {
     _id: string;
     title: string;
     slug?: string;
-    image?: string;
+    /** Property model stores an array of image URLs (may also arrive comma-joined). */
+    image?: string | string[];
     deal?: string;
     price?: number;
     location?: string | LeadPropertyLocation | null;
@@ -60,6 +61,27 @@ export interface AdminLead {
   lastActivityAt?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * Pick the first usable image URL from a property image field.
+ * Property.image is an array of URLs but legacy data may hold a
+ * single string or a comma-joined string — handle all shapes.
+ */
+export function firstImageUrl(
+  image: string | string[] | null | undefined,
+): string | null {
+  const candidates =
+    typeof image === "string"
+      ? image.split(",")
+      : Array.isArray(image)
+        ? image
+        : [];
+  for (const candidate of candidates) {
+    const url = typeof candidate === "string" ? candidate.trim() : "";
+    if (url) return url;
+  }
+  return null;
 }
 
 export interface AdminLeadFilters {
