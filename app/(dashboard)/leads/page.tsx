@@ -20,6 +20,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   useGetAllLeadsQuery,
   type AdminLead,
+  type LeadPropertyLocation,
 } from "@/services/leadsApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { selectIsAuthenticated, selectUser } from "@/store/authSlice";
@@ -35,6 +36,25 @@ const STATUS_BADGE_STYLES: Record<string, string> = {
   // Legacy brochure-request statuses
   pending: "bg-yellow-500/20 text-yellow-600 border-yellow-400/30",
   converted: "bg-green-500/20 text-green-600 border-green-400/30",
+};
+
+/**
+ * Safely format a property location for display.
+ * `location` can be an embedded object (`{ address, city, state, ... }`)
+ * or a legacy plain string. Rendering the object directly in JSX causes
+ * "Minified React error #31" (objects are not valid as a React child),
+ * so always pass it through this helper.
+ */
+const formatLocation = (
+  location: string | LeadPropertyLocation | null | undefined,
+): string => {
+  if (!location) return "";
+  if (typeof location === "string") return location;
+
+  return [location.address, location.city, location.state, location.country]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(", ");
 };
 
 const getStatusBadgeStyle = (status: string) =>
@@ -126,7 +146,9 @@ export default function Leads() {
               {property?.title || "Deleted property"}
             </p>
             <p className="text-xs text-muted-foreground truncate">
-              {property?.location || property?.deal || "—"}
+              {formatLocation(property?.location) ||
+                property?.deal ||
+                "—"}
             </p>
           </div>
         );
