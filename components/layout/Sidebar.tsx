@@ -7,6 +7,7 @@ import { logoutSuccess } from "@/store/authSlice";
 import {
   LayoutDashboard,
   Users,
+  UserPlus,
   Building2,
   Calendar,
   CreditCard,
@@ -33,6 +34,7 @@ const menuItems = [
   { title: "Properties", icon: Building2, path: "/properties" },
   { title: "Projects", icon: Building2, path: "/projects" },
   { title: "Bookings", icon: Calendar, path: "/bookings" },
+  { title: "Leads", icon: UserPlus, path: "/leads" },
   { title: "Payments", icon: CreditCard, path: "/payments" },
   { title: "Reviews", icon: Star, path: "/reviews" },
   { title: "Settings", icon: Settings, path: "/settings" },
