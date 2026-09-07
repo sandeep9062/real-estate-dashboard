@@ -46,6 +46,16 @@ const splitList = (value: string) =>
     .map((v) => v.trim())
     .filter(Boolean);
 
+/* Extract a readable message from an RTK Query / fetch error */
+const getErrMsg = (e: any) => {
+  if (typeof e?.data === "string" && e.data.trim()) return e.data.trim();
+  if (e?.data?.message) return e.data.message;
+  if (e?.status === 404)
+    return "API endpoint not found — the backend may be missing the latest code.";
+  if (e?.status) return `Request failed (HTTP ${e.status}).`;
+  return "Please try again.";
+};
+
 const joinList = (value?: string[] | null) => (value || []).join(", ");
 
 /* ── Field primitives ──────────────────────────────────────────────────── */
@@ -620,7 +630,7 @@ export default function EditUserPage() {
     } catch (e: any) {
       toast({
         title: "Failed to update user",
-        description: e?.data?.message || "Please try again.",
+        description: getErrMsg(e),
         variant: "destructive",
       });
     }
@@ -661,7 +671,7 @@ export default function EditUserPage() {
     } catch (e: any) {
       toast({
         title: "Failed to update agent profile",
-        description: e?.data?.message || "Please try again.",
+        description: getErrMsg(e),
         variant: "destructive",
       });
     }
@@ -676,7 +686,7 @@ export default function EditUserPage() {
     } catch (e: any) {
       toast({
         title: "Failed to create agent profile",
-        description: e?.data?.message || "Please try again.",
+        description: getErrMsg(e),
         variant: "destructive",
       });
     }
@@ -728,7 +738,7 @@ export default function EditUserPage() {
     } catch (e: any) {
       toast({
         title: "Failed to update landlord profile",
-        description: e?.data?.message || "Please try again.",
+        description: getErrMsg(e),
         variant: "destructive",
       });
     }
@@ -743,7 +753,7 @@ export default function EditUserPage() {
     } catch (e: any) {
       toast({
         title: "Failed to create landlord profile",
-        description: e?.data?.message || "Please try again.",
+        description: getErrMsg(e),
         variant: "destructive",
       });
     }
