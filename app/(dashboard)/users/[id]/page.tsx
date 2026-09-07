@@ -9,18 +9,12 @@ import {
   Briefcase,
   Building2,
   CalendarDays,
-  Clock3,
   FileText,
-  Globe,
   IdCard,
   Landmark,
   Mail,
-  MapPin,
-  MessageCircle,
   Phone,
   ShieldCheck,
-  Star,
-  Trophy,
   User as UserIcon,
   Users,
 } from "lucide-react";
@@ -108,23 +102,28 @@ const ChipList = ({ items, fallback }: { items?: string[]; fallback?: string }) 
   );
 };
 
-const StatTile = ({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: React.ReactNode;
-  color: string;
-}) => (
-  <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-gray-50 p-4">
-    <Icon className={`h-5 w-5 ${color}`} />
-    <p className="mt-1 text-2xl font-bold text-gray-900">{value ?? "—"}</p>
-    <p className="text-xs text-slate-500">{label}</p>
-  </div>
+const FieldGrid = ({ fields }: { fields: Array<{ label: string; value?: React.ReactNode }> }) => {
+  const visible = fields.filter(
+    (f) => f.value !== undefined && f.value !== null && f.value !== "",
+  );
+  if (visible.length === 0) return null;
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1">
+      {visible.map((f, i) => (
+        <div key={i} className="flex items-center justify-between gap-2 border-b border-gray-100 py-1.5">
+          <span className="min-w-0 text-xs text-slate-500">{f.label}</span>
+          <span className="truncate text-sm font-medium text-slate-900">{f.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const SectionLabel = ({ children }: { children: React.ReactNode }) => (
+  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{children}</p>
 );
+
+const yesNo = (v?: boolean) => (v === true ? "Yes" : v === false ? "No" : undefined);
 
 const ProfileLoading = ({ role }: { role: string }) => (
   <Card className="border border-gray-200 shadow-lg rounded-2xl">
@@ -150,19 +149,11 @@ const AgentProfileCard = ({ agent }: { agent: any }) => {
   const name = agent?.name || "Agent";
   const title = agent?.title || "Real Estate Agent";
 
-  const details = [
-    { icon: Mail, label: "Email", value: agent?.email },
-    { icon: Phone, label: "Phone", value: agent?.phone },
-    { icon: MessageCircle, label: "WhatsApp", value: agent?.whatsapp },
-    { icon: Briefcase, label: "Agency", value: agent?.agencyName },
-  ].filter((d) => d.value);
-
-  const stats = [
-    { icon: Star, label: "Rating", value: agent?.rating || "—" },
-    { icon: Trophy, label: "Deals", value: agent?.deals ?? "—" },
-    { icon: Clock3, label: "Response", value: agent?.responseTime },
-    { icon: BadgeCheck, label: "Experience", value: agent?.experience ? `${agent.experience} yrs` : "—" },
-  ];
+  const statusBadge =
+    agent?.status === "active"
+      ? "bg-green-100 text-green-700 border-green-200"
+      : "bg-red-100 text-red-700 border-red-200";
+  const unverifiedBadge = "bg-amber-100 text-amber-700 border-amber-200";
 
   return (
     <Card className="border border-gray-200 shadow-lg rounded-2xl">
@@ -172,22 +163,27 @@ const AgentProfileCard = ({ agent }: { agent: any }) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-5 space-y-5">
-        <div className="flex items-center gap-3">
-          {avatar ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatar} alt={name} className="h-14 w-14 rounded-full object-cover ring-2 ring-blue-100" />
-          ) : (
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold">
-              {initials(name)}
+        <div>
+          <div className="flex items-center gap-3">
+            {avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatar} alt={name} className="h-14 w-14 rounded-full object-cover ring-2 ring-blue-100" />
+            ) : (
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold">
+                {initials(name)}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="font-semibold text-gray-900">{name}</p>
+              <p className="text-sm text-slate-500">{title}</p>
             </div>
-          )}
-          <div>
-            <p className="font-semibold text-gray-900">{name}</p>
-            <p className="text-sm text-slate-500">{title}</p>
           </div>
-          <Badge className={`ml-auto px-2.5 py-1 text-xs capitalize border ${agent?.verified ? "bg-green-100 text-green-700 border-green-200" : "bg-amber-100 text-amber-700 border-amber-200"}`}>
-            {agent?.verified ? "Verified" : "Unverified"}
-          </Badge>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <Badge className={`border px-2.5 py-1 text-xs capitalize ${agent?.verified ? "bg-green-100 text-green-700 border-green-200" : unverifiedBadge}`}>{agent?.verified ? "Verified" : "Unverified"}</Badge>
+            <Badge className={`border px-2.5 py-1 text-xs capitalize ${agent?.topAgent ? "bg-purple-100 text-purple-700 border-purple-200" : unverifiedBadge}`}>{agent?.topAgent ? "Top Agent" : "Not Top Agent"}</Badge>
+            <Badge className={`border px-2.5 py-1 text-xs capitalize ${statusBadge}`}>{agent?.status || "—"}</Badge>
+            <Badge className={`border px-2.5 py-1 text-xs capitalize ${agent?.featured ? "bg-green-100 text-green-700 border-green-200" : unverifiedBadge}`}>{agent?.featured ? "Featured" : "Not Featured"}</Badge>
+          </div>
         </div>
 
         {agent?.profileCompleteness != null && (
@@ -202,45 +198,129 @@ const AgentProfileCard = ({ agent }: { agent: any }) => {
           </div>
         )}
 
-        {agent?.bio && <p className="text-sm text-slate-600 leading-relaxed">{agent.bio}</p>}
-
-        {details.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {details.map((d, i) => (
-              <IconWithLabel key={i} icon={d.icon} label={d.label} value={d.value} />
-            ))}
+        <div className="space-y-4">
+          <div>
+            <SectionLabel>About</SectionLabel>
+            <p className="text-sm text-slate-600 leading-relaxed mt-1">{agent?.bio || "—"}</p>
+            {agent?.longBio && <p className="text-sm text-slate-500 leading-relaxed mt-2">{agent.longBio}</p>}
           </div>
-        )}
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {stats.map((s, i) => (
-            <StatTile key={i} icon={s.icon} label={s.label} value={s.value} color="text-blue-500" />
-          ))}
+          <div>
+            <SectionLabel>Identity</SectionLabel>
+            <FieldGrid fields={[
+              { label: "ID (_id)", value: agent?._id },
+              { label: "User ID (userID)", value: agent?.userID },
+              { label: "Slug", value: agent?.slug },
+            ]} />
+          </div>
+
+          <div>
+            <SectionLabel>Contact</SectionLabel>
+            <FieldGrid fields={[
+              { label: "Email", value: agent?.email },
+              { label: "Phone", value: agent?.phone },
+              { label: "WhatsApp", value: agent?.whatsapp },
+            ]} />
+          </div>
+
+          <div>
+            <SectionLabel>Agency & Registration</SectionLabel>
+            <FieldGrid fields={[
+              { label: "Agency Name", value: agent?.agencyName },
+              { label: "RERA Number", value: agent?.rera },
+            ]} />
+          </div>
+
+          <div>
+            <SectionLabel>Performance Stats</SectionLabel>
+            <FieldGrid fields={[
+              { label: "Rating", value: agent?.rating ?? "—" },
+              { label: "Total Reviews", value: agent?.totalReviews ?? "—" },
+              { label: "Experience (Years)", value: agent?.experience ?? "—" },
+              { label: "Deals Closed", value: agent?.deals ?? "—" },
+              { label: "Response Time", value: agent?.responseTime || "—" },
+              { label: "Response Rate", value: agent?.responseRate || "—" },
+            ]} />
+          </div>
+
+        <div>
+            <SectionLabel>Service Areas</SectionLabel>
+            <div className="mt-1.5 space-y-2">
+              <div className="flex items-start gap-2">
+                <span className="w-32 shrink-0 text-xs text-slate-500">Locations</span>
+                <ChipList items={agent?.locations} fallback="—" />
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="w-32 shrink-0 text-xs text-slate-500">Specialisations</span>
+                <ChipList items={agent?.specialisations} fallback="—" />
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="w-32 shrink-0 text-xs text-slate-500">Languages</span>
+                <ChipList items={agent?.languages} fallback="—" />
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="w-32 shrink-0 text-xs text-slate-500">Achievements</span>
+                <ChipList items={agent?.achievements} fallback="—" />
+              </div>
+            </div>
+          </div>
+
+          {Array.isArray(agent?.stats) && agent.stats.length > 0 && (
+            <div>
+              <SectionLabel>Custom Stats</SectionLabel>
+              <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {agent.stats.map((s: any, i: number) => (
+                  <div key={i} className="rounded-lg border border-gray-100 bg-gray-50 p-3 text-center">
+                    <p className="text-lg">{s.icon || "📊"}</p>
+                    <p className="mt-1 text-sm font-bold text-gray-900">{s.value || "—"}</p>
+                    <p className="text-xs text-slate-500">{s.label || "—"}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <SectionLabel>Branding & Visuals</SectionLabel>
+            <div className="mt-1.5 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="w-32 shrink-0 text-xs text-slate-500">Avatar Color</span>
+                <span className="h-4 w-4 rounded-full border border-gray-200" style={{ backgroundColor: agent?.avatarColor || "#4161df" }} />
+                <span className="text-xs font-mono text-slate-600">{agent?.avatarColor || "—"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-32 shrink-0 text-xs text-slate-500">Cover Color</span>
+                <span className="h-4 w-4 rounded-full border border-gray-200" style={{ backgroundColor: agent?.coverColor || "#0d1640" }} />
+                <span className="text-xs font-mono text-slate-600">{agent?.coverColor || "—"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-32 shrink-0 text-xs text-slate-500">Cover Image</span>
+                {agent?.coverImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={agent.coverImage} alt="Cover" className="h-10 w-16 rounded object-cover" />
+                ) : (
+                  <span className="text-sm text-slate-400">—</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <SectionLabel>SEO</SectionLabel>
+            <FieldGrid fields={[
+              { label: "Meta Title", value: agent?.metaTitle },
+              { label: "Meta Description", value: agent?.metaDescription },
+            ]} />
+          </div>
+
+          <div>
+            <SectionLabel>Timestamps</SectionLabel>
+            <FieldGrid fields={[
+              { label: "Created At", value: formatDate(agent?.createdAt) },
+              { label: "Updated At", value: formatDate(agent?.updatedAt) },
+            ]} />
+          </div>
         </div>
-
-        {agent?.locations?.length > 0 && (
-          <div>
-            <p className="text-xs font-medium text-slate-500 mb-1.5">Locations</p>
-            <ChipList items={agent.locations} />
-          </div>
-        )}
-        {agent?.specialisations?.length > 0 && (
-          <div>
-            <p className="text-xs font-medium text-slate-500 mb-1.5">Specialisations</p>
-            <ChipList items={agent.specialisations} />
-          </div>
-        )}
-        {agent?.languages?.length > 0 && (
-          <div>
-            <p className="text-xs font-medium text-slate-500 mb-1.5">Languages</p>
-            <ChipList items={agent.languages} />
-          </div>
-        )}
-        {agent?.rera && (
-          <div className="border-t pt-3">
-            <DetailRow label="RERA Number" value={agent.rera} />
-          </div>
-        )}
       </CardContent>
     </Card>
   );
@@ -251,21 +331,11 @@ const LandlordProfileCard = ({ landlord }: { landlord: any }) => {
   const name = landlord?.name || "Landlord";
   const title = landlord?.title || "Property Owner";
 
-  const details = [
-    { icon: Mail, label: "Email", value: landlord?.email },
-    { icon: Phone, label: "Phone", value: landlord?.phone },
-    { icon: MessageCircle, label: "WhatsApp", value: landlord?.whatsapp },
-    { icon: MapPin, label: "Address", value: landlord?.address },
-    { icon: Building2, label: "City", value: landlord?.city },
-    { icon: Globe, label: "State", value: landlord?.state },
-  ].filter((d) => d.value);
-
-  const stats = [
-    { icon: Star, label: "Rating", value: landlord?.rating || "—" },
-    { icon: Building2, label: "Properties", value: landlord?.totalProperties ?? "—" },
-    { icon: Bookmark, label: "Active Listings", value: landlord?.activeListings ?? "—" },
-    { icon: Trophy, label: "Deals", value: landlord?.totalDeals ?? "—" },
-  ];
+  const unverifiedBadge = "bg-amber-100 text-amber-700 border-amber-200";
+  const statusBadge =
+    landlord?.status === "active"
+      ? "bg-green-100 text-green-700 border-green-200"
+      : "bg-red-100 text-red-700 border-red-200";
 
   return (
     <Card className="border border-gray-200 shadow-lg rounded-2xl">
@@ -275,79 +345,206 @@ const LandlordProfileCard = ({ landlord }: { landlord: any }) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-5 space-y-5">
-        <div className="flex items-center gap-3">
-          {avatar ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatar} alt={name} className="h-14 w-14 rounded-full object-cover ring-2 ring-amber-100" />
-          ) : (
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-700 font-bold">
-              {initials(name)}
+        <div>
+          <div className="flex items-center gap-3">
+            {avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatar} alt={name} className="h-14 w-14 rounded-full object-cover ring-2 ring-amber-100" />
+            ) : (
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-700 font-bold">
+                {initials(name)}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="font-semibold text-gray-900">{name}</p>
+              <p className="text-sm text-slate-500">{title}</p>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <Badge className={`border px-2.5 py-1 text-xs capitalize ${landlord?.isVerified ? "bg-green-100 text-green-700 border-green-200" : unverifiedBadge}`}>{landlord?.isVerified ? "Verified" : "Unverified"}</Badge>
+            <Badge className={`border px-2.5 py-1 text-xs capitalize ${landlord?.identityVerified ? "bg-green-100 text-green-700 border-green-200" : unverifiedBadge}`}>{landlord?.identityVerified ? "ID Verified" : "ID Not Verified"}</Badge>
+            <Badge className="border bg-slate-100 text-slate-700 border-slate-200 px-2.5 py-1 text-xs capitalize">{landlord?.isCompany ? "Company" : "Individual"}</Badge>
+            <Badge className={`border px-2.5 py-1 text-xs capitalize ${statusBadge}`}>{landlord?.status || "—"}</Badge>
+            <Badge className={`border px-2.5 py-1 text-xs capitalize ${landlord?.featured ? "bg-green-100 text-green-700 border-green-200" : unverifiedBadge}`}>{landlord?.featured ? "Featured" : "Not Featured"}</Badge>
+          </div>
+        </div>
+
+        {landlord?.profileCompleteness != null && (
+          <div>
+            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+              <span>Profile completeness</span>
+              <span>{landlord.profileCompleteness}%</span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-slate-100">
+              <div className="h-2 rounded-full bg-amber-500" style={{ width: `${landlord.profileCompleteness}%` }} />
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <div>
+            <SectionLabel>About</SectionLabel>
+            <p className="text-sm text-slate-600 leading-relaxed mt-1">{landlord?.bio || "—"}</p>
+            {landlord?.longBio && <p className="text-sm text-slate-500 leading-relaxed mt-2">{landlord.longBio}</p>}
+          </div>
+
+          <div>
+            <SectionLabel>Identity</SectionLabel>
+            <FieldGrid fields={[
+              { label: "ID (_id)", value: landlord?._id },
+              { label: "User ID (userID)", value: landlord?.userID },
+              { label: "Slug", value: landlord?.slug },
+              { label: "Member Since", value: landlord?.memberSince ? formatDate(landlord.memberSince) : undefined },
+            ]} />
+          </div>
+
+          <div>
+            <SectionLabel>Contact</SectionLabel>
+            <FieldGrid fields={[
+              { label: "Email", value: landlord?.email },
+              { label: "Phone", value: landlord?.phone },
+              { label: "WhatsApp", value: landlord?.whatsapp },
+            ]} />
+          </div>
+
+          <div>
+            <SectionLabel>Address</SectionLabel>
+            <FieldGrid fields={[
+              { label: "Address", value: landlord?.address },
+              { label: "City", value: landlord?.city },
+              { label: "State", value: landlord?.state },
+              { label: "Pincode", value: landlord?.pincode },
+            ]} />
+          </div>
+
+          <div>
+            <SectionLabel>Preferences</SectionLabel>
+            <FieldGrid fields={[
+              { label: "Preferred Contact Method", value: landlord?.preferences?.contactMethod },
+              { label: "Available Timings", value: landlord?.preferences?.availableTimings },
+              { label: "Accepts Site Visits", value: yesNo(landlord?.preferences?.acceptsVisits) },
+            ]} />
+          </div>
+
+          <div>
+            <SectionLabel>Portfolio & Performance</SectionLabel>
+            <FieldGrid fields={[
+              { label: "Rating", value: landlord?.rating ?? "—" },
+              { label: "Total Reviews", value: landlord?.totalReviews ?? "—" },
+              { label: "Total Properties", value: landlord?.totalProperties ?? "—" },
+              { label: "Active Listings", value: landlord?.activeListings ?? "—" },
+              { label: "Deals Closed", value: landlord?.totalDeals ?? "—" },
+              { label: "Response Time", value: landlord?.responseTime },
+              { label: "Response Rate", value: landlord?.responseRate },
+            ]} />
+          </div>
+
+          <div>
+            <SectionLabel>Service Areas</SectionLabel>
+            <div className="mt-1.5 space-y-2">
+              <div className="flex items-start gap-2">
+                <span className="w-32 shrink-0 text-xs text-slate-500">Property Types</span>
+                <ChipList items={landlord?.propertyTypes} fallback="—" />
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="w-32 shrink-0 text-xs text-slate-500">Locations</span>
+                <ChipList items={landlord?.locations} fallback="—" />
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="w-32 shrink-0 text-xs text-slate-500">Languages</span>
+                <ChipList items={landlord?.languages} fallback="—" />
+              </div>
+            </div>
+          </div>
+
+          {(landlord?.isCompany || landlord?.companyName || landlord?.gstin || landlord?.pan) && (
+            <div>
+              <SectionLabel>Company & Tax Details</SectionLabel>
+              <FieldGrid fields={[
+                { label: "Company Registered", value: yesNo(landlord?.isCompany) },
+                { label: "Company Name", value: landlord?.companyName },
+                { label: "GSTIN", value: landlord?.gstin },
+                { label: "PAN", value: landlord?.pan },
+              ]} />
             </div>
           )}
+
+          {landlord?.bankDetails && Object.values(landlord.bankDetails).some(Boolean) && (
+            <div>
+              <SectionLabel>Bank Details (Payouts)</SectionLabel>
+              <FieldGrid fields={[
+                { label: "Bank Name", value: landlord?.bankDetails?.bankName },
+                { label: "Account Holder", value: landlord?.bankDetails?.accountHolderName },
+                { label: "Account Number", value: landlord?.bankDetails?.accountNumber },
+                { label: "IFSC Code", value: landlord?.bankDetails?.ifscCode },
+                { label: "UPI ID", value: landlord?.bankDetails?.upiId },
+              ]} />
+            </div>
+          )}
+
+          {landlord?.documents?.length > 0 && (
+            <div>
+              <SectionLabel>Documents</SectionLabel>
+              <div className="mt-2 space-y-2">
+                {landlord.documents.map((doc: any, i: number) => (
+                  <div key={i} className="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50 p-2.5">
+                    <FileText size={16} className="shrink-0 text-amber-600" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-gray-900">{doc.title || doc.type || "Document"}</p>
+                      <p className="text-xs text-slate-500">
+                        {doc.type ? `${doc.type} · ` : ""}Uploaded {doc.uploadedAt ? formatDate(doc.uploadedAt) : "—"}
+                      </p>
+                    </div>
+                    <Badge className={`shrink-0 border px-2 py-0.5 text-xs ${doc.verified ? "bg-green-100 text-green-700 border-green-200" : "bg-amber-100 text-amber-700 border-amber-200"}`}>
+                      {doc.verified ? "Verified" : "Pending"}
+                    </Badge>
+                    {doc.url && (
+                      <a href={doc.url} target="_blank" rel="noreferrer" className="shrink-0 text-xs font-medium text-blue-600 hover:underline">
+                        View
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
-            <p className="font-semibold text-gray-900">{name}</p>
-            <p className="text-sm text-slate-500">{title}</p>
-          </div>
-          <Badge className={`ml-auto px-2.5 py-1 text-xs capitalize border ${landlord?.isVerified ? "bg-green-100 text-green-700 border-green-200" : "bg-amber-100 text-amber-700 border-amber-200"}`}>
-            {landlord?.isVerified ? "Verified" : "Unverified"}
-          </Badge>
-        </div>
-
-        {landlord?.longBio && <p className="text-sm text-slate-600 leading-relaxed">{landlord.longBio}</p>}
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {stats.map((s, i) => (
-            <StatTile key={i} icon={s.icon} label={s.label} value={s.value} color="text-amber-500" />
-          ))}
-        </div>
-
-        {details.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {details.map((d, i) => (
-              <IconWithLabel key={i} icon={d.icon} label={d.label} value={d.value} />
-            ))}
-          </div>
-        )}
-
-        {landlord?.propertyTypes?.length > 0 && (
-          <div>
-            <p className="text-xs font-medium text-slate-500 mb-1.5">Property Types</p>
-            <ChipList items={landlord.propertyTypes} />
-          </div>
-        )}
-        {landlord?.locations?.length > 0 && (
-          <div>
-            <p className="text-xs font-medium text-slate-500 mb-1.5">Locations</p>
-            <ChipList items={landlord.locations} />
-          </div>
-        )}
-        {landlord?.languages?.length > 0 && (
-          <div>
-            <p className="text-xs font-medium text-slate-500 mb-1.5">Languages</p>
-            <ChipList items={landlord.languages} />
-          </div>
-        )}
-
-        {landlord?.isCompany && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t pt-4">
-            {landlord.companyName && <DetailRow label="Company" value={landlord.companyName} />}
-            {landlord.gstin && <DetailRow label="GSTIN" value={landlord.gstin} />}
-            {landlord.pan && <DetailRow label="PAN" value={landlord.pan} />}
-          </div>
-        )}
-
-        {landlord?.documents?.length > 0 && (
-          <div>
-            <p className="text-xs font-medium text-slate-500 mb-1.5">Documents</p>
-            <div className="flex flex-wrap gap-2">
-              {landlord.documents.map((doc: any, i: number) => (
-                <Badge key={i} variant="secondary" className="gap-1">
-                  <FileText size={12} /> {doc.title || doc.type}
-                </Badge>
-              ))}
+            <SectionLabel>Branding & Visuals</SectionLabel>
+            <div className="mt-1.5 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="w-32 shrink-0 text-xs text-slate-500">Avatar Color</span>
+                <span className="h-4 w-4 rounded-full border border-gray-200" style={{ backgroundColor: landlord?.avatarColor || "#4161df" }} />
+                <span className="text-xs font-mono text-slate-600">{landlord?.avatarColor || "—"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-32 shrink-0 text-xs text-slate-500">Cover Image</span>
+                {landlord?.coverImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={landlord.coverImage} alt="Cover" className="h-10 w-16 rounded object-cover" />
+                ) : (
+                  <span className="text-sm text-slate-400">—</span>
+                )}
+              </div>
             </div>
           </div>
-        )}
+
+          <div>
+            <SectionLabel>SEO</SectionLabel>
+            <FieldGrid fields={[
+              { label: "Meta Title", value: landlord?.metaTitle },
+              { label: "Meta Description", value: landlord?.metaDescription },
+            ]} />
+          </div>
+
+          <div>
+            <SectionLabel>Timestamps</SectionLabel>
+            <FieldGrid fields={[
+              { label: "Created At", value: formatDate(landlord?.createdAt) },
+              { label: "Updated At", value: formatDate(landlord?.updatedAt) },
+            ]} />
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
