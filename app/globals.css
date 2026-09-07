@@ -173,6 +173,9 @@
   .animate-fade-in {
     animation-name: fadeIn;
     animation-duration: 0.6s;
-    animation-fill-mode: both;
+    /* NOTE: no animation-fill-mode here on purpose. `fill-mode: both/forwards`
+       keeps the animation in its "filling" phase forever, which retains a
+       composited GPU layer on the page root and causes the fixed sidebar to
+       ghost/detach during scroll (elements snap back when scrolling stops). */
   }
 }

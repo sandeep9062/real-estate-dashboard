@@ -80,7 +80,7 @@ export default function JournalsDashboard() {
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-6 bg-gray-50 min-h-screen">
+    <div className="space-y-8 p-4 md:p-6 animate-fade-in">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

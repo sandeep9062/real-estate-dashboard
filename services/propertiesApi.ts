@@ -53,6 +53,36 @@ export async function getPropertyServer(id: string) {
   }
 }
 
+/**
+ * Serializes the admin property form payload into FormData for the
+ * /api/admin/properties endpoints (multipart: images + floor plans + JSON fields).
+ */
+export function buildAdminPropertyFormData(property: Record<string, any>) {
+  const formData = new FormData();
+  Object.keys(property).forEach((key) => {
+    const value = property[key];
+    if (value === undefined || value === null) return;
+    if (key === "image") {
+      (value as any[]).forEach((item) => {
+        if (item instanceof File) formData.append("image", item);
+      });
+      const existingImages = (value as any[]).filter(
+        (item) => typeof item === "string",
+      );
+      formData.append("existingImages", JSON.stringify(existingImages));
+    } else if (key === "floorPlanFiles") {
+      (value as File[]).forEach((file) => {
+        if (file instanceof File) formData.append("floorPlan", file);
+      });
+    } else if (typeof value === "object") {
+      formData.append(key, JSON.stringify(value));
+    } else {
+      formData.append(key, String(value));
+    }
+  });
+  return formData;
+}
+
 export const propertiesApi = createApi({
   reducerPath: "propertiesApi",
   baseQuery: baseQueryWithAuth,
@@ -138,6 +168,29 @@ export const propertiesApi = createApi({
           body: formData,
         };
       },
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Property", id },
+        "Property",
+      ],
+    }),
+    // ── Admin-only: full-field property create/update ──
+    adminCreateProperty: builder.mutation<any, Record<string, any>>({
+      query: (property) => ({
+        url: "/admin/properties",
+        method: "POST",
+        body: buildAdminPropertyFormData(property),
+      }),
+      invalidatesTags: ["Property"],
+    }),
+    adminUpdateProperty: builder.mutation<
+      any,
+      { id: string; [key: string]: any }
+    >({
+      query: ({ id, ...property }) => ({
+        url: `/admin/properties/${id}`,
+        method: "PUT",
+        body: buildAdminPropertyFormData(property),
+      }),
       invalidatesTags: (result, error, { id }) => [
         { type: "Property", id },
         "Property",
@@ -254,6 +307,8 @@ export const {
   useGetOwnedPropertiesQuery,
   useCreatePropertyMutation,
   useUpdatePropertyMutation,
+  useAdminCreatePropertyMutation,
+  useAdminUpdatePropertyMutation,
   useDeletePropertyMutation,
   useGetPropertyBrochureQuery,
   useCreateWhatsAppLeadMutation,

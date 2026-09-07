@@ -344,7 +344,9 @@ export default function Leads() {
       )}
 
       {/* Table */}
-      <Card className="border border-border/50 backdrop-blur-xl bg-card/60 shadow-xl">
+      <Card className="border border-border/50 bg-card shadow-xl">
+        {/* NOTE: no backdrop-blur here — backdrop-filter forces re-rasterization
+            on every scroll frame and contributed to fixed-sidebar ghosting. */}
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Lead List</CardTitle>
           <Button

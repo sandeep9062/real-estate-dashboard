@@ -108,18 +108,9 @@ export default function LoginPage({
   return (
     <div
       className="flex items-center justify-center min-h-screen bg-gray-100 bg-center bg-cover relative"
-      style={{ backgroundImage: "url('/real-estate-login.jpg')" }}
+      style={{ backgroundImage: "url('/login.png')" }}
     >
-      {/* Logo in top-left corner */}
-      <div className="absolute top-6 left-6 z-10">
-        <img
-          src="/propertybulbul.png"
-          alt="PropertyBulbul Logo"
-          className="h-18 w-auto"
-        />
-      </div>
-
-      <div className="w-full max-w-sm p-6 sm:p-10 mx-4 sm:mx-0 shadow-xl bg-white/30 backdrop-blur-md rounded-xl">
+      <div className="w-full max-w-sm p-6 sm:p-10 mx-4 sm:mx-0 shadow-xl bg-white/10 backdrop-blur-md rounded-xl">
         <h2 className="mb-6 text-2xl font-bold text-center text-gray-900">
           Admin Login
         </h2>

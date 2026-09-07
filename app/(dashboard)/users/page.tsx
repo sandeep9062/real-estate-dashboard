@@ -6,7 +6,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Edit, Trash2, Building2, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -151,6 +150,19 @@ export default function Users() {
     }
   };
 
+  const handleRoleChange = async (user: User, role: string) => {
+    if (user.role === role) return;
+    try {
+      await updateUser({
+        id: user._id,
+        data: { ...user, role },
+      }).unwrap();
+      toast.success(`Role updated to "${role}" for ${user.name}`);
+    } catch (err) {
+      toast.error(`Failed to update role for ${user.name}`);
+    }
+  };
+
   const columns: ColumnDef<User>[] = [
     {
       id: "avatar",
@@ -202,11 +214,26 @@ export default function Users() {
       accessorKey: "role",
       header: "Role",
       enableSorting: true,
-      cell: ({ row }) => (
-        <Badge variant="outline" className="border-primary text-primary">
-          {row.getValue("role")}
-        </Badge>
-      ),
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <Select
+            value={user.role}
+            onValueChange={(value) => handleRoleChange(user, value)}
+          >
+            <SelectTrigger className="h-8 w-[130px] border-primary/40 text-primary">
+              <SelectValue placeholder="Select role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="user">User</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="agent">Agent</SelectItem>
+              <SelectItem value="landlord">Landlord</SelectItem>
+              <SelectItem value="builder">Builder</SelectItem>
+            </SelectContent>
+          </Select>
+        );
+      },
     },
     {
       accessorKey: "propertyCount",
@@ -310,7 +337,7 @@ export default function Users() {
         globalSearch
         searchPlaceholder="Search users..."
         toolbar={toolbar}
-        pageSize={10}
+        pageSize={50}
       />
 
       {/* Edit User Dialog */}
@@ -458,6 +485,9 @@ export default function Users() {
                 <SelectContent>
                   <SelectItem value="user">User</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="agent">Agent</SelectItem>
+                  <SelectItem value="landlord">Landlord</SelectItem>
+                  <SelectItem value="builder">Builder</SelectItem>
                 </SelectContent>
               </Select>
             </div>

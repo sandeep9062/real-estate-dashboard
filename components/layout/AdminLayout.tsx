@@ -15,7 +15,7 @@ import { useTokenRefresh } from "@/hooks/useTokenRefresh";
 const Sidebar = dynamic(() => import("./Sidebar"), { ssr: false });
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
 
   const isAuthenticated = useSelector(
@@ -136,7 +136,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
       <div
         className={cn(
-          "flex-1 transition-all duration-300",
+          "min-w-0 flex-1 transition-[margin] duration-300",
           isSidebarCollapsed ? "ml-20" : "ml-64",
         )}
       >

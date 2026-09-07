@@ -1,368 +1,571 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, MapPin, Ruler, Users, Wifi, Car, Dumbbell } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  MapPin,
+  Ruler,
+  Car,
+  Edit,
+  Eye,
+  Phone,
+  Star,
+  Shield,
+  Zap,
+  Droplets,
+  Lock,
+  Clipboard,
+  Tag,
+  Home,
+  Building2,
+  IndianRupee,
+  Bed,
+  Bath,
+  Boxes,
+  TreePine,
+  Users,
+  Globe,
+  Heart,
+  Share2,
+  Video,
+  ExternalLink,
+  CircleCheck,
+  CircleX,
+} from "lucide-react";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  useGetPropertyQuery,
-} from "@/services/propertiesApi";
+import { useGetPropertyQuery } from "@/services/propertiesApi";
 import { Skeleton } from "@/components/ui/skeleton";
+
+/* ── Small helpers ─────────────────────────────────────────────────────── */
+const formatPrice = (price?: number | null) => {
+  if (price == null) return "N/A";
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(price);
+};
+
+const formatDate = (date?: string | Date | null) => {
+  if (!date) return "N/A";
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const renderArea = (area?: { value?: number; unit?: string } | null) => {
+  if (!area?.value) return "N/A";
+  return `${area.value.toLocaleString("en-IN")} ${area.unit || "sqft"}`;
+};
+
+const fmtList = (arr?: string[] | null) =>
+  Array.isArray(arr) && arr.length > 0 ? arr : null;
+
+const IconWithLabel = ({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: React.ReactNode;
+}) => (
+  <div className="flex items-center gap-3">
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+      <Icon size={18} />
+    </div>
+    <div className="min-w-0">
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="truncate font-medium text-slate-900">{value ?? "N/A"}</p>
+    </div>
+  </div>
+);
+
+const DetailRow = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) => (
+  <div className="flex items-center justify-between py-1.5">
+    <span className="text-sm text-slate-500">{label}</span>
+    <span className="text-sm font-medium text-slate-900">{value ?? "N/A"}</span>
+  </div>
+);
+
+const VerifiedBadge = ({ verified }: { verified?: boolean }) =>
+  verified ? (
+    <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+      <CircleCheck size={12} className="mr-1" /> Verified
+    </Badge>
+  ) : (
+    <Badge variant="secondary" className="text-slate-500">
+      <CircleX size={12} className="mr-1" /> Unverified
+    </Badge>
+  );
 
 export default function PropertyView() {
   const params = useParams();
   const id = params?.id as string;
   const router = useRouter();
 
-  const { data: property, error, isLoading } = useGetPropertyQuery(id);
+  const { data, error, isLoading } = useGetPropertyQuery(id);
+  const p = data?.data ?? data;
 
+  /* ── Loading ───────────────────────────────────────────────────────── */
   if (isLoading) {
     return (
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center gap-4">
-          <Skeleton className="h-10 w-10" />
-          <div>
-            <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-72" />
             <Skeleton className="h-4 w-96" />
           </div>
         </div>
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <Skeleton className="h-64 w-full" />
-            <CardContent className="p-6">
-              <Skeleton className="h-6 w-48 mb-4" />
-              <div className="space-y-3">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
-            </CardContent>
-          </Card>
-          <div className="space-y-4">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-80 w-full rounded-xl" />
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-4">
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-48 w-full" />
           </div>
+          <Skeleton className="h-96 w-full" />
         </div>
       </div>
     );
   }
 
-  if (error) {
+  /* ── Error ─────────────────────────────────────────────────────────── */
+  if (error || !p) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900">Property not found</h2>
-          <p className="text-gray-600 mt-2">The property you're looking for doesn't exist.</p>
-          <Button
-            onClick={() => router.push("/properties")}
-            className="mt-4"
-          >
-            Back to Properties
+          <h2 className="text-2xl font-bold text-slate-900">
+            Property not found
+          </h2>
+          <p className="text-slate-500 mt-2">
+            The property you&apos;re looking for doesn&apos;t exist or was removed.
+          </p>
+          <Button onClick={() => router.push("/properties")} className="mt-4">
+            ← Back to Properties
           </Button>
         </div>
       </div>
     );
   }
 
-  if (!property) return null;
-
-  // Helper functions to safely render object properties
-  const renderValue = (value: any) => {
-    if (!value) return value;
-    if (typeof value === 'object' && value.value !== undefined) {
-      return value.value + (value.unit ? ' ' + value.unit : '');
-    }
-    return String(value);
-  };
-
-  const renderArea = (area: any) => {
-    if (!area) return 'N/A';
-    if (typeof area === 'object' && area.value) {
-      return `${area.value} ${area.unit || 'sq ft'}`;
-    }
-    return `${area} sq ft`;
-  };
-
-  const renderPrice = (price: any) => {
-    if (!price) return 'N/A';
-    if (typeof price === 'object' && price.value) {
-      return `₹${price.value}`;
-    }
-    return `₹${price}`;
-  };
+  /* ── Derived values ────────────────────────────────────────────────── */
+  const images = Array.isArray(p.image) ? p.image : [];
+  const floorPlans = Array.isArray(p.floorPlanImages) ? p.floorPlanImages : [];
+  const facilities = p.facilities || {};
+  const location = p.location || {};
+  const nearby = p.nearbyPlaces || {};
+  const isCommercial = p.type === "Commercial";
+  const coords =
+    location.coordinates?.lat != null && location.coordinates?.lng != null
+      ? { lat: location.coordinates.lat, lng: location.coordinates.lng }
+      : null;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* HEADER */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => router.push("/properties")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            {property.title}
-          </h1>
-          <p className="text-muted-foreground">
-            Property details and specifications
-          </p>
+    <div className="mx-auto max-w-6xl space-y-6 animate-fade-in pb-10">
+      {/* ── HEADER ──────────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="icon" onClick={() => router.push("/properties")}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">{p.title}</h1>
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+              <MapPin size={14} />
+              {location.address || "Address not specified"}
+              {location.city && `, ${location.city}`}
+              {location.sector && `, Sector ${location.sector}`}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => router.push(`/properties/edit/${p._id}`)}>
+            <Edit size={14} className="mr-1.5" /> Edit
+          </Button>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* LEFT COLUMN - IMAGES & BASIC INFO */}
-        <div className="space-y-4">
-          {/* MAIN IMAGE */}
-          <Card className="overflow-hidden">
-            <div className="aspect-video relative">
-              <img
-                src={property.image?.[0] || "/placeholder.png"}
-                alt={property.title}
-                className="h-full w-full object-cover"
-              />
-              <Badge
-                className={`absolute top-4 right-4 ${
-                  property.availability === "Ready to Move"
-                    ? "bg-green-500"
-                    : "bg-yellow-500"
-                }`}
-              >
-                {renderValue(property.availability)}
-              </Badge>
+      {/* ── IMAGE GALLERY ───────────────────────────────────────────── */}
+      {images.length > 0 && (
+        <div className="grid gap-2 overflow-hidden rounded-xl md:grid-cols-4 md:grid-rows-2">
+          {images.slice(0, 5).map((img: string | File, i: number) => (
+            <div
+              key={i}
+              className={`relative overflow-hidden bg-slate-100 ${
+                i === 0 ? "md:col-span-2 md:row-span-2 aspect-square md:aspect-auto" : "aspect-square"
+              }`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={typeof img === "string" ? img : URL.createObjectURL(img)} alt={`${p.title} ${i + 1}`} className="h-full w-full object-cover" />
+              {i === 4 && images.length > 5 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white font-semibold text-lg">
+                  +{images.length - 5} more
+                </div>
+              )}
             </div>
+          ))}
+        </div>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* ── MAIN COLUMN ───────────────────────────────────────────── */}
+        <div className="space-y-6 lg:col-span-2">
+          {/* KEY STATS */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <Badge variant="secondary" className="capitalize">{p.deal}</Badge>
+                <Badge variant="outline" className="capitalize">{p.type}</Badge>
+                {p.propertyCategory && <Badge variant="outline">{p.propertyCategory}</Badge>}
+                <VerifiedBadge verified={p.isVerified} />
+                {p.isFeatured && (
+                  <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">
+                    <Star size={12} className="mr-1" /> Featured
+                  </Badge>
+                )}
+                {!p.isActive && <Badge variant="destructive">Inactive</Badge>}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-4">
+                <IconWithLabel icon={IndianRupee} label="Price" value={formatPrice(p.price)} />
+                <IconWithLabel icon={Ruler} label="Area" value={renderArea(p.area)} />
+                <IconWithLabel icon={Home} label="Furnishing" value={p.furnishing || "N/A"} />
+                <IconWithLabel icon={Calendar} label="Availability" value={p.availability || "N/A"} />
+              </div>
+            </CardContent>
           </Card>
 
-          {/* BASIC PROPERTIES */}
+          {/* DESCRIPTION */}
+          {p.description && (
+            <Card>
+              <CardHeader><CardTitle>About this property</CardTitle></CardHeader>
+              <CardContent>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-600">{p.description}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* FACILITIES */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Basic Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Property Type</p>
-                  <p className="font-semibold">{renderValue(property.type)}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Category</p>
-                  <p className="font-semibold">{renderValue(property.category || property.propertyCategory)}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Deal Type</p>
-                  <p className="font-semibold">{renderValue(property.deal)}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Furnishing</p>
-                  <p className="font-semibold">{renderValue(property.furnishing)}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-sm font-medium text-muted-foreground">Price</p>
-                  <p className="text-2xl font-bold text-black">{renderPrice(property.price)}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">postedBy</p>
-                  <p className="font-semibold">{renderValue(property.postedBy)}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Listed Date</p>
-                  <p className="font-semibold flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    {property.createdAt ? new Date(property.createdAt).toLocaleDateString() : 'N/A'}
-                  </p>
-                </div>
+            <CardHeader><CardTitle className="flex items-center gap-2"><Boxes size={20} /> Facilities</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <IconWithLabel icon={Bed} label="Bedrooms" value={facilities.bedrooms ?? "—"} />
+                <IconWithLabel icon={Bath} label="Bathrooms" value={facilities.bathrooms ?? "—"} />
+                <IconWithLabel icon={Car} label="Parkings" value={facilities.parkings ?? "—"} />
+                <IconWithLabel icon={Boxes} label="Balconies" value={facilities.balconies ?? "—"} />
+                <IconWithLabel icon={Home} label="Servant Rooms" value={facilities.servantRooms ?? "—"} />
+                <IconWithLabel icon={Building2} label="Total Floors" value={facilities.totalFloors ?? "—"} />
               </div>
-
-              {/* VERIFICATION STATUS */}
-              {property.isVerified && (
-                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center gap-2 text-green-700">
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-semibold">Verified Property</span>
-                  </div>
-                </div>
-              )}
-
-              {/* SERVANT ROOMS */}
-              {property.facilities?.servantRooms > 0 && (
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm font-medium text-blue-700">Servant Rooms: {property.facilities.servantRooms}</p>
-                </div>
-              )}
-
-              {/* COMMERCIAL PROPERTY TYPES */}
-              {property.type === "Commercial" && property.commercialPropertyTypes && property.commercialPropertyTypes.length > 0 && (
-                <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                  <p className="text-sm font-medium text-purple-700 mb-2">Commercial Property Types:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {property.commercialPropertyTypes.map((type: string, index: number) => (
-                      <Badge key={index} variant="outline" className="text-xs text-purple-600 border-purple-300">
-                        {type}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* INVESTMENT OPTIONS */}
-              {property.investmentOptions && property.investmentOptions.length > 0 && (
-                <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                  <p className="text-sm font-medium text-orange-700 mb-2">Investment Options:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {property.investmentOptions.map((option: string, index: number) => (
-                      <Badge key={index} variant="outline" className="text-xs text-orange-600 border-orange-300">
-                        {option}
-                      </Badge>
+              <Separator className="my-4" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <DetailRow label="Parking type" value={facilities.parkingType} />
+                <DetailRow label="Water supply" value={facilities.waterSupply} />
+                <DetailRow label="Power backup" value={facilities.powerBackup ? "Yes" : "No"} />
+                <DetailRow label="Facing" value={p.facing} />
+              </div>
+              {fmtList(facilities.securityFeatures) && (
+                <div className="mt-4">
+                  <p className="text-xs font-medium text-slate-500 mb-2">Security</p>
+                  <div className="flex flex-wrap gap-2">
+                    {facilities.securityFeatures.map((s: string) => (
+                      <Badge key={s} variant="secondary" className="gap-1"><Shield size={12} /> {s}</Badge>
                     ))}
                   </div>
                 </div>
               )}
             </CardContent>
           </Card>
-        </div>
 
-        {/* RIGHT COLUMN - DETAILED INFO */}
-        <div className="space-y-4">
-          {/* PROPERTY DETAILS */}
+          {/* AREA DETAILS */}
           <Card>
-            <CardHeader>
-              <CardTitle>Property Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* COMPLETE ADDRESS */}
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-slate-600" />
-                  Complete Address
-                </h4>
-                <div className="space-y-1 text-sm">
-                  {property.location?.address && (
-                    <p className="text-slate-700"><span className="font-medium">Address:</span> {property.location.address}</p>
-                  )}
-                  <p className="text-slate-700"><span className="font-medium">City:</span> {property.location?.city}</p>
-                  <p className="text-slate-700"><span className="font-medium">State:</span> {property.location?.state}</p>
-                  {property.location?.country && (
-                    <p className="text-slate-700"><span className="font-medium">Country:</span> {property.location.country}</p>
-                  )}
-                  {property.location?.pincode && (
-                    <p className="text-slate-700"><span className="font-medium">Pincode:</span> {property.location.pincode}</p>
-                  )}
+            <CardHeader><CardTitle className="flex items-center gap-2"><Ruler size={20} /> Area Details</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="rounded-lg bg-slate-50 p-4">
+                  <p className="text-xs text-slate-500">Total Area</p>
+                  <p className="text-lg font-semibold">{renderArea(p.area)}</p>
+                </div>
+                <div className="rounded-lg bg-slate-50 p-4">
+                  <p className="text-xs text-slate-500">Carpet Area</p>
+                  <p className="text-lg font-semibold">{renderArea(p.area?.carpetArea)}</p>
+                </div>
+                <div className="rounded-lg bg-slate-50 p-4">
+                  <p className="text-xs text-slate-500">Super Built-up</p>
+                  <p className="text-lg font-semibold">{renderArea(p.area?.superBuiltUpArea)}</p>
                 </div>
               </div>
-
-              <Separator />
-
-              {/* FACILITIES DETAIL */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                  <Dumbbell className="h-5 w-5" />
-                  Property Facilities
-                </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white p-3 rounded-md">
-                    <p className="text-sm font-medium text-blue-700">Bedrooms</p>
-                    <p className="text-lg font-bold text-blue-900">{renderValue(property.facilities?.bedrooms || property.bedrooms || 'N/A')}</p>
-                  </div>
-                  <div className="bg-white p-3 rounded-md">
-                    <p className="text-sm font-medium text-blue-700">Bathrooms</p>
-                    <p className="text-lg font-bold text-blue-900">{renderValue(property.facilities?.bathrooms || property.bathrooms || 'N/A')}</p>
-                  </div>
-                  <div className="bg-white p-3 rounded-md">
-                    <p className="text-sm font-medium text-blue-700">Parking Spaces</p>
-                    <p className="text-lg font-bold text-blue-900">{renderValue(property.facilities?.parkings || (property.parking ? '1' : 'N/A'))}</p>
-                  </div>
-                  {property.facilities?.servantRooms > 0 && (
-                    <div className="bg-white p-3 rounded-md">
-                      <p className="text-sm font-medium text-blue-700">Servant Rooms</p>
-                      <p className="text-lg font-bold text-blue-900">{property.facilities.servantRooms}</p>
-                    </div>
-                  )}
+              {(p.ageOfProperty != null || p.floor != null) && (
+                <div className="grid gap-4 sm:grid-cols-2 mt-4">
+                  <DetailRow label="Age" value={p.ageOfProperty != null ? `${p.ageOfProperty} yrs` : undefined} />
+                  <DetailRow label="Floor" value={p.floor} />
                 </div>
-              </div>
-
-              {/* AREA DETAILS */}
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
-                  <Ruler className="h-5 w-5" />
-                  Area Details
-                </h4>
-                <div className="bg-white p-3 rounded-md">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-green-700">Total Area</span>
-                    <span className="text-xl font-bold text-green-900">{renderArea(property.area)}</span>
-                  </div>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
           {/* AMENITIES */}
-          {property.amenities && property.amenities.length > 0 && (
+          {fmtList(p.amenities) && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Wifi className="h-5 w-5" />
-                  Amenities
-                </CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>Amenities</CardTitle></CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  {property.amenities.map((amenity: any, index: number) => (
-                    <Badge key={index} variant="secondary">
-                      {renderValue(amenity)}
-                    </Badge>
-                  ))}
+                  {p.amenities.map((a: string) => (<Badge key={a} variant="secondary">{a}</Badge>))}
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* DESCRIPTION */}
-          {property.description && (
+          {/* COMMERCIAL */}
+          {isCommercial && (fmtList(p.commercialPropertyTypes) || fmtList(p.investmentOptions)) && (
             <Card>
-              <CardHeader>
-                <CardTitle>Description</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
-                  {renderValue(property.description)}
-                </p>
+              <CardHeader><CardTitle>Commercial Details</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                {fmtList(p.commercialPropertyTypes) && (
+                  <div>
+                    <p className="text-xs font-medium text-slate-500 mb-2">Property types</p>
+                    <div className="flex flex-wrap gap-2">
+                      {p.commercialPropertyTypes.map((t: string) => (<Badge key={t} variant="secondary">{t}</Badge>))}
+                    </div>
+                  </div>
+                )}
+                {fmtList(p.investmentOptions) && (
+                  <div>
+                    <p className="text-xs font-medium text-slate-500 mb-2">Investment options</p>
+                    <div className="flex flex-wrap gap-2">
+                      {p.investmentOptions.map((o: string) => (<Badge key={o} variant="secondary">{o}</Badge>))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
 
-          {/* ADDITIONAL IMAGES */}
-          {property.image && property.image.length > 1 && (
+          {/* NEARBY PLACES */}
+          {(fmtList(nearby.schools) || fmtList(nearby.hospitals) || fmtList(nearby.metroStations) || fmtList(nearby.malls)) && (
             <Card>
-              <CardHeader>
-                <CardTitle>Additional Images</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2"><MapPin size={20} /> Nearby Places</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                {fmtList(nearby.schools) && (
+                  <div>
+                    <p className="text-xs font-medium text-slate-500 mb-1">Schools</p>
+                    <div className="flex flex-wrap gap-2">{nearby.schools.map((s: string) => (<Badge key={s} variant="outline">{s}</Badge>))}</div>
+                  </div>
+                )}
+                {fmtList(nearby.hospitals) && (
+                  <div>
+                    <p className="text-xs font-medium text-slate-500 mb-1">Hospitals</p>
+                    <div className="flex flex-wrap gap-2">{nearby.hospitals.map((h: string) => (<Badge key={h} variant="outline">{h}</Badge>))}</div>
+                  </div>
+                )}
+                {fmtList(nearby.metroStations) && (
+                  <div>
+                    <p className="text-xs font-medium text-slate-500 mb-1">Metro / Transit</p>
+                    <div className="flex flex-wrap gap-2">{nearby.metroStations.map((m: string) => (<Badge key={m} variant="outline">{m}</Badge>))}</div>
+                  </div>
+                )}
+                {fmtList(nearby.malls) && (
+                  <div>
+                    <p className="text-xs font-medium text-slate-500 mb-1">Malls & Shopping</p>
+                    <div className="flex flex-wrap gap-2">{nearby.malls.map((m: string) => (<Badge key={m} variant="outline">{m}</Badge>))}</div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* FLOOR PLANS */}
+          {floorPlans.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle>Floor Plans</CardTitle></CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-2">
-                  {property.image.slice(1).map((img: string, index: number) => (
-                    <div key={index} className="aspect-square overflow-hidden rounded-md">
-                      <img
-                        src={img}
-                        alt={`Property ${index + 2}`}
-                        className="h-full w-full object-cover"
-                      />
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {floorPlans.map((fp: string, i: number) => (
+                    <div key={i} className="relative aspect-[4/3] overflow-hidden rounded-lg border">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={fp} alt={`Floor plan ${i + 1}`} className="h-full w-full object-cover" />
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
           )}
+
+          {/* LOCATION */}
+          {coords && (
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2"><MapPin size={20} /> Location</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  {location.address}{location.city && `, ${location.city}`}{location.state && `, ${location.state}`}{location.pincode && ` - ${location.pincode}`}
+                </p>
+                <p className="text-xs text-slate-400">{coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* ── SIDE COLUMN ───────────────────────────────────────────── */}
+        <div className="space-y-6">
+          {/* PRICING CARD */}
+          <Card className="sticky top-6">
+            <CardContent className="p-6 space-y-4">
+              <div>
+                <p className="text-sm text-slate-500">{p.deal === "Rent" ? "Monthly Rent" : "Total Price"}</p>
+                <p className="text-3xl font-bold text-slate-900">{formatPrice(p.price)}</p>
+                {p.pricePerSqft != null && (
+                  <p className="text-sm text-slate-500">₹{p.pricePerSqft.toLocaleString("en-IN")}/sqft</p>
+                )}
+              </div>
+              {p.deal === "Rent" && <Separator />}
+              {p.deal === "Rent" && (
+                <div className="space-y-2 text-sm">
+                  {p.maintenanceCharge != null && <DetailRow label="Maintenance" value={`₹${p.maintenanceCharge.toLocaleString("en-IN")}`} />}
+                  {p.securityDeposit != null && <DetailRow label="Security Deposit" value={`₹${p.securityDeposit.toLocaleString("en-IN")}`} />}
+                  {p.lockInMonths != null && <DetailRow label="Lock-in" value={`${p.lockInMonths} months`} />}
+                  {p.noticePeriodDays != null && <DetailRow label="Notice" value={`${p.noticePeriodDays} days`} />}
+                </div>
+              )}
+              {p.deal === "Sale" && p.ocStatus && (<><Separator /><DetailRow label="OC Status" value={p.ocStatus} /></>)}
+              {p.negotiable != null && (<><Separator /><DetailRow label="Negotiable" value={p.negotiable ? "Yes" : "No"} /></>)}
+            </CardContent>
+          </Card>
+
+          {/* PROPERTY INFO */}
+          <Card>
+            <CardHeader><CardTitle>Property Information</CardTitle></CardHeader>
+            <CardContent className="space-y-1">
+              <DetailRow label="Type" value={p.type} />
+              <DetailRow label="Category" value={p.propertyCategory} />
+              <DetailRow label="Furnishing" value={p.furnishing} />
+              <DetailRow label="Facing" value={p.facing} />
+              <DetailRow label="Tenant Preference" value={p.tenantPreference} />
+              <DetailRow label="Pets Allowed" value={p.petsAllowed ? "Yes" : "No"} />
+              <DetailRow label="Posted By" value={p.postedBy} />
+              <DetailRow label="Availability" value={p.availability} />
+              {p.availableFrom && <DetailRow label="Available From" value={formatDate(p.availableFrom)} />}
+              {p.possessionDate && <DetailRow label="Possession" value={formatDate(p.possessionDate)} />}
+            </CardContent>
+          </Card>
+
+          {/* PROJECT / BUILDER */}
+          {(p.projectName || p.builderName || p.totalUnits) && (
+            <Card>
+              <CardHeader><CardTitle>Project & Builder</CardTitle></CardHeader>
+              <CardContent className="space-y-1">
+                <DetailRow label="Project" value={p.projectName} />
+                <DetailRow label="Builder" value={p.builderName} />
+                <DetailRow label="Total Units" value={p.totalUnits} />
+                {p.ownershipType && <DetailRow label="Ownership" value={p.ownershipType} />}
+                {p.approvedBy && <DetailRow label="Approved By" value={p.approvedBy} />}
+                {p.reraNumber && <DetailRow label="RERA Number" value={p.reraNumber} />}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* CONTACT */}
+          {(fmtList(p.contactNumber) || p.preferredContact) && (
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2"><Phone size={18} /> Contact</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                {fmtList(p.contactNumber) && p.contactNumber.map((num: string, i: number) => (
+                  <p key={i} className="flex items-center gap-2 text-sm font-medium text-slate-900">
+                    <Phone size={14} className="text-slate-400" /> {num}
+                  </p>
+                ))}
+                {p.preferredContact && <Badge variant="outline">{p.preferredContact}</Badge>}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* VERIFICATION */}
+          <Card>
+            <CardHeader><CardTitle>Verification Status</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex items-center justify-between"><span className="text-sm text-slate-500">Bulbul Verified</span><VerifiedBadge verified={p.bulbulVerified} /></div>
+              <div className="flex items-center justify-between"><span className="text-sm text-slate-500">Owner Verified</span><VerifiedBadge verified={p.ownerVerified} /></div>
+              <div className="flex items-center justify-between"><span className="text-sm text-slate-500">Visit Verified</span><VerifiedBadge verified={p.visitVerified} /></div>
+            </CardContent>
+          </Card>
+
+          {/* LISTING STATUS */}
+          <Card>
+            <CardHeader><CardTitle>Listing Status</CardTitle></CardHeader>
+            <CardContent className="space-y-1">
+              <DetailRow label="Status" value={p.listingAvailability} />
+              <DetailRow label="Active" value={p.isActive ? "Yes" : "No"} />
+              <DetailRow label="Featured" value={p.isFeatured ? "Yes" : "No"} />
+              {p.featuredUntil && <DetailRow label="Featured Until" value={formatDate(p.featuredUntil)} />}
+              <DetailRow label="Views" value={p.views?.toLocaleString("en-IN")} />
+              <DetailRow label="Leads" value={p.leads?.toLocaleString("en-IN")} />
+              <DetailRow label="Created" value={formatDate(p.createdAt)} />
+              <DetailRow label="Updated" value={formatDate(p.updatedAt)} />
+            </CardContent>
+          </Card>
+
+          {/* MEDIA LINKS */}
+          {p.videoUrl && (
+            <Button variant="outline" className="w-full" asChild>
+              <a href={p.videoUrl} target="_blank" rel="noopener noreferrer"><Video size={16} className="mr-2" /> Watch Video Tour</a>
+            </Button>
+          )}
+          {p.virtualTourUrl && (
+            <Button variant="outline" className="w-full" asChild>
+              <a href={p.virtualTourUrl} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} className="mr-2" /> Virtual Tour</a>
+            </Button>
+          )}
+
+          {/* SEO / SLUG (admin info) */}
+          {(p.seoTitle || p.seoDescription || p.slug) && (
+            <Card>
+              <CardHeader><CardTitle className="text-sm">SEO & Slug</CardTitle></CardHeader>
+              <CardContent className="space-y-2 text-xs text-slate-500">
+                {p.slug && <DetailRow label="Slug" value={p.slug} />}
+                {p.seoTitle && <DetailRow label="Title" value={p.seoTitle} />}
+                {p.seoDescription && (
+                  <div>
+                    <p className="text-slate-400 mb-1">Description</p>
+                    <p className="text-slate-600 leading-relaxed">{p.seoDescription}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {p.adminNotes && (
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><Clipboard size={16} /> Admin Notes</CardTitle></CardHeader>
+              <CardContent>
+                <p className="whitespace-pre-wrap text-xs text-slate-600 leading-relaxed">{p.adminNotes}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardContent className="p-4 text-sm">
+              <DetailRow label="Landlord Property" value={p.isLandlordProperty ? "Yes" : "No"} />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
   );
 }
+
+
+
+
+
+

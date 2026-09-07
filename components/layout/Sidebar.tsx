@@ -53,7 +53,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0  h-screen border-r border-border bg-card transition-all duration-300",
+        "fixed left-0 top-0 z-40 h-screen border-r border-border bg-card transition-[width] duration-300",
         isCollapsed ? "w-20" : "w-64",
       )}
     >

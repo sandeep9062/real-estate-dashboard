@@ -1,6 +1,5 @@
 "use client";
-import { useMemo } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { useEffect, useMemo, useRef } from "react";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -9,67 +8,82 @@ interface MapProps {
   location?: { lat: number; lng: number };
 }
 
-const MapEvents = ({
-  setLocation,
-}: {
-  setLocation?: (location: { lat: number; lng: number }) => void;
-}) => {
-  useMapEvents({
-    click(e) {
-      if (setLocation) {
-        setLocation({ lat: e.latlng.lat, lng: e.latlng.lng });
-      }
-    },
-  });
-  return null;
-};
+const DEFAULT_POSITION: [number, number] = [30.751851738730274, 76.77228927612306];
+
+const markerIcon = new L.Icon({
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
 
 const Map = ({ setLocation, location }: MapProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
+  // Keep the latest setLocation in a ref so the click handler never goes stale
+  // and never forces us to rebuild the map.
+  const setLocationRef = useRef(setLocation);
+  setLocationRef.current = setLocation;
+
   const position = useMemo<[number, number]>(() => {
     return location &&
       typeof location.lat === "number" &&
       typeof location.lng === "number"
       ? [location.lat, location.lng]
-      : [30.751851738730274, 76.77228927612306];
+      : DEFAULT_POSITION;
   }, [location?.lat, location?.lng]);
 
-  // Use a stable key based on position so the MapContainer fully remounts
-  // when coordinates change. This prevents "Map container is already initialized"
-  // errors caused by React re-rendering a mounted MapContainer.
-  const mapKey = useMemo(
-    () => `${position[0].toFixed(4)}-${position[1].toFixed(4)}`,
-    [position],
-  );
+  // Initialize the map exactly once
+  useEffect(() => {
+    if (mapRef.current || !containerRef.current) return;
 
-  const markerIcon = useMemo(
-    () =>
-      new L.Icon({
-        iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-        iconRetinaUrl:
-          "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-        shadowUrl:
-          "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-      }),
-    [],
-  );
+    const map = L.map(containerRef.current, {
+      center: position,
+      zoom: 13,
+      scrollWheelZoom: false,
+    });
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+
+    markerRef.current = L.marker(position, { icon: markerIcon }).addTo(map);
+
+    map.on("click", (e: L.LeafletMouseEvent) => {
+      setLocationRef.current?.({
+        lat: Number(e.latlng.lat.toFixed(6)),
+        lng: Number(e.latlng.lng.toFixed(6)),
+      });
+    });
+
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+      markerRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Pan map + move marker when coordinates change
+  useEffect(() => {
+    const map = mapRef.current;
+    const marker = markerRef.current;
+    if (!map || !marker) return;
+    map.setView(position, map.getZoom(), { animate: true });
+    marker.setLatLng(position);
+  }, [position]);
 
   return (
-    <MapContainer
-      key={mapKey}
-      center={position}
-      zoom={13}
+    <div
+      ref={containerRef}
       style={{ height: "100%", width: "100%" }}
-      scrollWheelZoom={false}
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      />
-      <Marker position={position} icon={markerIcon} />
-      <MapEvents setLocation={setLocation} />
-    </MapContainer>
+      className="leaflet-container"
+    />
   );
 };
 
