@@ -151,10 +151,9 @@ const AgentProfileCard = ({ agent }: { agent: any }) => {
   const name = agent?.name || "Agent";
   const title = agent?.title || "Real Estate Agent";
 
-  const statusBadge =
-    agent?.status === "active"
-      ? "bg-green-100 text-green-700 border-green-200"
-      : "bg-red-100 text-red-700 border-red-200";
+  const statusBadge = agent?.isActive
+    ? "bg-green-100 text-green-700 border-green-200"
+    : "bg-red-100 text-red-700 border-red-200";
   const unverifiedBadge = "bg-amber-100 text-amber-700 border-amber-200";
 
   return (
@@ -183,7 +182,7 @@ const AgentProfileCard = ({ agent }: { agent: any }) => {
           <div className="mt-3 flex flex-wrap gap-1.5">
             <Badge className={`border px-2.5 py-1 text-xs capitalize ${agent?.verified ? "bg-green-100 text-green-700 border-green-200" : unverifiedBadge}`}>{agent?.verified ? "Verified" : "Unverified"}</Badge>
             <Badge className={`border px-2.5 py-1 text-xs capitalize ${agent?.topAgent ? "bg-purple-100 text-purple-700 border-purple-200" : unverifiedBadge}`}>{agent?.topAgent ? "Top Agent" : "Not Top Agent"}</Badge>
-            <Badge className={`border px-2.5 py-1 text-xs capitalize ${statusBadge}`}>{agent?.status || "—"}</Badge>
+            <Badge className={`border px-2.5 py-1 text-xs capitalize ${statusBadge}`}>{agent ? (agent.isActive ? "Active" : "Inactive") : "—"}</Badge>
             <Badge className={`border px-2.5 py-1 text-xs capitalize ${agent?.featured ? "bg-green-100 text-green-700 border-green-200" : unverifiedBadge}`}>{agent?.featured ? "Featured" : "Not Featured"}</Badge>
           </div>
         </div>
@@ -334,10 +333,9 @@ const LandlordProfileCard = ({ landlord }: { landlord: any }) => {
   const title = landlord?.title || "Property Owner";
 
   const unverifiedBadge = "bg-amber-100 text-amber-700 border-amber-200";
-  const statusBadge =
-    landlord?.status === "active"
-      ? "bg-green-100 text-green-700 border-green-200"
-      : "bg-red-100 text-red-700 border-red-200";
+  const statusBadge = landlord?.isActive
+    ? "bg-green-100 text-green-700 border-green-200"
+    : "bg-red-100 text-red-700 border-red-200";
 
   return (
     <Card className="border border-gray-200 shadow-lg rounded-2xl">
@@ -366,7 +364,7 @@ const LandlordProfileCard = ({ landlord }: { landlord: any }) => {
             <Badge className={`border px-2.5 py-1 text-xs capitalize ${landlord?.isVerified ? "bg-green-100 text-green-700 border-green-200" : unverifiedBadge}`}>{landlord?.isVerified ? "Verified" : "Unverified"}</Badge>
             <Badge className={`border px-2.5 py-1 text-xs capitalize ${landlord?.identityVerified ? "bg-green-100 text-green-700 border-green-200" : unverifiedBadge}`}>{landlord?.identityVerified ? "ID Verified" : "ID Not Verified"}</Badge>
             <Badge className="border bg-slate-100 text-slate-700 border-slate-200 px-2.5 py-1 text-xs capitalize">{landlord?.isCompany ? "Company" : "Individual"}</Badge>
-            <Badge className={`border px-2.5 py-1 text-xs capitalize ${statusBadge}`}>{landlord?.status || "—"}</Badge>
+            <Badge className={`border px-2.5 py-1 text-xs capitalize ${statusBadge}`}>{landlord ? (landlord.isActive ? "Active" : "Inactive") : "—"}</Badge>
             <Badge className={`border px-2.5 py-1 text-xs capitalize ${landlord?.featured ? "bg-green-100 text-green-700 border-green-200" : unverifiedBadge}`}>{landlord?.featured ? "Featured" : "Not Featured"}</Badge>
           </div>
         </div>

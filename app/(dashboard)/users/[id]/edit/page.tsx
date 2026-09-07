@@ -197,7 +197,7 @@ type AgentFormValues = {
   name: string; title: string; email: string; phone: string; whatsapp: string;
   agencyName: string; rera: string; experience: string; bio: string; longBio: string;
   locations: string; specialisations: string; languages: string; achievements: string;
-  status: string; verified: boolean; topAgent: boolean; featured: boolean;
+  isActive: boolean; verified: boolean; topAgent: boolean; featured: boolean;
   avatarColor: string; coverColor: string; coverImage: string;
   metaTitle: string; metaDescription: string;
 };
@@ -209,7 +209,7 @@ type LandlordFormValues = {
   totalProperties: string; activeListings: string;
   propertyTypes: string; locations: string; languages: string;
   isCompany: boolean; companyName: string; gstin: string; pan: string;
-  isVerified: boolean; identityVerified: boolean; featured: boolean; status: string;
+  isVerified: boolean; identityVerified: boolean; featured: boolean; isActive: boolean;
   contactMethod: string; availableTimings: string; acceptsVisits: boolean;
   avatarColor: string; coverImage: string;
   metaTitle: string; metaDescription: string;
@@ -329,8 +329,8 @@ const AgentEditCard = ({
       <div>
         <SectionHeading>Status & Verification</SectionHeading>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <SelectField label="Status" value={form.status} options={["active", "inactive"]} onChange={af("status")} />
           <div className="space-y-2">
+            <SwitchField label="Active" checked={form.isActive} onChange={af("isActive")} />
             <SwitchField label="Verified" checked={form.verified} onChange={af("verified")} />
             <SwitchField label="Top Agent" checked={form.topAgent} onChange={af("topAgent")} />
             <SwitchField label="Featured" checked={form.featured} onChange={af("featured")} />
@@ -429,8 +429,8 @@ const LandlordEditCard = ({
       <div>
         <SectionHeading>Status, Verification & Preferences</SectionHeading>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <SelectField label="Status" value={form.status} options={["active", "inactive", "suspended"]} onChange={lf("status")} />
           <div className="space-y-2">
+            <SwitchField label="Active" checked={form.isActive} onChange={lf("isActive")} />
             <SwitchField label="Verified" checked={form.isVerified} onChange={lf("isVerified")} />
             <SwitchField label="Identity Verified" checked={form.identityVerified} onChange={lf("identityVerified")} />
             <SwitchField label="Featured" checked={form.featured} onChange={lf("featured")} />
@@ -488,7 +488,7 @@ export default function EditUserPage() {
       name: "", title: "", email: "", phone: "", whatsapp: "", agencyName: "", rera: "",
       experience: "0", bio: "", longBio: "",
       locations: "", specialisations: "", languages: "", achievements: "",
-      status: "active", verified: false, topAgent: false, featured: false,
+      isActive: true, verified: false, topAgent: false, featured: false,
       avatarColor: "#4161df", coverColor: "#0d1640", coverImage: "",
       metaTitle: "", metaDescription: "",
     }),
@@ -506,7 +506,7 @@ export default function EditUserPage() {
       totalProperties: "0", activeListings: "0",
       propertyTypes: "", locations: "", languages: "",
       isCompany: false, companyName: "", gstin: "", pan: "",
-      isVerified: false, identityVerified: false, featured: false, status: "active",
+      isVerified: false, identityVerified: false, featured: false, isActive: true,
       contactMethod: "phone", availableTimings: "", acceptsVisits: true,
       avatarColor: "#4161df", coverImage: "",
       metaTitle: "", metaDescription: "",
@@ -545,7 +545,7 @@ export default function EditUserPage() {
       specialisations: joinList(agent.specialisations),
       languages: joinList(agent.languages),
       achievements: joinList(agent.achievements),
-      status: agent.status || "active",
+      isActive: agent.isActive !== false,
       verified: Boolean(agent.verified),
       topAgent: Boolean(agent.topAgent),
       featured: Boolean(agent.featured),
@@ -583,7 +583,7 @@ export default function EditUserPage() {
       isVerified: Boolean(landlord.isVerified),
       identityVerified: Boolean(landlord.identityVerified),
       featured: Boolean(landlord.featured),
-      status: landlord.status || "active",
+      isActive: landlord.isActive !== false,
       contactMethod: landlord.preferences?.contactMethod || "phone",
       availableTimings: landlord.preferences?.availableTimings || "",
       acceptsVisits: landlord.preferences?.acceptsVisits ?? true,
@@ -651,7 +651,7 @@ export default function EditUserPage() {
     specialisations: splitList(agentForm.specialisations),
     languages: splitList(agentForm.languages),
     achievements: splitList(agentForm.achievements),
-    status: agentForm.status,
+    isActive: agentForm.isActive,
     verified: agentForm.verified,
     topAgent: agentForm.topAgent,
     featured: agentForm.featured,
@@ -716,7 +716,7 @@ export default function EditUserPage() {
     isVerified: landlordForm.isVerified,
     identityVerified: landlordForm.identityVerified,
     featured: landlordForm.featured,
-    status: landlordForm.status,
+    isActive: landlordForm.isActive,
     preferences: {
       contactMethod: landlordForm.contactMethod,
       availableTimings: landlordForm.availableTimings,

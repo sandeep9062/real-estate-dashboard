@@ -10,6 +10,7 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  Star,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -33,20 +34,31 @@ export default function JournalsDashboard() {
   const [deleteJournal] = useDeleteJournalMutation();
   const [updateJournal] = useUpdateJournalMutation();
 
-  const handleToggleActive = async (journal: any) => {
-    const newActiveState = !journal.isActive;
+  const handleToggleField = async (
+    journal: (typeof journals)[number],
+    field: "isActive" | "isFeatured",
+  ) => {
+    const newValue = !journal[field];
+    const label =
+      field === "isActive"
+        ? newValue
+          ? "activated"
+          : "deactivated"
+        : newValue
+          ? "featured"
+          : "unfeatured";
     try {
       await updateJournal({
         id: journal._id,
-        update: { isActive: newActiveState },
+        update: { [field]: newValue },
       }).unwrap();
       toast({
-        title: `Journal ${newActiveState ? "activated" : "deactivated"} successfully`,
+        title: `Journal ${label} successfully`,
       });
     } catch (error) {
       toast({
         variant: "destructive",
-        title: `Failed to ${newActiveState ? "activate" : "deactivate"} journal`,
+        title: `Failed to update journal`,
       });
     }
   };
@@ -200,7 +212,9 @@ export default function JournalsDashboard() {
                           </Link>
                           <Switch
                             checked={journal.isActive}
-                            onCheckedChange={() => handleToggleActive(journal)}
+                            onCheckedChange={() =>
+                              handleToggleField(journal, "isActive")
+                            }
                             title={journal.isActive ? "Deactivate" : "Activate"}
                             aria-label={
                               journal.isActive
@@ -208,6 +222,30 @@ export default function JournalsDashboard() {
                                 : "Activate journal"
                             }
                           />
+                          <span
+                            className="flex items-center gap-1"
+                            title={journal.isFeatured ? "Unfeature" : "Feature"}
+                          >
+                            <Star
+                              size={14}
+                              className={
+                                journal.isFeatured
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "text-slate-300"
+                              }
+                            />
+                            <Switch
+                              checked={journal.isFeatured}
+                              onCheckedChange={() =>
+                                handleToggleField(journal, "isFeatured")
+                              }
+                              aria-label={
+                                journal.isFeatured
+                                  ? "Unfeature journal"
+                                  : "Feature journal"
+                              }
+                            />
+                          </span>
                           <button
                             onClick={() => handleDelete(journal._id)}
                             className="p-2 text-slate-400 hover:text-red-600 transition-colors"

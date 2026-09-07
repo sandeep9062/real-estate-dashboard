@@ -28,6 +28,7 @@ export interface Journal {
   author: string;
   date: string;
   isActive: boolean;
+  isFeatured: boolean;
   category: string;
   targetSector: string;
   location?: string;
@@ -50,6 +51,7 @@ export interface JournalInput {
   coverImage?: string | File;
   excerpt?: string;
   isActive?: boolean;
+  isFeatured?: boolean;
   metaTitle?: string;
   keywords?: string[];
 }
