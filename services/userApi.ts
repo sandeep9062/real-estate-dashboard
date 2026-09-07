@@ -39,7 +39,7 @@ interface ToggleUserStatusPayload {
 export const userApi = createApi({
   reducerPath: "userApi",
   baseQuery: baseQueryWithAuth,
-  tagTypes: ["User"],
+  tagTypes: ["User", "Agent", "Landlord"],
   endpoints: (builder) => ({
     // ✅ Get all users
     getUsers: builder.query<User[], void>({
@@ -57,12 +57,16 @@ export const userApi = createApi({
     getAgentByUserId: builder.query<any, string>({
       query: (userId) => `/agents/by-user/${userId}`,
       transformResponse: (response: { data?: any }) => response?.data,
+      providesTags: (result, error, userId) => [{ type: "Agent", id: userId }],
     }),
 
     // ✅ Get landlord profile linked to a user id (admin dashboard)
     getLandlordByUserId: builder.query<any, string>({
       query: (userId) => `/landlords/by-user/${userId}`,
       transformResponse: (response: { data?: any }) => response?.data,
+      providesTags: (result, error, userId) => [
+        { type: "Landlord", id: userId },
+      ],
     }),
 
     // ✅ Create a new user
@@ -272,6 +276,38 @@ export const userApi = createApi({
         { type: "User", id: result?._id },
       ],
     }),
+
+    // ✅ Admin: update agent profile by linked user id
+    updateAgentByUserId: builder.mutation<
+      any,
+      { userId: string; data: Record<string, any> }
+    >({
+      query: ({ userId, data }) => ({
+        url: `/agents/by-user/${userId}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: (result, error, { userId }) => [
+        { type: "Agent", id: userId },
+        "User",
+      ],
+    }),
+
+    // ✅ Admin/owner: update landlord profile by landlord id
+    updateLandlordProfile: builder.mutation<
+      any,
+      { id: string; data: Record<string, any> }
+    >({
+      query: ({ id, data }) => ({
+        url: `/landlords/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Landlord", id },
+        "User",
+      ],
+    }),
   }),
 });
 
@@ -291,4 +327,6 @@ export const {
   useToFavMutation,
   useGetFavouritesQuery,
   useUpdateProfileMutation,
+  useUpdateAgentByUserIdMutation,
+  useUpdateLandlordProfileMutation,
 } = userApi;
