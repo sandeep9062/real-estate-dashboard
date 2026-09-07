@@ -1,11 +1,11 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import {
   Edit,
-  Eye,
   Trash2,
   Search,
   X,
@@ -19,6 +19,9 @@ import {
   Warehouse,
   Filter,
   RotateCcw,
+  Plus,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,8 +41,18 @@ import {
 } from "@/services/propertiesApi";
 import Swal from "sweetalert2";
 import { toast } from "sonner";
-import AddPropertyModal from "../../../components/AddPropertyModal";
-import EditPropertyModal from "../../../components/EditPropertyModal";
+
+/* ── Constants ─────────────────────────────────────────────────────────── */
+const LISTING_AVAILABILITY = [
+  "Available",
+  "Fresh",
+  "Under offer",
+  "Booked",
+  "Sold",
+  "Rented",
+  "Review Required",
+  "Non Available",
+];
 
 interface PropertyRow {
   _id: string;
@@ -48,10 +61,11 @@ interface PropertyRow {
   category: string;
   propertyCategory?: string;
   price: number;
-  availability: string;
+  listingAvailability: string;
   deal: string;
   furnishing: string;
   postedBy: string;
+  isFeatured: boolean;
   isVerified: boolean;
   isActive: boolean;
   image: string[];
@@ -62,8 +76,6 @@ interface PropertyRow {
     address: string;
   };
 }
-
-
 
 // Debounce hook for search input
 function useDebounce<T>(value: T, delay: number): T {
@@ -114,15 +126,13 @@ function FilterChip({
 
 export default function Properties() {
   const router = useRouter();
-  const [modalOpened, setModalOpened] = useState(false);
-  const [editModalOpened, setEditModalOpened] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(true);
+  const [showListingAvailability, setShowListingAvailability] = useState(false);
   const [filters, setFilters] = useState({
     type: "",
     category: "",
-    availability: "",
+    listingAvailability: "",
     deal: "",
     furnishing: "",
     postedBy: "",
@@ -181,22 +191,24 @@ export default function Properties() {
       ...new Set(
         properties
           .map((p) => p.category || p.propertyCategory)
-          .filter((c): c is string => !!c)
+          .filter((c): c is string => !!c),
       ),
     ];
     const availabilities = [
       ...new Set(
-        properties.map((p) => p.availability).filter((a): a is string => !!a)
+        properties
+          .map((p) => p.listingAvailability)
+          .filter((a): a is string => !!a),
       ),
     ];
     const furnishingOptions = [
       ...new Set(
-        properties.map((p) => p.furnishing).filter((f): f is string => !!f)
+        properties.map((p) => p.furnishing).filter((f): f is string => !!f),
       ),
     ];
     const postedByOptions = [
       ...new Set(
-        properties.map((p) => p.postedBy).filter((p): p is string => !!p)
+        properties.map((p) => p.postedBy).filter((p): p is string => !!p),
       ),
     ];
 
@@ -230,7 +242,11 @@ export default function Properties() {
       }
 
       // Type filter
-      if (filters.type && filters.type !== "any" && property.type !== filters.type)
+      if (
+        filters.type &&
+        filters.type !== "any" &&
+        property.type !== filters.type
+      )
         return false;
 
       // Category filter
@@ -239,11 +255,11 @@ export default function Properties() {
         if (propertyCategory !== filters.category) return false;
       }
 
-      // Availability filter
+      // Listing Availability filter
       if (
-        filters.availability &&
-        filters.availability !== "any" &&
-        property.availability !== filters.availability
+        filters.listingAvailability &&
+        filters.listingAvailability !== "any" &&
+        property.listingAvailability !== filters.listingAvailability
       )
         return false;
 
@@ -311,20 +327,9 @@ export default function Properties() {
     }
   };
 
-  // EDIT PROPERTY
+  // EDIT PROPERTY - navigates to the edit page using AdminPropertyForm
   const handleEdit = (id: string) => {
-    const propertyToEdit = properties?.find(
-      (property: PropertyRow) => property._id === id,
-    );
-    if (propertyToEdit) {
-      setSelectedProperty(propertyToEdit);
-      setEditModalOpened(true);
-    }
-  };
-
-  // VIEW PROPERTY DETAILS
-  const handleView = (id: string) => {
-    router.push(`/properties/view/${id}`);
+    router.push(`/properties/edit/${id}`);
   };
 
   // TOGGLE ACTIVE STATUS
@@ -340,7 +345,7 @@ export default function Properties() {
         description: property.description,
         location: property.location,
         category: property.category,
-        availability: property.availability,
+        listingAvailability: property.listingAvailability,
         deal: property.deal,
         furnishing: property.furnishing,
         postedBy: property.postedBy,
@@ -354,6 +359,86 @@ export default function Properties() {
     }
   };
 
+  // UPDATE LISTING AVAILABILITY
+  const handleListingAvailabilityChange = async (
+    property: PropertyRow,
+    newAvailability: string
+  ) => {
+    try {
+      await updateProperty({
+        id: property._id,
+        listingAvailability: newAvailability,
+        title: property.title,
+        type: property.type,
+        price: property.price,
+        description: property.description,
+        location: property.location,
+        category: property.category,
+        deal: property.deal,
+        furnishing: property.furnishing,
+        postedBy: property.postedBy,
+        image: property.image || [],
+      }).unwrap();
+      toast.success(`Listing status updated to "${newAvailability}"`);
+    } catch (err) {
+      toast.error("Failed to update listing status");
+    }
+  };
+
+  // TOGGLE FEATURED STATUS
+  const handleToggleFeatured = async (property: PropertyRow) => {
+    const newStatus = !property.isFeatured;
+    try {
+      await updateProperty({
+        id: property._id,
+        isFeatured: newStatus,
+        title: property.title,
+        type: property.type,
+        price: property.price,
+        description: property.description,
+        location: property.location,
+        category: property.category,
+        listingAvailability: property.listingAvailability,
+        deal: property.deal,
+        furnishing: property.furnishing,
+        postedBy: property.postedBy,
+        image: property.image || [],
+      }).unwrap();
+      toast.success(
+        `Property ${newStatus ? "featured" : "unfeatured"} successfully`
+      );
+    } catch (err) {
+      toast.error("Failed to update featured status");
+    }
+  };
+
+  // TOGGLE VERIFIED STATUS
+  const handleToggleVerified = async (property: PropertyRow) => {
+    const newStatus = !property.isVerified;
+    try {
+      await updateProperty({
+        id: property._id,
+        isVerified: newStatus,
+        title: property.title,
+        type: property.type,
+        price: property.price,
+        description: property.description,
+        location: property.location,
+        category: property.category,
+        listingAvailability: property.listingAvailability,
+        deal: property.deal,
+        furnishing: property.furnishing,
+        postedBy: property.postedBy,
+        image: property.image || [],
+      }).unwrap();
+      toast.success(
+        `Property ${newStatus ? "verified" : "unverified"} successfully`
+      );
+    } catch (err) {
+      toast.error("Failed to update verified status");
+    }
+  };
+
   const columns: ColumnDef<PropertyRow>[] = [
     {
       accessorKey: "title",
@@ -361,13 +446,16 @@ export default function Properties() {
       enableSorting: true,
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-14 rounded overflow-hidden flex-shrink-0 bg-muted">
+          <Link
+            href={`/properties/view/${row.original._id}`}
+            className="h-10 w-14 rounded overflow-hidden flex-shrink-0 bg-muted hover:opacity-80 transition-opacity"
+          >
             <img
               src={row.original.image?.[0] || "/placeholder.png"}
               alt={row.original.title}
               className="h-full w-full object-cover"
             />
-          </div>
+          </Link>
           <div>
             <p className="font-medium line-clamp-1">{row.original.title}</p>
             {row.original.location?.city && (
@@ -393,8 +481,31 @@ export default function Properties() {
     },
     {
       accessorKey: "deal",
-      header: "Deal",
+      header: "Featured",
       enableSorting: true,
+      cell: ({ row }) => {
+        const property = row.original;
+        const isFeatured = property.isFeatured;
+        return (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleFeatured(property);
+            }}
+            disabled={togglingActive}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 ${
+              isFeatured ? "bg-yellow-500" : "bg-gray-300"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${
+                isFeatured ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        );
+      },
     },
     {
       accessorKey: "price",
@@ -407,21 +518,38 @@ export default function Properties() {
       ),
     },
     {
-      accessorKey: "availability",
-      header: "Availability",
+      accessorKey: "listingAvailability",
+      header: "Listing Status",
       enableSorting: true,
       cell: ({ row }) => {
-        const availability = row.getValue("availability") as string;
+        const property = row.original;
+        const listingAvailability = row.getValue(
+          "listingAvailability",
+        ) as string;
         return (
-          <Badge
-            className={
-              availability === "Ready to Move"
-                ? "bg-green-500"
-                : "bg-yellow-500"
+          <select
+            value={listingAvailability || ""}
+            onChange={(e) =>
+              handleListingAvailabilityChange(property, e.target.value)
             }
+            className={`px-2 py-1 rounded-md text-xs font-medium border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              listingAvailability === "Available"
+                ? "bg-green-100 text-green-700"
+                : listingAvailability === "Fresh"
+                ? "bg-blue-100 text-blue-700"
+                : listingAvailability === "Booked"
+                ? "bg-orange-100 text-orange-700"
+                : listingAvailability === "Sold" || listingAvailability === "Rented"
+                ? "bg-red-100 text-red-700"
+                : "bg-yellow-100 text-yellow-700"
+            }`}
           >
-            {availability}
-          </Badge>
+            {LISTING_AVAILABILITY.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
         );
       },
     },
@@ -429,18 +557,29 @@ export default function Properties() {
       accessorKey: "isVerified",
       header: "Verified",
       enableSorting: true,
-      cell: ({ row }) => (
-        <Badge
-          variant={row.getValue("isVerified") ? "default" : "secondary"}
-          className={
-            row.getValue("isVerified")
-              ? "bg-green-500/20 text-green-600"
-              : "bg-gray-500/20 text-gray-500"
-          }
-        >
-          {row.getValue("isVerified") ? "Verified" : "Unverified"}
-        </Badge>
-      ),
+      cell: ({ row }) => {
+        const property = row.original;
+        const isVerified = row.getValue("isVerified") as boolean;
+        return (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleVerified(property);
+            }}
+            disabled={togglingActive}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+              isVerified ? "bg-green-500" : "bg-gray-300"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${
+                isVerified ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        );
+      },
     },
     {
       accessorKey: "isActive",
@@ -456,13 +595,15 @@ export default function Properties() {
               handleToggleActive(property);
             }}
             disabled={togglingActive}
-            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider transition-all border-2 ${
-              property.isActive === false
-                ? "bg-red-100 text-red-700 border-red-400 hover:bg-red-200"
-                : "bg-green-100 text-green-700 border-green-400 hover:bg-green-200"
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              property.isActive ? "bg-green-500" : "bg-gray-300"
             }`}
           >
-            {property.isActive === false ? "Inactive" : "Active"}
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${
+                property.isActive ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
           </button>
         );
       },
@@ -475,22 +616,11 @@ export default function Properties() {
         const property = row.original;
         return (
           <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => handleView(property._id)}
-            >
-              <Eye className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => handleEdit(property._id)}
-            >
-              <Edit className="h-3.5 w-3.5" />
-            </Button>
+            <Link href={`/properties/edit/${property._id}`}>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Edit className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
             <Button
               variant="ghost"
               size="icon"
@@ -510,7 +640,7 @@ export default function Properties() {
     setFilters({
       type: "",
       category: "",
-      availability: "",
+      listingAvailability: "",
       deal: "",
       furnishing: "",
       postedBy: "",
@@ -532,10 +662,13 @@ export default function Properties() {
 
   // HELPER: Get filter icon
   const getFilterIcon = (key: string) => {
-    const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+    const iconMap: Record<
+      string,
+      React.ComponentType<{ className?: string }>
+    > = {
       type: Home,
       category: Building2,
-      availability: MapPin,
+      listingAvailability: MapPin,
       deal: Star,
       furnishing: Warehouse,
       postedBy: Tag,
@@ -562,7 +695,12 @@ export default function Properties() {
 
   // ACTIVE FILTER CHIPS - Show active filters as removable chips
   const activeFilterChips = useMemo(() => {
-    const chips: { key: string; label: string; value: string; displayValue: string }[] = [];
+    const chips: {
+      key: string;
+      label: string;
+      value: string;
+      displayValue: string;
+    }[] = [];
 
     if (debouncedSearchQuery) {
       chips.push({
@@ -577,7 +715,9 @@ export default function Properties() {
       if (value && value !== "any") {
         chips.push({
           key,
-          label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, " $1"),
+          label:
+            key.charAt(0).toUpperCase() +
+            key.slice(1).replace(/([A-Z])/g, " $1"),
           value,
           displayValue: getFilterDisplayValue(key, value),
         });
@@ -605,7 +745,8 @@ export default function Properties() {
           </label>
           <div className="flex flex-wrap gap-2">
             {quickFilters.map((qf) => {
-              const isActive = filters[qf.key as keyof typeof filters] === qf.value;
+              const isActive =
+                filters[qf.key as keyof typeof filters] === qf.value;
               return (
                 <Button
                   key={`${qf.key}-${qf.value}`}
@@ -664,7 +805,10 @@ export default function Properties() {
             <Select
               value={filters.category || "any"}
               onValueChange={(value) =>
-                setFilters({ ...filters, category: value === "any" ? "" : value })
+                setFilters({
+                  ...filters,
+                  category: value === "any" ? "" : value,
+                })
               }
             >
               <SelectTrigger className="bg-white border-slate-300">
@@ -681,29 +825,61 @@ export default function Properties() {
             </Select>
           </div>
 
+          {/* Listing Availability with Roll Down Button */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
               <MapPin className="h-3.5 w-3.5 text-slate-500" />
-              Availability
+              Listing Availability
             </label>
-            <Select
-              value={filters.availability || "any"}
-              onValueChange={(value) =>
-                setFilters({ ...filters, availability: value === "any" ? "" : value })
-              }
+            <button
+              type="button"
+              onClick={() => setShowListingAvailability(!showListingAvailability)}
+              className="w-full flex items-center justify-between px-3 py-2 bg-white border border-slate-300 rounded-md text-sm hover:bg-slate-50 transition-colors"
             >
-              <SelectTrigger className="bg-white border-slate-300">
-                <SelectValue placeholder="Any Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="any">Any Status</SelectItem>
+              <span className={filters.listingAvailability ? "text-slate-900" : "text-slate-500"}>
+                {filters.listingAvailability || "Any Status"}
+              </span>
+              {showListingAvailability ? (
+                <ChevronUp className="h-4 w-4 text-slate-500" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-slate-500" />
+              )}
+            </button>
+            {showListingAvailability && (
+              <div className="mt-2 p-3 bg-white border border-slate-200 rounded-md shadow-sm space-y-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilters({ ...filters, listingAvailability: "" });
+                    setShowListingAvailability(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                    !filters.listingAvailability
+                      ? "bg-blue-50 text-blue-700 font-medium"
+                      : "hover:bg-slate-50 text-slate-700"
+                  }`}
+                >
+                  Any Status
+                </button>
                 {filterOptions.availabilities?.map((avail) => (
-                  <SelectItem key={avail} value={avail}>
+                  <button
+                    key={avail}
+                    type="button"
+                    onClick={() => {
+                      setFilters({ ...filters, listingAvailability: avail });
+                      setShowListingAvailability(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                      filters.listingAvailability === avail
+                        ? "bg-blue-50 text-blue-700 font-medium"
+                        : "hover:bg-slate-50 text-slate-700"
+                    }`}
+                  >
                     {avail}
-                  </SelectItem>
+                  </button>
                 ))}
-              </SelectContent>
-            </Select>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -736,7 +912,10 @@ export default function Properties() {
             <Select
               value={filters.furnishing || "any"}
               onValueChange={(value) =>
-                setFilters({ ...filters, furnishing: value === "any" ? "" : value })
+                setFilters({
+                  ...filters,
+                  furnishing: value === "any" ? "" : value,
+                })
               }
             >
               <SelectTrigger className="bg-white border-slate-300">
@@ -761,7 +940,10 @@ export default function Properties() {
             <Select
               value={filters.postedBy || "any"}
               onValueChange={(value) =>
-                setFilters({ ...filters, postedBy: value === "any" ? "" : value })
+                setFilters({
+                  ...filters,
+                  postedBy: value === "any" ? "" : value,
+                })
               }
             >
               <SelectTrigger className="bg-white border-slate-300">
@@ -786,7 +968,10 @@ export default function Properties() {
             <Select
               value={filters.isVerified || "any"}
               onValueChange={(value) =>
-                setFilters({ ...filters, isVerified: value === "any" ? "" : value })
+                setFilters({
+                  ...filters,
+                  isVerified: value === "any" ? "" : value,
+                })
               }
             >
               <SelectTrigger className="bg-white border-slate-300">
@@ -809,7 +994,10 @@ export default function Properties() {
             <Select
               value={filters.isActive || "any"}
               onValueChange={(value) =>
-                setFilters({ ...filters, isActive: value === "any" ? "" : value })
+                setFilters({
+                  ...filters,
+                  isActive: value === "any" ? "" : value,
+                })
               }
             >
               <SelectTrigger className="bg-white border-slate-300">
@@ -852,42 +1040,32 @@ export default function Properties() {
           </p>
         </div>
 
-        <button
-          onClick={() => setModalOpened(true)}
-          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-white hover:text-primary transition border border-primary"
+        <Link
+          href="/properties/new"
+          className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-white hover:text-primary transition border border-primary"
         >
+          <Plus className="h-4 w-4" />
           Add Property
-        </button>
+        </Link>
       </div>
-
-      {/* MODALS */}
-      <AddPropertyModal opened={modalOpened} setOpened={setModalOpened} />
-
-      {selectedProperty && (
-        <EditPropertyModal
-          key={selectedProperty._id}
-          opened={editModalOpened}
-          setOpened={setEditModalOpened}
-          propertyData={selectedProperty}
-          onSuccess={() => {
-            setSelectedProperty(null);
-          }}
-        />
-      )}
 
       {/* ACTIVE FILTER CHIPS */}
       {activeFilterChips.length > 0 && (
         <Card className="bg-blue-50/50 border-blue-200">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-medium text-slate-700">Active Filters:</span>
+              <span className="text-sm font-medium text-slate-700">
+                Active Filters:
+              </span>
               {activeFilterChips.map((chip) => (
                 <FilterChip
                   key={chip.key}
                   label={chip.label}
                   value={chip.displayValue}
                   onRemove={() => removeFilterChip(chip.key)}
-                  icon={chip.key === "search" ? Search : getFilterIcon(chip.key)}
+                  icon={
+                    chip.key === "search" ? Search : getFilterIcon(chip.key)
+                  }
                 />
               ))}
               <Button
@@ -946,7 +1124,8 @@ export default function Properties() {
               </span>
               {activeFiltersCount > 0 && (
                 <span className="text-blue-600">
-                  {activeFiltersCount} filter{activeFiltersCount > 1 ? "s" : ""} active
+                  {activeFiltersCount} filter{activeFiltersCount > 1 ? "s" : ""}{" "}
+                  active
                 </span>
               )}
             </div>
@@ -962,7 +1141,7 @@ export default function Properties() {
         data={filteredProperties}
         isLoading={isLoading}
         loadingRows={10}
-        pageSize={50}
+        pageSize={200}
       />
     </div>
   );
