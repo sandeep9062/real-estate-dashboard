@@ -18,8 +18,10 @@ export interface User {
   resetPasswordToken?: string;
   resetPasswordExpire?: string;
   createdAt: string;
+  updatedAt?: string;
   favProperties: any[];
   bookings: any[];
+  bookedVisits?: any[];
   ownedProperties: any[];
   propertyCount?: number;
 }

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Edit, Trash2, Building2, User as UserIcon } from "lucide-react";
@@ -44,6 +45,7 @@ import {
 import { selectIsAuthenticated, selectUser } from "@/store/authSlice";
 
 export default function Users() {
+  const router = useRouter();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
@@ -172,17 +174,24 @@ export default function Users() {
         const user = row.original;
         return (
           <div className="flex items-center justify-center">
-            {user.image ? (
-              <img
-                src={user.image}
-                alt={user.name}
-                className="h-8 w-8 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                <UserIcon className="h-4 w-4 text-muted-foreground" />
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => router.push(`/users/${user._id}`)}
+              title={`View ${user.name}'s details`}
+              className="group relative inline-flex h-8 w-8 overflow-hidden rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
+            >
+              {user.image ? (
+                <img
+                  src={user.image}
+                  alt={user.name}
+                  className="h-8 w-8 rounded-full object-cover transition-transform group-hover:scale-105"
+                />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-muted-foreground/20">
+                  <UserIcon className="h-4 w-4 text-muted-foreground" />
+                </div>
+              )}
+            </button>
           </div>
         );
       },
@@ -240,10 +249,29 @@ export default function Users() {
       header: "Properties",
       enableSorting: true,
       cell: ({ row }) => {
+        const user = row.original;
         const count = row.getValue<number>("propertyCount") || 0;
+        if (count > 0) {
+          return (
+            <button
+              type="button"
+              onClick={() => router.push(`/users/${user._id}/properties`)}
+              title={`View all ${count} properties listed by ${user.name}`}
+              className="group flex items-center gap-2 rounded-md px-2 py-1 -mx-2 transition-colors hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-primary/40"
+            >
+              <Building2 className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-blue-600" />
+              <span className="font-medium text-blue-600 underline-offset-2 group-hover:underline">
+                {count}
+              </span>
+              <span className="text-xs text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
+                →
+              </span>
+            </button>
+          );
+        }
         return (
-          <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Building2 className="h-4 w-4" />
             <span className="font-medium">{count}</span>
           </div>
         );
