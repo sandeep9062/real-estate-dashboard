@@ -53,6 +53,18 @@ export const userApi = createApi({
       providesTags: (result, error, id) => ["User", { type: "User", id }],
     }),
 
+    // ✅ Get agent profile linked to a user id (admin dashboard)
+    getAgentByUserId: builder.query<any, string>({
+      query: (userId) => `/agents/by-user/${userId}`,
+      transformResponse: (response: { data?: any }) => response?.data,
+    }),
+
+    // ✅ Get landlord profile linked to a user id (admin dashboard)
+    getLandlordByUserId: builder.query<any, string>({
+      query: (userId) => `/landlords/by-user/${userId}`,
+      transformResponse: (response: { data?: any }) => response?.data,
+    }),
+
     // ✅ Create a new user
     addUser: builder.mutation<User, Partial<User>>({
       query: (data) => ({
@@ -267,6 +279,8 @@ export const userApi = createApi({
 export const {
   useGetUsersQuery,
   useGetUserByIdQuery,
+  useGetAgentByUserIdQuery,
+  useGetLandlordByUserIdQuery,
   useAddUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,
