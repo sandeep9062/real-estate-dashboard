@@ -46,7 +46,6 @@ import { selectIsAuthenticated, selectUser } from "@/store/authSlice";
 
 export default function Users() {
   const router = useRouter();
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -108,25 +107,9 @@ export default function Users() {
     }
   };
 
-  const handleEditOpen = (user: User) => {
-    setSelectedUser(user);
-    setIsEditDialogOpen(true);
-  };
-
   const handleDeleteOpen = (user: User) => {
     setSelectedUser(user);
     setIsDeleteDialogOpen(true);
-  };
-
-  const handleSaveChanges = async () => {
-    if (!selectedUser) return;
-    try {
-      await updateUser({ id: selectedUser._id, data: selectedUser }).unwrap();
-      toast.success("User updated successfully");
-      setIsEditDialogOpen(false);
-    } catch (err) {
-      toast.error("Failed to update user");
-    }
   };
 
   const handleDeleteConfirm = async () => {
@@ -308,7 +291,8 @@ export default function Users() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => handleEditOpen(user)}
+              title={`Edit ${user.name}`}
+              onClick={() => router.push(`/users/${user._id}/edit`)}
             >
               <Edit className="h-4 w-4" />
             </Button>
@@ -367,89 +351,6 @@ export default function Users() {
         toolbar={toolbar}
         pageSize={50}
       />
-
-      {/* Edit User Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-          </DialogHeader>
-          {selectedUser && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input
-                  id="name"
-                  value={selectedUser.name}
-                  onChange={(e) =>
-                    setSelectedUser({ ...selectedUser, name: e.target.value })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  value={selectedUser.email}
-                  onChange={(e) =>
-                    setSelectedUser({ ...selectedUser, email: e.target.value })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="phone" className="text-right">
-                  Phone
-                </Label>
-                <Input
-                  id="phone"
-                  value={selectedUser.phone}
-                  onChange={(e) =>
-                    setSelectedUser({ ...selectedUser, phone: e.target.value })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="role" className="text-right">
-                  Role
-                </Label>
-                <Select
-                  value={selectedUser.role}
-                  onValueChange={(value) =>
-                    setSelectedUser({ ...selectedUser, role: value })
-                  }
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="agent">Agent</SelectItem>
-                    <SelectItem value="landlord">Landlord</SelectItem>
-                    <SelectItem value="builder">Builder</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSaveChanges}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Add User Dialog */}
       <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
