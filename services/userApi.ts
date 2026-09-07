@@ -293,6 +293,38 @@ export const userApi = createApi({
       ],
     }),
 
+    // ✅ Admin: create an agent profile for a user (role must be "agent")
+    createAgentByUserId: builder.mutation<
+      any,
+      { userId: string; data: Record<string, any> }
+    >({
+      query: ({ userId, data }) => ({
+        url: `/agents/by-user/${userId}`,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: (result, error, { userId }) => [
+        { type: "Agent", id: userId },
+        "User",
+      ],
+    }),
+
+    // ✅ Admin: create a landlord profile for a user (role must be "landlord")
+    createLandlordByUserId: builder.mutation<
+      any,
+      { userId: string; data: Record<string, any> }
+    >({
+      query: ({ userId, data }) => ({
+        url: `/landlords/by-user/${userId}`,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: (result, error, { userId }) => [
+        { type: "Landlord", id: userId },
+        "User",
+      ],
+    }),
+
     // ✅ Admin/owner: update landlord profile by landlord id
     updateLandlordProfile: builder.mutation<
       any,
@@ -328,5 +360,7 @@ export const {
   useGetFavouritesQuery,
   useUpdateProfileMutation,
   useUpdateAgentByUserIdMutation,
+  useCreateAgentByUserIdMutation,
+  useCreateLandlordByUserIdMutation,
   useUpdateLandlordProfileMutation,
 } = userApi;

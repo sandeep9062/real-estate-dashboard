@@ -32,6 +32,8 @@ import {
   useGetLandlordByUserIdQuery,
   useGetUserByIdQuery,
   useUpdateAgentByUserIdMutation,
+  useCreateAgentByUserIdMutation,
+  useCreateLandlordByUserIdMutation,
   useUpdateLandlordProfileMutation,
   useUpdateUserMutation,
 } from "@/services/userApi";
@@ -158,10 +160,12 @@ const SaveBar = ({
   onSave,
   saving,
   saved,
+  label = "Save Changes",
 }: {
   onSave: () => void;
   saving: boolean;
   saved: boolean;
+  label?: string;
 }) => (
   <div className="flex items-center gap-3">
     <Button onClick={onSave} disabled={saving} className="gap-2">
@@ -170,7 +174,7 @@ const SaveBar = ({
       ) : (
         <Save size={16} />
       )}
-      {saving ? "Saving…" : "Save Changes"}
+      {saving ? "Saving…" : label}
     </Button>
     {saved && !saving && (
       <span className="text-sm font-medium text-green-600">Saved ✓</span>
@@ -229,7 +233,10 @@ const SectionHeading = ({ children }: { children: React.ReactNode }) => (
 );
 
 const NoProfileNote = ({ role }: { role: string }) => (
-  <p className="text-sm text-slate-500">No {role} profile exists for this account.</p>
+  <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-sm text-slate-600">
+    No {role} profile exists for this account yet. Fill in the details below and
+    click <span className="font-medium">Create {role === "agent" ? "Agent" : "Landlord"} Profile</span>.
+  </div>
 );
 
 const ColorField = ({
@@ -263,6 +270,7 @@ const AgentEditCard = ({
   saving,
   saved,
   onSave,
+  isCreate,
 }: {
   agent?: any;
   form: AgentFormValues;
@@ -270,16 +278,12 @@ const AgentEditCard = ({
   saving: boolean;
   saved: boolean;
   onSave: () => void;
+  isCreate: boolean;
 }) => {
-  if (!agent)
-    return (
-      <CardShell title="Agent Profile" icon={Briefcase} iconClass="text-blue-600" headerClass="bg-blue-50/60">
-        <NoProfileNote role="agent" />
-      </CardShell>
-    );
-
   return (
     <CardShell title="Agent Profile" icon={Briefcase} iconClass="text-blue-600" headerClass="bg-blue-50/60">
+      {isCreate && <NoProfileNote role="agent" />}
+
       <div>
         <SectionHeading>Basic Info</SectionHeading>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -335,7 +339,7 @@ const AgentEditCard = ({
         </div>
       </div>
 
-      <SaveBar onSave={onSave} saving={saving} saved={saved} />
+      <SaveBar onSave={onSave} saving={saving} saved={saved} label={isCreate ? "Create Agent Profile" : "Save Changes"} />
     </CardShell>
   );
 };
@@ -348,6 +352,7 @@ const LandlordEditCard = ({
   saving,
   saved,
   onSave,
+  isCreate,
 }: {
   landlord?: any;
   form: LandlordFormValues;
@@ -355,16 +360,12 @@ const LandlordEditCard = ({
   saving: boolean;
   saved: boolean;
   onSave: () => void;
+  isCreate: boolean;
 }) => {
-  if (!landlord)
-    return (
-      <CardShell title="Landlord Profile" icon={Landmark} iconClass="text-amber-600" headerClass="bg-amber-50/60">
-        <NoProfileNote role="landlord" />
-      </CardShell>
-    );
-
   return (
     <CardShell title="Landlord Profile" icon={Landmark} iconClass="text-amber-600" headerClass="bg-amber-50/60">
+      {isCreate && <NoProfileNote role="landlord" />}
+
       <div>
         <SectionHeading>Basic Info</SectionHeading>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -440,7 +441,7 @@ const LandlordEditCard = ({
         </div>
       </div>
 
-      <SaveBar onSave={onSave} saving={saving} saved={saved} />
+      <SaveBar onSave={onSave} saving={saving} saved={saved} label={isCreate ? "Create Landlord Profile" : "Save Changes"} />
     </CardShell>
   );
 };
@@ -463,6 +464,8 @@ export default function EditUserPage() {
 
   const [updateUser, { isLoading: savingUser }] = useUpdateUserMutation();
   const [updateAgent, { isLoading: savingAgent }] = useUpdateAgentByUserIdMutation();
+  const [createAgentProfile, { isLoading: creatingAgent }] = useCreateAgentByUserIdMutation();
+  const [createLandlordProfile, { isLoading: creatingLandlord }] = useCreateLandlordByUserIdMutation();
   const [updateLandlord, { isLoading: savingLandlord }] = useUpdateLandlordProfileMutation();
 
   /* Account form state */
@@ -581,6 +584,27 @@ export default function EditUserPage() {
     });
   }, [landlord]);
 
+  /* When a profile doesn't exist yet, seed the form from the user account */
+  useEffect(() => {
+    if (role !== "agent" || agentLoading || agent) return;
+    setAgentForm((p) => ({
+      ...p,
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+    }));
+  }, [role, agent, agentLoading, user]);
+
+  useEffect(() => {
+    if (role !== "landlord" || landlordLoading || landlord) return;
+    setLandlordForm((p) => ({
+      ...p,
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+    }));
+  }, [role, landlord, landlordLoading, user]);
+
   const af = (key: keyof typeof agentForm) => (v: string | boolean) =>
     setAgentForm((p) => ({ ...p, [key]: v }));
   const lf = (key: keyof typeof landlordForm) => (v: string | boolean) =>
@@ -602,36 +626,35 @@ export default function EditUserPage() {
     }
   };
 
+  const agentPayload = () => ({
+    name: agentForm.name,
+    title: agentForm.title,
+    email: agentForm.email,
+    phone: agentForm.phone,
+    whatsapp: agentForm.whatsapp,
+    agencyName: agentForm.agencyName,
+    rera: agentForm.rera,
+    experience: Number(agentForm.experience) || 0,
+    bio: agentForm.bio,
+    longBio: agentForm.longBio,
+    locations: splitList(agentForm.locations),
+    specialisations: splitList(agentForm.specialisations),
+    languages: splitList(agentForm.languages),
+    achievements: splitList(agentForm.achievements),
+    status: agentForm.status,
+    verified: agentForm.verified,
+    topAgent: agentForm.topAgent,
+    featured: agentForm.featured,
+    avatarColor: agentForm.avatarColor,
+    coverColor: agentForm.coverColor,
+    coverImage: agentForm.coverImage,
+    metaTitle: agentForm.metaTitle,
+    metaDescription: agentForm.metaDescription,
+  });
+
   const handleSaveAgent = async () => {
     try {
-      await updateAgent({
-        userId: id,
-        data: {
-          name: agentForm.name,
-          title: agentForm.title,
-          email: agentForm.email,
-          phone: agentForm.phone,
-          whatsapp: agentForm.whatsapp,
-          agencyName: agentForm.agencyName,
-          rera: agentForm.rera,
-          experience: Number(agentForm.experience) || 0,
-          bio: agentForm.bio,
-          longBio: agentForm.longBio,
-          locations: splitList(agentForm.locations),
-          specialisations: splitList(agentForm.specialisations),
-          languages: splitList(agentForm.languages),
-          achievements: splitList(agentForm.achievements),
-          status: agentForm.status,
-          verified: agentForm.verified,
-          topAgent: agentForm.topAgent,
-          featured: agentForm.featured,
-          avatarColor: agentForm.avatarColor,
-          coverColor: agentForm.coverColor,
-          coverImage: agentForm.coverImage,
-          metaTitle: agentForm.metaTitle,
-          metaDescription: agentForm.metaDescription,
-        },
-      }).unwrap();
+      await updateAgent({ userId: id, data: agentPayload() }).unwrap();
       setAgentSaved(true);
       setTimeout(() => setAgentSaved(false), 2500);
       toast({ title: "Agent profile updated" });
@@ -644,53 +667,82 @@ export default function EditUserPage() {
     }
   };
 
+  const handleCreateAgent = async () => {
+    try {
+      await createAgentProfile({ userId: id, data: agentPayload() }).unwrap();
+      setAgentSaved(true);
+      setTimeout(() => setAgentSaved(false), 2500);
+      toast({ title: "Agent profile created" });
+    } catch (e: any) {
+      toast({
+        title: "Failed to create agent profile",
+        description: e?.data?.message || "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const landlordPayload = () => ({
+    name: landlordForm.name,
+    email: landlordForm.email,
+    title: landlordForm.title,
+    phone: landlordForm.phone,
+    whatsapp: landlordForm.whatsapp,
+    bio: landlordForm.bio,
+    longBio: landlordForm.longBio,
+    address: landlordForm.address,
+    city: landlordForm.city,
+    state: landlordForm.state,
+    pincode: landlordForm.pincode,
+    totalProperties: Number(landlordForm.totalProperties) || 0,
+    activeListings: Number(landlordForm.activeListings) || 0,
+    propertyTypes: splitList(landlordForm.propertyTypes),
+    locations: splitList(landlordForm.locations),
+    languages: splitList(landlordForm.languages),
+    isCompany: landlordForm.isCompany,
+    companyName: landlordForm.companyName,
+    gstin: landlordForm.gstin,
+    pan: landlordForm.pan,
+    isVerified: landlordForm.isVerified,
+    identityVerified: landlordForm.identityVerified,
+    featured: landlordForm.featured,
+    status: landlordForm.status,
+    preferences: {
+      contactMethod: landlordForm.contactMethod,
+      availableTimings: landlordForm.availableTimings,
+      acceptsVisits: landlordForm.acceptsVisits,
+    },
+    avatarColor: landlordForm.avatarColor,
+    coverImage: landlordForm.coverImage,
+    metaTitle: landlordForm.metaTitle,
+    metaDescription: landlordForm.metaDescription,
+  });
+
   const handleSaveLandlord = async () => {
     if (!landlord?._id) return;
     try {
-      await updateLandlord({
-        id: landlord._id,
-        data: {
-          name: landlordForm.name,
-          email: landlordForm.email,
-          title: landlordForm.title,
-          phone: landlordForm.phone,
-          whatsapp: landlordForm.whatsapp,
-          bio: landlordForm.bio,
-          longBio: landlordForm.longBio,
-          address: landlordForm.address,
-          city: landlordForm.city,
-          state: landlordForm.state,
-          pincode: landlordForm.pincode,
-          totalProperties: Number(landlordForm.totalProperties) || 0,
-          activeListings: Number(landlordForm.activeListings) || 0,
-          propertyTypes: splitList(landlordForm.propertyTypes),
-          locations: splitList(landlordForm.locations),
-          languages: splitList(landlordForm.languages),
-          isCompany: landlordForm.isCompany,
-          companyName: landlordForm.companyName,
-          gstin: landlordForm.gstin,
-          pan: landlordForm.pan,
-          isVerified: landlordForm.isVerified,
-          identityVerified: landlordForm.identityVerified,
-          featured: landlordForm.featured,
-          status: landlordForm.status,
-          preferences: {
-            contactMethod: landlordForm.contactMethod,
-            availableTimings: landlordForm.availableTimings,
-            acceptsVisits: landlordForm.acceptsVisits,
-          },
-          avatarColor: landlordForm.avatarColor,
-          coverImage: landlordForm.coverImage,
-          metaTitle: landlordForm.metaTitle,
-          metaDescription: landlordForm.metaDescription,
-        },
-      }).unwrap();
+      await updateLandlord({ id: landlord._id, data: landlordPayload() }).unwrap();
       setLandlordSaved(true);
       setTimeout(() => setLandlordSaved(false), 2500);
       toast({ title: "Landlord profile updated" });
     } catch (e: any) {
       toast({
         title: "Failed to update landlord profile",
+        description: e?.data?.message || "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreateLandlord = async () => {
+    try {
+      await createLandlordProfile({ userId: id, data: landlordPayload() }).unwrap();
+      setLandlordSaved(true);
+      setTimeout(() => setLandlordSaved(false), 2500);
+      toast({ title: "Landlord profile created" });
+    } catch (e: any) {
+      toast({
+        title: "Failed to create landlord profile",
         description: e?.data?.message || "Please try again.",
         variant: "destructive",
       });
@@ -790,11 +842,12 @@ export default function EditUserPage() {
       {showAgentCard && !agentLoading && (
         <AgentEditCard
           agent={agent}
+          isCreate={!agent}
           form={agentForm}
           af={af}
-          saving={savingAgent}
+          saving={savingAgent || creatingAgent}
           saved={agentSaved}
-          onSave={handleSaveAgent}
+          onSave={agent ? handleSaveAgent : handleCreateAgent}
         />
       )}
 
@@ -802,11 +855,12 @@ export default function EditUserPage() {
       {showLandlordCard && !landlordLoading && (
         <LandlordEditCard
           landlord={landlord}
+          isCreate={!landlord}
           form={landlordForm}
           lf={lf}
-          saving={savingLandlord}
+          saving={savingLandlord || creatingLandlord}
           saved={landlordSaved}
-          onSave={handleSaveLandlord}
+          onSave={landlord ? handleSaveLandlord : handleCreateLandlord}
         />
       )}
 
