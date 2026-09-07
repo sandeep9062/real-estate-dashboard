@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   ArrowLeft,
   Activity,
@@ -13,6 +14,7 @@ import {
   IdCard,
   Landmark,
   Mail,
+  Pencil,
   Phone,
   ShieldCheck,
   User as UserIcon,
@@ -657,6 +659,11 @@ export default function UserDetailPage() {
             <p className="text-sm text-gray-500 mt-1">View full user information and activity</p>
           </div>
           <div className="flex items-center gap-2">
+            <Link href={`/users/${id}/edit`}>
+              <Button className="gap-1.5">
+                <Pencil size={15} /> Edit User
+              </Button>
+            </Link>
             <Badge
               className={`px-3 py-1 text-sm capitalize border ${
                 ROLE_STYLES[role] || "bg-slate-100 text-slate-700 border-slate-200"
