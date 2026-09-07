@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import {
   useGetAgentByUserIdQuery,
   useGetLandlordByUserIdQuery,
@@ -626,12 +626,10 @@ export default function EditUserPage() {
       await updateUser({ id, data: { ...account } }).unwrap();
       setUserSaved(true);
       setTimeout(() => setUserSaved(false), 2500);
-      toast({ title: "User account updated" });
+      toast.success("User account updated");
     } catch (e: any) {
-      toast({
-        title: "Failed to update user",
+      toast.error("Failed to update user", {
         description: getErrMsg(e),
-        variant: "destructive",
       });
     }
   };
@@ -667,12 +665,10 @@ export default function EditUserPage() {
       await updateAgent({ userId: id, data: agentPayload() }).unwrap();
       setAgentSaved(true);
       setTimeout(() => setAgentSaved(false), 2500);
-      toast({ title: "Agent profile updated" });
+      toast.success("Agent profile updated");
     } catch (e: any) {
-      toast({
-        title: "Failed to update agent profile",
+      toast.error("Failed to update agent profile", {
         description: getErrMsg(e),
-        variant: "destructive",
       });
     }
   };
@@ -682,12 +678,10 @@ export default function EditUserPage() {
       await createAgentProfile({ userId: id, data: agentPayload() }).unwrap();
       setAgentSaved(true);
       setTimeout(() => setAgentSaved(false), 2500);
-      toast({ title: "Agent profile created" });
+      toast.success("Agent profile created");
     } catch (e: any) {
-      toast({
-        title: "Failed to create agent profile",
+      toast.error("Failed to create agent profile", {
         description: getErrMsg(e),
-        variant: "destructive",
       });
     }
   };
@@ -734,12 +728,10 @@ export default function EditUserPage() {
       await updateLandlord({ id: landlord._id, data: landlordPayload() }).unwrap();
       setLandlordSaved(true);
       setTimeout(() => setLandlordSaved(false), 2500);
-      toast({ title: "Landlord profile updated" });
+      toast.success("Landlord profile updated");
     } catch (e: any) {
-      toast({
-        title: "Failed to update landlord profile",
+      toast.error("Failed to update landlord profile", {
         description: getErrMsg(e),
-        variant: "destructive",
       });
     }
   };
@@ -749,12 +741,10 @@ export default function EditUserPage() {
       await createLandlordProfile({ userId: id, data: landlordPayload() }).unwrap();
       setLandlordSaved(true);
       setTimeout(() => setLandlordSaved(false), 2500);
-      toast({ title: "Landlord profile created" });
+      toast.success("Landlord profile created");
     } catch (e: any) {
-      toast({
-        title: "Failed to create landlord profile",
+      toast.error("Failed to create landlord profile", {
         description: getErrMsg(e),
-        variant: "destructive",
       });
     }
   };

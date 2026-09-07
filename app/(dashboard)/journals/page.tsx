@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import {
   useGetJournalsQuery,
@@ -52,14 +52,9 @@ export default function JournalsDashboard() {
         id: journal._id,
         update: { [field]: newValue },
       }).unwrap();
-      toast({
-        title: `Journal ${label} successfully`,
-      });
+      toast.success(`Journal ${label} successfully`);
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: `Failed to update journal`,
-      });
+      toast.error(`Failed to update journal`);
     }
   };
 
@@ -67,9 +62,9 @@ export default function JournalsDashboard() {
     if (window.confirm("Are you sure you want to delete this journal?")) {
       try {
         await deleteJournal(id).unwrap();
-        toast({ title: "Journal deleted successfully" });
+        toast.success("Journal deleted successfully");
       } catch (error) {
-        toast({ variant: "destructive", title: "Failed to delete journal" });
+        toast.error("Failed to delete journal");
       }
     }
   };

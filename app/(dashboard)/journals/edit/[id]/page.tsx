@@ -24,7 +24,7 @@ import {
   Link2,
 } from "lucide-react";
 import Link from "next/link";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import {
   useGetJournalByIdQuery,
   useUpdateJournalMutation,
@@ -195,7 +195,7 @@ export default function EditJournalPage() {
     const editorContent = editorRef.current?.getCurrentContent() || "";
 
     if (!editorContent) {
-      toast({ variant: "destructive", title: "Content cannot be empty" });
+      toast.error("Content cannot be empty");
       return;
     }
 
@@ -205,14 +205,12 @@ export default function EditJournalPage() {
         update: { ...formData, content: editorContent },
       }).unwrap();
 
-      toast({ title: "Journal updated successfully! ✅" });
+      toast.success("Journal updated successfully! ✅");
       setIsDirty(false);
       router.push("/journals");
     } catch (error: any) {
       console.error("Update failed:", error);
-      toast({
-        variant: "destructive",
-        title: "Update failed",
+      toast.error("Update failed", {
         description:
           error?.data?.message || "Something went wrong while saving.",
       });

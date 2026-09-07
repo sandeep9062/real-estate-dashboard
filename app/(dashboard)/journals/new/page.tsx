@@ -24,7 +24,7 @@ import {
   Link2,
 } from "lucide-react";
 import Link from "next/link";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useCreateJournalMutation } from "@/services/journalApi";
 import dynamic from "next/dynamic";
 import type { RichTextEditorRef } from "@/components/RichTextEditor";
@@ -201,9 +201,7 @@ export default function NewJournalPage() {
     const editorContent = editorRef.current?.getCurrentContent() || "";
 
     if (!formData.title || !editorContent) {
-      toast({
-        variant: "destructive",
-        title: "Missing required fields",
+      toast.error("Missing required fields", {
         description: "Title and content are required to publish a journal.",
       });
       return;
@@ -214,14 +212,12 @@ export default function NewJournalPage() {
     try {
       await createJournal({ ...formData, content: editorContent }).unwrap();
       clearDraft();
-      toast({ title: "Journal published successfully! 🚀" });
+      toast.success("Journal published successfully! 🚀");
       router.push("/journals");
     } catch (error: any) {
       console.error("Failed to save journal:", error);
       setSaveStatus("unsaved");
-      toast({
-        variant: "destructive",
-        title: "Error creating journal",
+      toast.error("Error creating journal", {
         description:
           error?.data?.message || "Please check your network or try again.",
       });

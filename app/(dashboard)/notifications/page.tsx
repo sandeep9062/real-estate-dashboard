@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { NotificationData } from "@/schemas/notification";
 import { useGetNotificationsQuery, useMarkAsReadMutation, useMarkAllAsReadMutation, useDeleteNotificationMutation } from "@/services/notificationApi";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { formatDistanceToNow, format } from "date-fns";
 import { useSearchParams } from "next/navigation";
 
@@ -102,7 +102,6 @@ const NotificationItem = ({
 };
 
 export default function NotificationsPage() {
-  const { toast } = useToast();
   const searchParams = useSearchParams();
   const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page') || '1'));
 
@@ -117,69 +116,40 @@ export default function NotificationsPage() {
 
   const handleMarkAsRead = async (notificationId: string) => {
     if (!notificationId || notificationId === 'undefined') {
-      toast({
-        title: "Error",
-        description: "Invalid notification ID",
-        variant: "destructive",
-      });
+      toast.error("Invalid notification ID");
       return;
     }
 
     try {
       await markAsRead(notificationId).unwrap();
-      toast({
-        title: "Success",
-        description: "Notification marked as read",
-      });
+      toast.success("Notification marked as read");
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to mark notification as read",
-        variant: "destructive",
-      });
+      toast.error("Failed to mark notification as read");
     }
   };
 
   const handleMarkAllAsRead = async () => {
     try {
       await markAllAsRead().unwrap();
-      toast({
-        title: "Success",
-        description: "All notifications marked as read",
-      });
+      toast.success("All notifications marked as read");
       refetch();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to mark all notifications as read",
-        variant: "destructive",
-      });
+      toast.error("Failed to mark all notifications as read");
     }
   };
 
   const handleDeleteNotification = async (notificationId: string) => {
     if (!notificationId || notificationId === 'undefined') {
-      toast({
-        title: "Error",
-        description: "Invalid notification ID",
-        variant: "destructive",
-      });
+      toast.error("Invalid notification ID");
       return;
     }
 
     try {
       await deleteNotification(notificationId).unwrap();
-      toast({
-        title: "Success",
-        description: "Notification deleted",
-      });
+      toast.success("Notification deleted");
       refetch();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete notification",
-        variant: "destructive",
-      });
+      toast.error("Failed to delete notification");
     }
   };
 
