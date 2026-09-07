@@ -10,12 +10,11 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
 import {
   useGetJournalsQuery,
   useDeleteJournalMutation,
@@ -25,7 +24,7 @@ import {
 export default function JournalsDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const limit = 100;
 
   const { data, isLoading, isError } = useGetJournalsQuery({ page, limit });
   const journals = data?.journals ?? [];
@@ -33,17 +32,6 @@ export default function JournalsDashboard() {
   const total = data?.total ?? 0;
   const [deleteJournal] = useDeleteJournalMutation();
   const [updateJournal] = useUpdateJournalMutation();
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this journal?")) {
-      try {
-        await deleteJournal(id).unwrap();
-        toast({ title: "Journal deleted successfully" });
-      } catch (error) {
-        toast({ variant: "destructive", title: "Failed to delete journal" });
-      }
-    }
-  };
 
   const handleToggleActive = async (journal: any) => {
     const newActiveState = !journal.isActive;
@@ -60,6 +48,17 @@ export default function JournalsDashboard() {
         variant: "destructive",
         title: `Failed to ${newActiveState ? "activate" : "deactivate"} journal`,
       });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this journal?")) {
+      try {
+        await deleteJournal(id).unwrap();
+        toast({ title: "Journal deleted successfully" });
+      } catch (error) {
+        toast({ variant: "destructive", title: "Failed to delete journal" });
+      }
     }
   };
 
@@ -153,14 +152,20 @@ export default function JournalsDashboard() {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
-                          <div className="relative size-12 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shrink-0">
+                          <a
+                            href={`https://propertybulbul.com/journal/${journal.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="relative size-12 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shrink-0"
+                            title="View Live"
+                          >
                             <Image
                               src={journal.coverImage}
                               alt={journal.title}
                               fill
                               className="object-cover"
                             />
-                          </div>
+                          </a>
                           <div className="min-w-0">
                             <p className="font-semibold text-slate-900 truncate max-w-[200px] md:max-w-xs">
                               {journal.title}
@@ -187,34 +192,22 @@ export default function JournalsDashboard() {
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
                           <Link
-                            href={`/journals/${journal.slug}`}
-                            className="p-2 text-slate-400 hover:text-[#4161df] transition-colors"
-                            title="View Live"
-                          >
-                            <ExternalLink size={18} />
-                          </Link>
-                          <Link
                             href={`/journals/edit/${journal._id}`}
                             className="p-2 text-slate-400 hover:text-amber-600 transition-colors"
                             title="Edit"
                           >
                             <Edit2 size={18} />
                           </Link>
-                          <button
-                            onClick={() => handleToggleActive(journal)}
-                            className={`p-2 transition-colors ${
-                              journal.isActive
-                                ? "text-green-500 hover:text-green-700"
-                                : "text-slate-400 hover:text-green-600"
-                            }`}
+                          <Switch
+                            checked={journal.isActive}
+                            onCheckedChange={() => handleToggleActive(journal)}
                             title={journal.isActive ? "Deactivate" : "Activate"}
-                          >
-                            {journal.isActive ? (
-                              <Eye size={18} />
-                            ) : (
-                              <EyeOff size={18} />
-                            )}
-                          </button>
+                            aria-label={
+                              journal.isActive
+                                ? "Deactivate journal"
+                                : "Activate journal"
+                            }
+                          />
                           <button
                             onClick={() => handleDelete(journal._id)}
                             className="p-2 text-slate-400 hover:text-red-600 transition-colors"
