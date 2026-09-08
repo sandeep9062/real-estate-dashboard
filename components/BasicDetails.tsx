@@ -99,6 +99,7 @@ const schema = z.object({
   pricePerSqft: z.string().optional(),
   negotiable: z.boolean().optional(),
   amenities: z.array(z.string()).optional(),
+  tenantPreference: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -155,6 +156,7 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
       pricePerSqft: "",
       negotiable: true,
       amenities: [] as string[],
+      tenantPreference: "Any",
     },
   });
 
@@ -246,6 +248,7 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
     );
     setValue("negotiable", propertyDetails.negotiable !== false);
     setValue("amenities", propertyDetails.amenities || []);
+    setValue("tenantPreference", propertyDetails.tenantPreference || "Any");
   }, [propertyDetails, setValue]);
 
   const onSubmit = (data: FormData) => {
@@ -303,6 +306,7 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
       pricePerSqft: toOptNumStr(data.pricePerSqft),
       negotiable: data.negotiable !== false,
       amenities: data.amenities || [],
+      tenantPreference: data.tenantPreference || "Any",
     }));
     nextStep();
   };
@@ -594,6 +598,30 @@ const BasicDetails: React.FC<BasicDetailsProps> = ({
             )}
           />
         </div>
+
+        {deal === "Rent" && (
+          <div className="space-y-2">
+            <Label htmlFor="tenantPreference">Tenant Preference</Label>
+            <Controller
+              name="tenantPreference"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Family">Family</SelectItem>
+                    <SelectItem value="Bachelors">Bachelors</SelectItem>
+                    <SelectItem value="Any">Any</SelectItem>
+                    <SelectItem value="Working Professionals">Working Professionals</SelectItem>
+                    <SelectItem value="Students">Students</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+        )}
 
         <div className="border-t pt-6 mt-6 space-y-4">
           <h3 className="text-lg font-semibold text-gray-900">

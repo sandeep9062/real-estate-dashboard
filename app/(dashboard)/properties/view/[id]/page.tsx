@@ -451,7 +451,9 @@ export default function PropertyView() {
               <DetailRow label="Category" value={p.propertyCategory} />
               <DetailRow label="Furnishing" value={p.furnishing} />
               <DetailRow label="Facing" value={p.facing} />
-              <DetailRow label="Tenant Preference" value={p.tenantPreference} />
+              {p.deal === "Rent" && (
+                <DetailRow label="Tenant Preference" value={p.tenantPreference} />
+              )}
               <DetailRow label="Pets Allowed" value={p.petsAllowed ? "Yes" : "No"} />
               <DetailRow label="Posted By" value={p.postedBy} />
               <DetailRow label="Availability" value={p.availability} />

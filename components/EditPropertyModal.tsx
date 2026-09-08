@@ -81,6 +81,7 @@ interface PropertyDetailsType {
   image: File[] | string[];
   facilities: FacilitiesType;
   userEmail?: string;
+  tenantPreference?: string;
 }
 
 const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
@@ -148,6 +149,7 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
       balconies: 0,
     },
     userEmail: user?.email,
+    tenantPreference: "Any",
   });
 
   // Initialize form with existing property data
@@ -214,6 +216,7 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
           ...propertyData.facilities,
         },
         userEmail: propertyData.userEmail || user?.email,
+        tenantPreference: propertyData.tenantPreference || "Any",
       });
       setActive(0); // Reset to first step
     }
@@ -274,6 +277,7 @@ const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
           balconies: 0,
         },
         userEmail: user?.email,
+        tenantPreference: "Any",
       });
       setActive(0);
     }

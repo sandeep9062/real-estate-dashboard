@@ -46,6 +46,7 @@ const TENANT_PREFERENCES = [
   "Bachelors",
   "Any",
   "Working Professionals",
+  "Students",
 ];
 const POSTED_BY = ["Owner", "Agent", "Builder"];
 const PREFERRED_CONTACT = ["Call", "WhatsApp", "Email"];
@@ -1379,19 +1380,21 @@ const AdminPropertyForm: React.FC<AdminPropertyFormProps> = ({
                 placeholder="e.g. North-East"
               />
             </Field>
-            <Field label="Tenant preference">
-              <select
-                className={inputCls}
-                value={form.tenantPreference}
-                onChange={(e) => update("tenantPreference", e.target.value)}
-              >
-                {TENANT_PREFERENCES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </Field>
+            {form.deal === "Rent" && (
+              <Field label="Tenant preference">
+                <select
+                  className={inputCls}
+                  value={form.tenantPreference}
+                  onChange={(e) => update("tenantPreference", e.target.value)}
+                >
+                  {TENANT_PREFERENCES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
             <Field label="Floor number">
               <input
                 className={inputCls}
