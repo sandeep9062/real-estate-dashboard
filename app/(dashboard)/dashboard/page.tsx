@@ -42,9 +42,11 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useGetDashboardStatsQuery } from "@/services/dashboardApi";
-import { useGetAllPropertiesQuery } from "@/services/propertiesApi";
+import { useGetAllPropertiesQuery, useDeletePropertyMutation, useUpdatePropertyMutation } from "@/services/propertiesApi";
 import { useGetAllLeadsQuery } from "@/services/leadsApi";
 import { DataTable } from "@/components/ui/data-table";
+import Swal from "sweetalert2";
+import { toast } from "sonner";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -57,6 +59,53 @@ export default function Dashboard() {
   const { data: propertiesResponse, isLoading: propertiesLoading } =
     useGetAllPropertiesQuery({ includeInactive: "true", limit: "500" });
   const properties = (propertiesResponse?.data ?? []) as any[];
+  const [deleteProperty] = useDeletePropertyMutation();
+  const [updateProperty, { isLoading: togglingActive }] = useUpdatePropertyMutation();
+
+  // DELETE PROPERTY
+  const handleDelete = async (propertyId: string, title: string) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: `Do you really want to delete "${title}"? This action cannot be undone.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteProperty(propertyId).unwrap();
+      toast.success(`"${title}" has been removed`);
+    } catch (err) {
+      toast.error("Failed to delete property");
+    }
+  };
+
+  // TOGGLE ACTIVE STATUS
+  const handleToggleActive = async (property: any) => {
+    const newStatus = !property.isActive;
+    try {
+      await updateProperty({
+        id: property._id,
+        isActive: newStatus,
+        title: property.title,
+        type: property.type,
+        price: property.price,
+        category: property.category,
+        listingAvailability: property.listingAvailability || property.availability,
+        deal: property.deal,
+        image: property.image || [],
+      }).unwrap();
+      toast.success(
+        `Property ${newStatus ? "activated" : "deactivated"} successfully`,
+      );
+    } catch (err) {
+      toast.error("Failed to toggle property status");
+    }
+  };
 
   // Fetch total leads count
   const { data: leadsData, isLoading: leadsLoading } = useGetAllLeadsQuery();
@@ -599,17 +648,28 @@ export default function Dashboard() {
                 accessorKey: "isActive",
                 header: "Status",
                 enableSorting: true,
-                cell: ({ row }) => (
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase border-2 ${
-                      row.original.isActive === false
-                        ? "bg-red-100 text-red-700 border-red-400"
-                        : "bg-green-100 text-green-700 border-green-400"
-                    }`}
-                  >
-                    {row.original.isActive === false ? "Inactive" : "Active"}
-                  </span>
-                ),
+                cell: ({ row }) => {
+                  const property = row.original;
+                  return (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleActive(property);
+                      }}
+                      disabled={togglingActive}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        property.isActive ? "bg-green-500" : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${
+                          property.isActive ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  );
+                },
               },
               {
                 id: "actions",
@@ -631,9 +691,17 @@ export default function Dashboard() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={() => router.push(`/properties`)}
+                      onClick={() => router.push(`/properties/edit/${row.original._id}`)}
                     >
                       <Edit className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => handleDelete(row.original._id, row.original.title)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 ),

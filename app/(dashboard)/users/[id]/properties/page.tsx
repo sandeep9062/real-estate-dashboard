@@ -12,13 +12,17 @@ import {
   MapPin,
   CheckCircle2,
   XCircle,
+  Trash2,
+  Edit,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useGetAllPropertiesQuery } from "@/services/propertiesApi";
+import { useGetAllPropertiesQuery, useDeletePropertyMutation, useUpdatePropertyMutation } from "@/services/propertiesApi";
 import { useGetUserByIdQuery } from "@/services/userApi";
+import Swal from "sweetalert2";
+import { toast } from "sonner";
 
 /* ── Helpers ───────────────────────────────────────────────────────────── */
 const formatDate = (date?: string | Date | null) => {
@@ -87,8 +91,55 @@ export default function UserPropertiesPage() {
     data: propertiesResponse,
     isLoading: propertiesLoading,
   } = useGetAllPropertiesQuery({ includeInactive: "true", limit: "500" });
+  const [deleteProperty] = useDeletePropertyMutation();
+  const [updateProperty, { isLoading: togglingActive }] = useUpdatePropertyMutation();
 
   const allProperties = (propertiesResponse?.data ?? []) as PropertyRow[];
+
+  // DELETE PROPERTY
+  const handleDelete = async (propertyId: string, title: string) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: `Do you really want to delete "${title}"? This action cannot be undone.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteProperty(propertyId).unwrap();
+      toast.success(`"${title}" has been removed`);
+    } catch (err) {
+      toast.error("Failed to delete property");
+    }
+  };
+
+  // TOGGLE ACTIVE STATUS
+  const handleToggleActive = async (property: PropertyRow) => {
+    const newStatus = !property.isActive;
+    try {
+      await updateProperty({
+        id: property._id,
+        isActive: newStatus,
+        title: property.title,
+        type: property.type,
+        price: property.price,
+        category: property.category,
+        listingAvailability: property.listingAvailability,
+        deal: property.deal,
+        image: property.image || [],
+      }).unwrap();
+      toast.success(
+        `Property ${newStatus ? "activated" : "deactivated"} successfully`,
+      );
+    } catch (err) {
+      toast.error("Failed to toggle property status");
+    }
+  };
 
   // Client-side filter: properties whose populated `user._id` matches this user
   const properties = useMemo(() => {
@@ -185,15 +236,25 @@ const columns: ColumnDef<PropertyRow>[] = [
       header: "Status",
       enableSorting: true,
       cell: ({ row }) => {
-        const isActive = Boolean(row.getValue("isActive"));
+        const property = row.original;
         return (
-          <Badge
-            className={`border-0 ${
-              isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleActive(property);
+            }}
+            disabled={togglingActive}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              property.isActive ? "bg-green-500" : "bg-gray-300"
             }`}
           >
-            {isActive ? "Active" : "Inactive"}
-          </Badge>
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${
+                property.isActive ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
         );
       },
     },
@@ -209,15 +270,28 @@ const columns: ColumnDef<PropertyRow>[] = [
     },
     {
       id: "actions",
-      header: "",
+      header: "Actions",
       enableSorting: false,
       cell: ({ row }) => (
-        <div className="flex justify-end">
+        <div className="flex gap-1">
           <Link href={`/properties/view/${row.original._id}`}>
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <Eye className="h-4 w-4" />
             </Button>
           </Link>
+          <Link href={`/properties/edit/${row.original._id}`}>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Edit className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-destructive hover:text-destructive"
+            onClick={() => handleDelete(row.original._id, row.original.title)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       ),
     },
