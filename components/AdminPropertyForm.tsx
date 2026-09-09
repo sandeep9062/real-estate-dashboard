@@ -111,7 +111,6 @@ interface PropertyFormValues {
   seoTitle: string;
   seoDescription: string;
   projectId: string;
-  isLandlordProperty: boolean;
   location: {
     address: string;
     city: string;
@@ -138,7 +137,6 @@ interface PropertyFormValues {
   furnishing: string;
   facing: string;
   tenantPreference: string;
-  petsAllowed: boolean;
   postedBy: string;
   ownershipType: string;
   approvedBy: string;
@@ -151,7 +149,6 @@ interface PropertyFormValues {
   projectName: string;
   builderName: string;
   totalUnits: string;
-  societyAmenitiesText: string;
   contactNumbersText: string;
   preferredContact: string;
   facilities: {
@@ -207,7 +204,6 @@ const DEFAULT_FORM: PropertyFormValues = {
   seoTitle: "",
   seoDescription: "",
   projectId: "",
-  isLandlordProperty: true,
   location: {
     address: "",
     city: "",
@@ -234,7 +230,6 @@ const DEFAULT_FORM: PropertyFormValues = {
   furnishing: "Un-Furnished",
   facing: "",
   tenantPreference: "Any",
-  petsAllowed: false,
   postedBy: "Owner",
   ownershipType: "__none__",
   approvedBy: "",
@@ -247,7 +242,6 @@ const DEFAULT_FORM: PropertyFormValues = {
   projectName: "",
   builderName: "",
   totalUnits: "",
-  societyAmenitiesText: "",
   contactNumbersText: "",
   preferredContact: "WhatsApp",
   facilities: {
@@ -487,7 +481,6 @@ const AdminPropertyForm: React.FC<AdminPropertyFormProps> = ({
       seoTitle: property.seoTitle || "",
       seoDescription: property.seoDescription || "",
       projectId: property.projectId?._id || property.projectId || "",
-      isLandlordProperty: property.isLandlordProperty !== false,
       location: {
         address: property.location?.address || "",
         city: property.location?.city || "",
@@ -540,7 +533,6 @@ const AdminPropertyForm: React.FC<AdminPropertyFormProps> = ({
       furnishing: property.furnishing || "Un-Furnished",
       facing: property.facing || "",
       tenantPreference: property.tenantPreference || "Any",
-      petsAllowed: !!property.petsAllowed,
       postedBy: property.postedBy || "Owner",
       ownershipType: property.ownershipType || "__none__",
       approvedBy: property.approvedBy || "",
@@ -564,7 +556,6 @@ const AdminPropertyForm: React.FC<AdminPropertyFormProps> = ({
       builderName: property.builderName || "",
       totalUnits:
         property.totalUnits != null ? String(property.totalUnits) : "",
-      societyAmenitiesText: (property.societyAmenities || []).join("\n"),
       contactNumbersText: (property.contactNumber || []).join("\n"),
       preferredContact: property.preferredContact || "WhatsApp",
       facilities: {
@@ -644,7 +635,6 @@ const AdminPropertyForm: React.FC<AdminPropertyFormProps> = ({
       seoTitle: form.seoTitle.trim(),
       seoDescription: form.seoDescription.trim(),
       projectId: form.projectId.trim() || undefined,
-      isLandlordProperty: form.isLandlordProperty,
       location: {
         address: loc.address.trim(),
         city: loc.city.trim(),
@@ -688,7 +678,6 @@ const AdminPropertyForm: React.FC<AdminPropertyFormProps> = ({
       furnishing: form.furnishing,
       facing: form.facing.trim(),
       tenantPreference: form.tenantPreference,
-      petsAllowed: form.petsAllowed,
       postedBy: form.postedBy,
       ownershipType:
         form.ownershipType === "__none__" ? undefined : form.ownershipType,
@@ -702,7 +691,6 @@ const AdminPropertyForm: React.FC<AdminPropertyFormProps> = ({
       projectName: form.projectName.trim(),
       builderName: form.builderName.trim(),
       totalUnits: toOptNum(form.totalUnits),
-      societyAmenities: splitLines(form.societyAmenitiesText),
       contactNumber: splitLines(form.contactNumbersText),
       preferredContact: form.preferredContact,
       facilities: {
@@ -1429,11 +1417,6 @@ const AdminPropertyForm: React.FC<AdminPropertyFormProps> = ({
               />
             </Field>
           </div>
-          <Check
-            label="Pets allowed"
-            checked={form.petsAllowed}
-            onChange={(v) => update("petsAllowed", v)}
-          />
         </Section>
 
         {/* PRICING & TERMS */}
@@ -1532,20 +1515,6 @@ const AdminPropertyForm: React.FC<AdminPropertyFormProps> = ({
               />
             </Field>
           </div>
-          <Field label="Society amenities (one per line or comma separated)">
-            <textarea
-              className={inputCls}
-              rows={2}
-              value={form.societyAmenitiesText}
-              onChange={(e) => update("societyAmenitiesText", e.target.value)}
-              placeholder={"Club house\nGated community"}
-            />
-          </Field>
-          <Check
-            label="Is landlord property"
-            checked={form.isLandlordProperty}
-            onChange={(v) => update("isLandlordProperty", v)}
-          />
         </Section>
 
         {/* FACILITIES */}

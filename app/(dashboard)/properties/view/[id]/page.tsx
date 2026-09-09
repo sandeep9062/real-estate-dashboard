@@ -454,7 +454,6 @@ export default function PropertyView() {
               {p.deal === "Rent" && (
                 <DetailRow label="Tenant Preference" value={p.tenantPreference} />
               )}
-              <DetailRow label="Pets Allowed" value={p.petsAllowed ? "Yes" : "No"} />
               <DetailRow label="Posted By" value={p.postedBy} />
               <DetailRow label="Availability" value={p.availability} />
               {p.availableFrom && <DetailRow label="Available From" value={formatDate(p.availableFrom)} />}
@@ -554,20 +553,11 @@ export default function PropertyView() {
               </CardContent>
             </Card>
           )}
-
-          <Card>
-            <CardContent className="p-4 text-sm">
-              <DetailRow label="Landlord Property" value={p.isLandlordProperty ? "Yes" : "No"} />
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
   );
 }
-
-
-
 
 
 
