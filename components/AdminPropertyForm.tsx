@@ -99,6 +99,7 @@ const INVESTMENT_OPTIONS = [
 /* ── Form state shape: strings for inputs, converted on submit ──────────── */
 interface PropertyFormValues {
   title: string;
+  slug: string;
   description: string;
   deal: string;
   type: string;
@@ -107,7 +108,7 @@ interface PropertyFormValues {
   negotiable: boolean;
   pricePerSqft: string;
   ageOfProperty: string;
-  slug: string;
+
   seoTitle: string;
   seoDescription: string;
   projectId: string;
@@ -192,6 +193,7 @@ interface PropertyFormValues {
 
 const DEFAULT_FORM: PropertyFormValues = {
   title: "",
+  slug: "",
   description: "",
   deal: "Rent",
   type: "Residential",
@@ -200,7 +202,7 @@ const DEFAULT_FORM: PropertyFormValues = {
   negotiable: true,
   pricePerSqft: "",
   ageOfProperty: "",
-  slug: "",
+
   seoTitle: "",
   seoDescription: "",
   projectId: "",
@@ -623,6 +625,7 @@ const AdminPropertyForm: React.FC<AdminPropertyFormProps> = ({
     const loc = form.location;
     return {
       title: form.title.trim(),
+      slug: form.slug.trim() || undefined,
       description: form.description.trim(),
       deal: form.deal,
       type: form.type,
@@ -631,7 +634,7 @@ const AdminPropertyForm: React.FC<AdminPropertyFormProps> = ({
       negotiable: form.negotiable,
       pricePerSqft: toOptNum(form.pricePerSqft),
       ageOfProperty: toOptNum(form.ageOfProperty),
-      slug: form.slug.trim() || undefined,
+
       seoTitle: form.seoTitle.trim(),
       seoDescription: form.seoDescription.trim(),
       projectId: form.projectId.trim() || undefined,
@@ -744,6 +747,8 @@ const AdminPropertyForm: React.FC<AdminPropertyFormProps> = ({
 
     // Required-field validation (mirrors the Property model)
     if (!form.title.trim()) return toast.error("Title is required");
+    if (!form.slug.trim()) return toast.error("Deal type is required");
+
     if (!form.description.trim()) return toast.error("Description is required");
     if (!form.price.trim()) return toast.error("Price is required");
     if (!form.location.address.trim())
@@ -941,6 +946,16 @@ const AdminPropertyForm: React.FC<AdminPropertyFormProps> = ({
                 placeholder="e.g. 3BHK Apartment in Sector 70"
               />
             </Field>
+
+            <Field label="Slug" required>
+              <input
+                className={inputCls}
+                value={form.slug}
+                onChange={(e) => update("slug", e.target.value)}
+                placeholder="e.g. 3bhk-apartment-in-sector-70"
+              />
+            </Field>
+
             <Field label="Price (₹)" required>
               <input
                 className={inputCls}
