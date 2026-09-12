@@ -441,7 +441,7 @@ export default function NewJournalPage() {
                     Meta Title
                   </label>
                   <span className="text-[11px] text-slate-400">
-                    {formData.metaTitle.length}/70
+                    {formData.metaTitle.length}/120
                   </span>
                 </div>
                 <input
@@ -452,7 +452,7 @@ export default function NewJournalPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, metaTitle: e.target.value })
                   }
-                  maxLength={70}
+                  maxLength={120}
                 />
               </div>
             </div>
@@ -463,7 +463,7 @@ export default function NewJournalPage() {
                   Meta Description (Excerpt)
                 </label>
                 <span className="text-[11px] text-slate-400">
-                  {formData.excerpt.length}/160
+                  {formData.excerpt.length}/260
                 </span>
               </div>
               <textarea
@@ -474,7 +474,7 @@ export default function NewJournalPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, excerpt: e.target.value })
                 }
-                maxLength={160}
+                maxLength={260}
               />
 
               {(formData.metaTitle || formData.excerpt) && (
@@ -519,19 +519,67 @@ export default function NewJournalPage() {
                     }
                   >
                     <option value="Investment">Investment Guide</option>
+                    <option value="Investment Analysis">
+                      Investment Analysis
+                    </option>
                     <option value="Locality Guide">Locality Guide</option>
+                    <option value="City Guide">City Guide</option>
                     <option value="Market News">Market News</option>
+                    <option value="Market Insights">Market Insights</option>
+                    <option value="Market Updates">Market Updates</option>
+                    <option value="Market Trends">Market Trends</option>
+                    <option value="Market Outlook">Market Outlook</option>
                     <option value="Legal">Legal & Documentation</option>
                     <option value="Lifestyle">Tricity Lifestyle</option>
                     <option value="RERA Updates">RERA Updates</option>
                     <option value="Home Buying Guide">Home Buying Guide</option>
+                    <option value="Buyer Guide">Buyer Guide</option>
+                    <option value="Property Guide">Property Guide</option>
+                    <option value="Real Estate Guide">Real Estate Guide</option>
+                    <option value="Real Estate News">Real Estate News</option>
                     <option value="NRI Guide">NRI Guide</option>
                     <option value="Rental Guide">Rental Guide</option>
+                    <option value="Tenant Guides">Tenant Guides</option>
+                    <option value="Owner Guide">Owner Guide</option>
+                    <option value="Owner Onboarding">Owner Onboarding</option>
+                    <option value="Property Management">
+                      Property Management
+                    </option>
                     <option value="Construction">
                       Construction & Development
                     </option>
                     <option value="Interior & Design">Interior & Design</option>
                     <option value="Property Tax">Property Tax & Finance</option>
+                    <option value="Home Loans">Home Loans & Mortgages</option>
+                    <option value="Vastu">Vastu & Feng Shui</option>
+                    <option value="Commercial Real Estate">
+                      Commercial Real Estate
+                    </option>
+                    <option value="Plot & Land">Plots & Land Buying</option>
+                    <option value="Affordable Housing">
+                      Affordable Housing
+                    </option>
+                    <option value="Luxury Homes">Luxury Homes</option>
+                    <option value="Builder Spotlight">Builder Spotlight</option>
+                    <option value="Builder Reviews">
+                      Builder & Project Reviews
+                    </option>
+                    <option value="Selling Guide">
+                      Property Selling Guide
+                    </option>
+                    <option value="Government Schemes">
+                      Government Schemes
+                    </option>
+                    <option value="Infrastructure">
+                      Infrastructure & Connectivity
+                    </option>
+                    <option value="Smart Homes">
+                      Smart Homes & Technology
+                    </option>
+                    <option value="PG & Co Living">PG & Co-Living</option>
+                    <option value="Student Housing">Student Housing</option>
+                    <option value="Real Estate Tips">Tips & FAQs</option>
+                    <option value="News & Events">News & Events</option>
                   </select>
                 </div>
 
