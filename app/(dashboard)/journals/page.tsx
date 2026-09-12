@@ -128,22 +128,22 @@ export default function JournalsDashboard() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full table-fixed text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="px-6 py-4 text-xs font-semibold uppercase text-slate-500 tracking-wider">
+                  <th className="w-[38%] px-4 py-3 text-xs font-semibold uppercase text-slate-500 tracking-wider">
                     Journal
                   </th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase text-slate-500 tracking-wider">
+                  <th className="w-[10%] px-4 py-3 text-xs font-semibold uppercase text-slate-500 tracking-wider">
                     Views
                   </th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase text-slate-500 tracking-wider">
+                  <th className="w-[18%] px-4 py-3 text-xs font-semibold uppercase text-slate-500 tracking-wider">
                     Sector/Category
                   </th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase text-slate-500 tracking-wider">
+                  <th className="w-[14%] px-4 py-3 text-xs font-semibold uppercase text-slate-500 tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase text-slate-500 tracking-wider text-right">
+                  <th className="w-[20%] px-4 py-3 text-xs font-semibold uppercase text-slate-500 tracking-wider text-right">
                     Actions
                   </th>
                 </tr>
@@ -160,13 +160,13 @@ export default function JournalsDashboard() {
                       key={journal._id}
                       className="hover:bg-slate-50/50 transition-colors group"
                     >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-4">
+                      <td className="px-4 py-3 overflow-hidden">
+                        <div className="flex items-center gap-3">
                           <a
                             href={`https://propertybulbul.com/journal/${journal.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="relative size-12 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shrink-0"
+                            className="relative size-10 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shrink-0"
                             title="View Live"
                           >
                             <Image
@@ -177,7 +177,7 @@ export default function JournalsDashboard() {
                             />
                           </a>
                           <div className="min-w-0">
-                            <p className="font-semibold text-slate-900 truncate max-w-[200px] md:max-w-xs">
+                            <p className="font-semibold text-slate-900 truncate">
                               {journal.title}
                             </p>
                             <p className="text-xs text-slate-500 truncate italic">
@@ -186,24 +186,24 @@ export default function JournalsDashboard() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-700 font-medium">
+                      <td className="px-4 py-3 text-sm text-slate-700 font-medium whitespace-nowrap">
                         {journal.views ?? 0}
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 w-fit">
+                      <td className="px-4 py-3 overflow-hidden">
+                        <div className="flex flex-col gap-1 min-w-0">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 w-fit max-w-full truncate">
                             {journal.category}
                           </span>
-                          <span className="text-xs text-slate-600 font-medium">
+                          <span className="text-xs text-slate-600 font-medium truncate">
                             {journal.targetSector}
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-500">
+                      <td className="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">
                         {new Date(journal.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1">
                           <Link
                             href={`/journals/edit/${journal._id}`}
                             className="p-2 text-slate-400 hover:text-amber-600 transition-colors"
