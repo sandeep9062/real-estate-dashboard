@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -21,6 +20,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -31,9 +40,15 @@ import {
   Clock,
   Mail,
   Phone,
+  Trash2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useGetContactsQuery } from "@/services/contactApi";
+import { toast } from "sonner";
+import {
+  useGetContactsQuery,
+  useUpdateContactMutation,
+  useDeleteContactMutation,
+} from "@/services/contactApi";
 import { selectIsAuthenticated, selectUser } from "@/store/authSlice";
 
 interface ContactMessage {
@@ -96,6 +111,14 @@ export default function ContactMessages() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedContact, setSelectedContact] =
     useState<ContactMessage | null>(null);
+  const [contactToDelete, setContactToDelete] =
+    useState<ContactMessage | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  const [updateContact, { isLoading: isUpdatingStatus }] =
+    useUpdateContactMutation();
+  const [deleteContact, { isLoading: isDeleting }] =
+    useDeleteContactMutation();
 
   const {
     data: contacts = [],
@@ -138,6 +161,40 @@ export default function ContactMessages() {
       archived: contactList.filter((c) => c.status === "archived").length,
     };
   }, [contactList]);
+
+  const handleStatusChange = async (id: string, status: string) => {
+    setUpdatingId(id);
+    try {
+      await updateContact({ id, body: { status } }).unwrap();
+      toast.success("Status updated");
+      // Keep the open detail dialog in sync with the new status
+      if (selectedContact && selectedContact._id === id) {
+        setSelectedContact({
+          ...selectedContact,
+          status: status as ContactMessage["status"],
+        });
+      }
+    } catch {
+      toast.error("Failed to update status");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!contactToDelete) return;
+    try {
+      await deleteContact(contactToDelete._id).unwrap();
+      toast.success("Message deleted");
+      // Close the detail dialog if the deleted message was open
+      if (selectedContact && selectedContact._id === contactToDelete._id) {
+        setSelectedContact(null);
+      }
+      setContactToDelete(null);
+    } catch {
+      toast.error("Failed to delete message");
+    }
+  };
 
   const columns: ColumnDef<ContactMessage, unknown>[] = [
     {
@@ -182,14 +239,28 @@ export default function ContactMessages() {
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => (
-        <Badge
-          variant="outline"
-          className={getStatusBadgeStyle(row.original.status)}
-        >
-          {row.original.status ?? "new"}
-        </Badge>
-      ),
+      cell: ({ row }) => {
+        const contact = row.original;
+        const status = contact.status ?? "new";
+        return (
+          <Select
+            value={status}
+            onValueChange={(v) => handleStatusChange(contact._id, v)}
+            disabled={updatingId === contact._id}
+          >
+            <SelectTrigger
+              className={`w-[110px] border text-xs ${getStatusBadgeStyle(status)}`}
+            >
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="new">New</SelectItem>
+              <SelectItem value="read">Read</SelectItem>
+              <SelectItem value="archived">Archived</SelectItem>
+            </SelectContent>
+          </Select>
+        );
+      },
     },
     {
       accessorKey: "createdAt",
@@ -208,14 +279,25 @@ export default function ContactMessages() {
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          title="View full message"
-          onClick={() => setSelectedContact(row.original)}
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            title="View full message"
+            onClick={() => setSelectedContact(row.original)}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Delete message"
+            className="text-red-500 hover:text-red-600"
+            onClick={() => setContactToDelete(row.original)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       ),
     },
   ];
@@ -339,12 +421,26 @@ export default function ContactMessages() {
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">
                     Status
                   </p>
-                  <Badge
-                    variant="outline"
-                    className={getStatusBadgeStyle(selectedContact.status)}
+                  <Select
+                    value={selectedContact.status ?? "new"}
+                    onValueChange={(v) =>
+                      handleStatusChange(selectedContact._id, v)
+                    }
+                    disabled={isUpdatingStatus}
                   >
-                    {selectedContact.status ?? "new"}
-                  </Badge>
+                    <SelectTrigger
+                      className={`w-[130px] border text-sm ${getStatusBadgeStyle(
+                        selectedContact.status,
+                      )}`}
+                    >
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="new">New</SelectItem>
+                      <SelectItem value="read">Read</SelectItem>
+                      <SelectItem value="archived">Archived</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">
@@ -390,6 +486,33 @@ export default function ContactMessages() {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog
+        open={!!contactToDelete}
+        onOpenChange={() => setContactToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this message?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {contactToDelete
+                ? `The message from "${contactToDelete.name}" will be permanently deleted. This action can't be undone.`
+                : "This action can't be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
