@@ -37,6 +37,7 @@ export interface Journal {
   excerpt: string;
   metaTitle: string;
   keywords: string[];
+  views: number;
   createdAt: string;
 }
 

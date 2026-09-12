@@ -135,6 +135,9 @@ export default function JournalsDashboard() {
                     Journal
                   </th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase text-slate-500 tracking-wider">
+                    Views
+                  </th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase text-slate-500 tracking-wider">
                     Sector/Category
                   </th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase text-slate-500 tracking-wider">
@@ -182,6 +185,9 @@ export default function JournalsDashboard() {
                             </p>
                           </div>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-700 font-medium">
+                        {journal.views ?? 0}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-1">
