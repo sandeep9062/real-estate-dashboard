@@ -350,85 +350,6 @@ export default function EditJournalPage() {
             </div>
           </div>
 
-          {/* Content Editor Card */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
-            <div className="p-6 pb-3 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-500">
-                <BookOpen size={16} />
-                <span className="text-xs font-semibold uppercase tracking-wider">
-                  Content
-                </span>
-                <span className="text-[11px] text-slate-400 hidden sm:inline">
-                  ({contentStats.words} words · {contentStats.readingTime})
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPreview(!showPreview);
-                    updateContentStats();
-                  }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
-                    showPreview
-                      ? "bg-[#4161df] text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
-                >
-                  {showPreview ? <Edit3 size={14} /> : <Eye size={14} />}
-                  {showPreview ? "Edit" : "Preview"}
-                </button>
-              </div>
-            </div>
-
-            <div className={showPreview ? "hidden" : "block"}>
-              <RichTextEditor
-                ref={editorRef}
-                content={formData.content}
-                isMarkdown={true}
-                onChange={updateContentStats}
-              />
-            </div>
-
-            {showPreview && (
-              <div className="p-6 max-h-[600px] overflow-y-auto prose prose-slate max-w-none">
-                {editorRef.current?.getCurrentContent() ? (
-                  <div className="space-y-4">
-                    <h2 className="text-2xl font-bold text-slate-900">
-                      {formData.title || "Untitled"}
-                    </h2>
-                    <div className="text-sm text-slate-500 border-b border-slate-200 pb-4">
-                      {contentStats.readingTime} · {contentStats.words} words
-                    </div>
-                    <div className="text-slate-700 leading-relaxed whitespace-pre-wrap">
-                      {editorRef.current?.getCurrentContent()}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-16 text-slate-400">
-                    <FileText size={48} className="mx-auto mb-3 opacity-50" />
-                    <p>No content yet</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="px-6 py-2.5 bg-slate-50/50 border-t border-slate-100 flex items-center gap-4 text-[11px] text-slate-400">
-              <span className="flex items-center gap-1">
-                <AlignLeft size={12} />
-                {contentStats.words} words
-              </span>
-              <span className="flex items-center gap-1">
-                <Hash size={12} />
-                {contentStats.chars} characters
-              </span>
-              <span className="flex items-center gap-1">
-                <Clock size={12} />
-                {contentStats.readingTime}
-              </span>
-            </div>
-          </div>
-
           {/* SEO Section */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
             <div className="p-6 pb-3 border-b border-slate-100">
@@ -726,6 +647,85 @@ export default function EditJournalPage() {
                   No keywords added yet
                 </p>
               )}
+            </div>
+          </div>
+
+          {/* Content Editor Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
+            <div className="p-6 pb-3 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-slate-500">
+                <BookOpen size={16} />
+                <span className="text-xs font-semibold uppercase tracking-wider">
+                  Content
+                </span>
+                <span className="text-[11px] text-slate-400 hidden sm:inline">
+                  ({contentStats.words} words · {contentStats.readingTime})
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPreview(!showPreview);
+                    updateContentStats();
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                    showPreview
+                      ? "bg-[#4161df] text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {showPreview ? <Edit3 size={14} /> : <Eye size={14} />}
+                  {showPreview ? "Edit" : "Preview"}
+                </button>
+              </div>
+            </div>
+
+            <div className={showPreview ? "hidden" : "block"}>
+              <RichTextEditor
+                ref={editorRef}
+                content={formData.content}
+                isMarkdown={true}
+                onChange={updateContentStats}
+              />
+            </div>
+
+            {showPreview && (
+              <div className="p-6 max-h-[600px] overflow-y-auto prose prose-slate max-w-none">
+                {editorRef.current?.getCurrentContent() ? (
+                  <div className="space-y-4">
+                    <h2 className="text-2xl font-bold text-slate-900">
+                      {formData.title || "Untitled"}
+                    </h2>
+                    <div className="text-sm text-slate-500 border-b border-slate-200 pb-4">
+                      {contentStats.readingTime} · {contentStats.words} words
+                    </div>
+                    <div className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      {editorRef.current?.getCurrentContent()}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-16 text-slate-400">
+                    <FileText size={48} className="mx-auto mb-3 opacity-50" />
+                    <p>No content yet</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="px-6 py-2.5 bg-slate-50/50 border-t border-slate-100 flex items-center gap-4 text-[11px] text-slate-400">
+              <span className="flex items-center gap-1">
+                <AlignLeft size={12} />
+                {contentStats.words} words
+              </span>
+              <span className="flex items-center gap-1">
+                <Hash size={12} />
+                {contentStats.chars} characters
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock size={12} />
+                {contentStats.readingTime}
+              </span>
             </div>
           </div>
 
