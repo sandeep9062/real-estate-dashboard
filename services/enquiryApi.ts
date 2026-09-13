@@ -7,28 +7,31 @@ import { baseQueryWithAuth } from "./api";
  */
 export interface AdminEnquiry {
   _id: string;
-  name?: string;
+  fullName?: string;
   email?: string;
   phone?: string;
   deal?: "Rent" | "Sale";
   type?: "Residential" | "Commercial" | "Industrial" | "Agricultural";
+  propertyType?: string;
   propertyCategory?: string;
   availability?: "Ready to Move" | "Under Construction";
   furnishing?: string;
   ownershipType?: string;
-  city?: string;
   location?: string;
   budget?: string;
-  carpetAreaMin?: string;
-  carpetAreaMax?: string;
+  carpetAreaMin?: number;
+  carpetAreaMax?: number;
   message?: string;
   purchasePurpose?: string;
   preApprovedLoan?: string;
-  needLoanAssistance?: string;
+  needLoanAssistance?: boolean;
   timeline?: string;
-  contactMethod?: string;
-  consent?: boolean;
+  callbackTime?: string;
+  source?: string;
+  consentGiven?: boolean;
+  reraOnly?: boolean;
   petsAllowed?: boolean;
+  amenities?: string[];
   houseRules?: {
     ownerLivesOnPremises?: boolean;
     curfew?: { hasCurfew?: boolean; time?: string };
@@ -78,7 +81,8 @@ export const enquiryApi = createApi({
           if (value) params.set(key, String(value));
         });
         const qs = params.toString();
-        return `/enquiry${qs ? `?${qs}` : ""}`;
+        // Backend mounts the enquiry router at /api/v1/enquiry (backend/app.js).
+        return `/v1/enquiry${qs ? `?${qs}` : ""}`;
       },
       providesTags: ["AdminEnquiries"],
       // NOTE: GET /api/v1/enquiry returns a raw array — no transformResponse needed.

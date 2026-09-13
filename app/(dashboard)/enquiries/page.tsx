@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useSelector } from "react-redux";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +20,6 @@ import {
   type AdminEnquiry,
 } from "@/services/enquiryApi";
 import { Skeleton } from "@/components/ui/skeleton";
-import { selectIsAuthenticated, selectUser } from "@/store/authSlice";
 
 const DEAL_BADGE_STYLES: Record<string, string> = {
   Rent: "bg-blue-500/20 text-blue-600 border-blue-400/30",
@@ -76,9 +74,6 @@ const summarizeFacilities = (facilities: AdminEnquiry["facilities"]) => {
   return parts.length ? parts.join(" · ") : "—";
 };
 export default function Enquiries() {
-  const isAuthenticated = useSelector(selectIsAuthenticated);
-  const userRole = useSelector(selectUser)?.role;
-
   const [dealFilter, setDealFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
@@ -103,13 +98,13 @@ export default function Enquiries() {
 
   const columns = useMemo<ColumnDef<AdminEnquiry>[]>(() => [
     {
-      accessorKey: "name",
+      accessorKey: "fullName",
       header: "Requester",
       cell: ({ row }) => {
         const e = row.original;
         return (
           <div className="min-w-[140px]">
-            <p className="font-medium">{e.name || "—"}</p>
+            <p className="font-medium">{e.fullName || "—"}</p>
             <p className="text-xs text-muted-foreground">{e.email || "—"}</p>
             <p className="text-xs text-muted-foreground">{e.phone || "—"}</p>
           </div>
@@ -171,11 +166,11 @@ export default function Enquiries() {
       },
     },
     {
-      accessorKey: "city",
+      accessorKey: "location",
       header: "Location",
       cell: ({ row }) => {
         const e = row.original;
-        return <span className="text-sm">{e.city || e.location || "—"}</span>;
+        return <span className="text-sm">{e.location || "—"}</span>;
       },
     },
     {
