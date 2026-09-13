@@ -23,6 +23,7 @@ export interface AdminEnquiry {
   carpetAreaMax?: number;
   message?: string;
   purchasePurpose?: string;
+  income?: string;
   preApprovedLoan?: string;
   needLoanAssistance?: boolean;
   timeline?: string;
@@ -58,6 +59,7 @@ export interface AdminEnquiry {
     metroStations?: string[];
     malls?: string[];
   };
+  status?: "New" | "In Progress" | "Closed";
   createdAt: string;
   updatedAt: string;
 }
@@ -67,6 +69,7 @@ export interface AdminEnquiryFilters {
   type?: string;
   availability?: string;
   furnishing?: string;
+  status?: string;
 }
 
 export const enquiryApi = createApi({
@@ -87,7 +90,19 @@ export const enquiryApi = createApi({
       providesTags: ["AdminEnquiries"],
       // NOTE: GET /api/v1/enquiry returns a raw array — no transformResponse needed.
     }),
+    updateEnquiryStatus: builder.mutation<
+      AdminEnquiry,
+      { id: string; status: "New" | "In Progress" | "Closed" }
+    >({
+      query: ({ id, status }) => ({
+        url: `/v1/enquiry/${id}`,
+        method: "PATCH",
+        body: { status },
+      }),
+      invalidatesTags: ["AdminEnquiries"],
+    }),
   }),
 });
 
-export const { useGetAllEnquiriesQuery } = enquiryApi;
+export const { useGetAllEnquiriesQuery, useUpdateEnquiryStatusMutation } =
+  enquiryApi;
