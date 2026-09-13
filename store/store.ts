@@ -11,6 +11,7 @@ import { dashboardApi } from "@/services/dashboardApi";
 import { notificationApi } from "@/services/notificationApi";
 import { projectsApi } from "@/services/projectsApi";
 import { leadsApi } from "@/services/leadsApi";
+import { enquiryApi } from "@/services/enquiryApi";
 
 const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ const store = configureStore({
     [notificationApi.reducerPath]: notificationApi.reducer,
     [projectsApi.reducerPath]: projectsApi.reducer,
     [leadsApi.reducerPath]: leadsApi.reducer,
+    [enquiryApi.reducerPath]: enquiryApi.reducer,
     auth: authReducer,
   },
   middleware: (getDefaultMiddleware) =>
@@ -38,6 +40,7 @@ const store = configureStore({
       notificationApi.middleware,
       projectsApi.middleware,
       leadsApi.middleware,
+      enquiryApi.middleware,
     ),
   devTools: process.env.NODE_ENV !== "production",
 });

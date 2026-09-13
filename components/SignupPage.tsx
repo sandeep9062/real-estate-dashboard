@@ -14,7 +14,12 @@ const signupSchema = z.object({
   name: z.string().min(1, "Full name is required"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  phone: z.string().min(10, "Phone number is required"),
+  phone: z
+    .string()
+    .regex(
+      /^\+[1-9]\d{7,14}$/,
+      "Enter a valid phone number with country code, e.g. +919876543210",
+    ),
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;

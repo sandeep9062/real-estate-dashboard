@@ -19,6 +19,7 @@ import {
   Bell,
   ChevronLeft,
   LogOut,
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -33,12 +34,14 @@ const menuItems = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { title: "Journals", icon: Newspaper, path: "/journals" },
   { title: "Contacts", icon: Mail, path: "/contacts" },
+  { title: "Requirements", icon: ClipboardList, path: "/enquiries" },
   { title: "Notifications", icon: Bell, path: "/notifications" },
   { title: "Users", icon: Users, path: "/users" },
   { title: "Properties", icon: Building2, path: "/properties" },
   { title: "Projects", icon: FolderKanban, path: "/projects" },
   { title: "Bookings", icon: Calendar, path: "/bookings" },
   { title: "Leads", icon: UserPlus, path: "/leads" },
+
   { title: "Payments", icon: CreditCard, path: "/payments" },
   { title: "Reviews", icon: Star, path: "/reviews" },
   { title: "Settings", icon: Settings, path: "/settings" },

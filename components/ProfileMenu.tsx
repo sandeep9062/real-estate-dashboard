@@ -41,7 +41,12 @@ interface ProfileMenuProps {
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email"),
-  phone: z.string().min(1, "Phone is required"),
+  phone: z
+    .string()
+    .regex(
+      /^\+[1-9]\d{7,14}$/,
+      "Enter a valid phone number with country code, e.g. +919876543210",
+    ),
 });
 
 type FormData = z.infer<typeof schema>;
