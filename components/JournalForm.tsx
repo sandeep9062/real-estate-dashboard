@@ -99,6 +99,8 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     coverImage: string | File;
     altText: string;
     author: { name: string; role?: string; avatar?: string };
+    status: "draft" | "published" | "archived";
+    isFeatured: boolean;
   }>({
     title: "",
     slug: "",
@@ -114,6 +116,8 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     coverImage: "",
     altText: "",
     author: { name: "" },
+    status: "published",
+    isFeatured: false,
   });
 
   const [keywordInput, setKeywordInput] = useState("");
@@ -190,6 +194,8 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
       content,
       coverImage: journal.coverImage || "",
       altText: journal.altText || "",
+      status: journal.status || "published",
+      isFeatured: Boolean(journal.isFeatured),
       author: journal.author
         ? {
             name: journal.author.name || "",
