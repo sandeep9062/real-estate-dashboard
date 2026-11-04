@@ -89,9 +89,12 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     slug: string;
     category: string;
     targetSector: string;
+    targetCity: string;
     excerpt: string;
     metaTitle: string;
+    metaDescription: string;
     keywords: string[];
+    tags: string[];
     content: string;
     coverImage: string | File;
     altText: string;
@@ -101,9 +104,12 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     slug: "",
     category: "Investment",
     targetSector: "",
+    targetCity: "",
     excerpt: "",
     metaTitle: "",
+    metaDescription: "",
     keywords: [],
+    tags: [],
     content: "",
     coverImage: "",
     altText: "",
@@ -175,9 +181,12 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
       slug: journal.slug || "",
       category: journal.category || "Investment",
       targetSector: journal.targetSector || "",
+      targetCity: journal.targetCity || "",
       excerpt: journal.excerpt || content.substring(0, 150) || "",
       metaTitle: journal.metaTitle || "",
+      metaDescription: journal.metaDescription || journal.excerpt || content.substring(0, 150) || "",
       keywords: journal.keywords || [],
+      tags: journal.tags || [],
       content,
       coverImage: journal.coverImage || "",
       altText: journal.altText || "",
