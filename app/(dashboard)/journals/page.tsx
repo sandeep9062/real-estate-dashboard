@@ -43,7 +43,9 @@ export default function JournalsDashboard() {
         ? journal.status === "published"
           ? "draft"
           : "published"
-        : !journal[field];
+        : journal.isFeatured !== undefined
+        ? !journal.isFeatured
+        : false;
     const label =
       field === "status"
         ? newValue === "published"
