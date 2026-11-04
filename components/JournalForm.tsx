@@ -94,6 +94,8 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     keywords: string[];
     content: string;
     coverImage: string | File;
+    altText: string;
+    author: string;
   }>({
     title: "",
     slug: "",
@@ -104,6 +106,8 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     keywords: [],
     content: "",
     coverImage: "",
+    altText: "",
+    author: "",
   });
 
   const [keywordInput, setKeywordInput] = useState("");
@@ -176,6 +180,8 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
       keywords: journal.keywords || [],
       content,
       coverImage: journal.coverImage || "",
+      altText: journal.altText || "",
+      author: journal.author || "",
     });
     setImagePreview(journal.coverImage || null);
 
@@ -508,6 +514,23 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
             </div>
           </div>
 
+          {/* Author Field */}
+          <div className="px-6 pt-6">
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+              Author
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. PropertyBulbul Editorial"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
+              value={formData.author}
+              onChange={(e) => {
+                setFormData({ ...formData, author: e.target.value });
+                markDirty();
+              }}
+            />
+          </div>
+
 
           {/* SEO Section */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
@@ -584,6 +607,23 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
               )}
             </div>
           </div>
+
+           {/* Alt Text for cover image */}
+           <div className="mt-4">
+             <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+               Alt Text
+             </label>
+             <input
+               type="text"
+               placeholder="Description for image accessibility/SEO"
+               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
+               value={formData.altText}
+               onChange={(e) => {
+                 setFormData({ ...formData, altText: e.target.value });
+                 markDirty();
+               }}
+             />
+           </div>
 
 
           {/* Settings - Inline horizontal fields */}
