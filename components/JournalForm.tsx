@@ -98,7 +98,7 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     content: string;
     coverImage: string | File;
     altText: string;
-    author: string;
+    author: { name: string; role?: string; avatar?: string };
   }>({
     title: "",
     slug: "",
@@ -113,7 +113,7 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     content: "",
     coverImage: "",
     altText: "",
-    author: "",
+    author: { name: "" },
   });
 
   const [keywordInput, setKeywordInput] = useState("");
@@ -190,7 +190,13 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
       content,
       coverImage: journal.coverImage || "",
       altText: journal.altText || "",
-      author: journal.author || "",
+      author: journal.author
+        ? {
+            name: journal.author.name || "",
+            role: journal.author.role,
+            avatar: journal.author.avatar,
+          }
+        : { name: "" },
     });
     setImagePreview(journal.coverImage || null);
 
@@ -532,9 +538,12 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
               type="text"
               placeholder="e.g. PropertyBulbul Editorial"
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
-              value={formData.author}
+              value={formData.author.name}
               onChange={(e) => {
-                setFormData({ ...formData, author: e.target.value });
+                setFormData({
+                  ...formData,
+                  author: { ...formData.author, name: e.target.value },
+                });
                 markDirty();
               }}
             />

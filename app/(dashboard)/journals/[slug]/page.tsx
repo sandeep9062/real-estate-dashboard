@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: canonicalUrl,
       type: "article",
       publishedTime: journal.createdAt,
-      authors: [journal.author || "PropertyBulbul Editorial"],
+      authors: [journal.author?.name || "PropertyBulbul Editorial"],
       images: [
         {
           url: imageUrl,

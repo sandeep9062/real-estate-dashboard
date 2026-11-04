@@ -84,7 +84,7 @@ export function generateArticleSchema(journal: any, slug: string) {
     dateModified: journal.updatedAt || journal.createdAt,
     author: {
       "@type": "Organization",
-      name: journal.author || "PropertyBulbul Editorial",
+      name: journal.author?.name || "PropertyBulbul Editorial",
       url: "https://propertybulbul.com",
     },
     publisher: {

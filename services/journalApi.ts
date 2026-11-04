@@ -35,9 +35,15 @@ export interface Journal {
   altText?: string;
   coverImageWidth?: number;
   coverImageHeight?: number;
-  author: string;
+  author: {
+    name: string;
+    role?: string;
+    avatar?: string;
+  };
   targetCity?: string;
   targetSector: string;
+  series?: string;
+  articleNumber?: number;
   metaTitle?: string;
   metaDescription?: string;
   keywords: string[];
@@ -66,9 +72,15 @@ export interface JournalInput {
   content?: string;
   coverImage?: string | File;
   altText?: string;
-  author?: string;
+  author?: {
+    name?: string;
+    role?: string;
+    avatar?: string;
+  } | string;
   targetCity?: string;
   targetSector?: string;
+  series?: string;
+  articleNumber?: number;
   metaTitle?: string;
   metaDescription?: string;
   keywords?: string[];
