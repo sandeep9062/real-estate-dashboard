@@ -24,37 +24,61 @@ export async function getJournalBySlugServer(slug: string) {
 export interface Journal {
   _id: string;
   title: string;
-  content: string;
-  author: string;
-  date: string;
-  isActive: boolean;
-  isFeatured: boolean;
-  category: string;
-  targetSector: string;
-  location?: string;
-  coverImage: string;
   slug: string;
-  excerpt: string;
-  metaTitle: string;
+  slugHistory?: string[];
+  category: string;
+  tags?: string[];
+  excerpt?: string;
+  content: string;
+  faqs?: Array<{ question: string; answer: string }>;
+  coverImage: string;
+  altText?: string;
+  coverImageWidth?: number;
+  coverImageHeight?: number;
+  author: string;
+  targetCity?: string;
+  targetSector: string;
+  metaTitle?: string;
+  metaDescription?: string;
   keywords: string[];
+  canonicalUrl?: string;
+  noIndex?: boolean;
+  relatedSlugs?: string[];
+  readingTime?: number;
+  wordCount?: number;
+  status: "draft" | "published" | "archived";
+  publishedAt?: string;
+  lastReviewedAt?: string;
   views: number;
+  isFeatured: boolean;
+  deletedAt?: string | null;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface JournalInput {
   title?: string;
   slug?: string;
-  content?: string;
-  author?: string;
+  slugHistory?: string[];
   category?: string;
-  targetSector?: string;
-  location?: string;
-  coverImage?: string | File;
+  tags?: string[];
   excerpt?: string;
-  isActive?: boolean;
-  isFeatured?: boolean;
+  content?: string;
+  coverImage?: string | File;
+  altText?: string;
+  author?: string;
+  targetCity?: string;
+  targetSector?: string;
   metaTitle?: string;
+  metaDescription?: string;
   keywords?: string[];
+  canonicalUrl?: string;
+  noIndex?: boolean;
+  relatedSlugs?: string[];
+  status?: "draft" | "published" | "archived";
+  isFeatured?: boolean;
+  publishedAt?: string;
+  lastReviewedAt?: string;
 }
 
 export interface PaginatedJournalsResponse {
@@ -94,7 +118,9 @@ export const journalApi = createApi({
           : [{ type: "Journal", id: "LIST" }],
     }),
 
-    // Fetch single journal by ID
+    // Fetch single journal by ID (any status except soft-deleted).
+    // Backend route is admin-only; used by the journal editor (edit mode) to
+    // load drafts as well as published/archived journals.
     getJournalById: builder.query<Journal, string>({
       query: (id) => `/v1/journals/${id}`,
       providesTags: (result, error, id) => [{ type: "Journal", id }],

@@ -36,12 +36,17 @@ export default function JournalsDashboard() {
 
   const handleToggleField = async (
     journal: (typeof journals)[number],
-    field: "isActive" | "isFeatured",
+    field: "status" | "isFeatured",
   ) => {
-    const newValue = !journal[field];
+    const newValue =
+      field === "status"
+        ? journal.status === "published"
+          ? "draft"
+          : "published"
+        : !journal[field];
     const label =
-      field === "isActive"
-        ? newValue
+      field === "status"
+        ? newValue === "published"
           ? "activated"
           : "deactivated"
         : newValue
@@ -212,13 +217,13 @@ export default function JournalsDashboard() {
                             <Edit2 size={18} />
                           </Link>
                           <Switch
-                            checked={journal.isActive}
+                            checked={journal.status === "published"}
                             onCheckedChange={() =>
-                              handleToggleField(journal, "isActive")
+                              handleToggleField(journal, "status")
                             }
-                            title={journal.isActive ? "Deactivate" : "Activate"}
+                            title={journal.status === "published" ? "Deactivate" : "Activate"}
                             aria-label={
-                              journal.isActive
+                              journal.status === "published"
                                 ? "Deactivate journal"
                                 : "Activate journal"
                             }
