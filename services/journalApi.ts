@@ -24,76 +24,37 @@ export async function getJournalBySlugServer(slug: string) {
 export interface Journal {
   _id: string;
   title: string;
-  slug: string;
-  slugHistory?: string[];
-  category: string;
-  tags?: string[];
-  excerpt?: string;
   content: string;
-  faqs?: Array<{ question: string; answer: string }>;
-  coverImage?: string;
-  altText?: string;
-  coverImageWidth?: number;
-  coverImageHeight?: number;
-  author?: {
-    name: string;
-    role?: string;
-    avatar?: string;
-  };
-  targetCity?: string;
-  targetSector?: string;
-  series?: string;
-  articleNumber?: number;
-  metaTitle?: string;
-  metaDescription?: string;
-  keywords?: string[];
-  canonicalUrl?: string;
-  noIndex?: boolean;
-  relatedSlugs?: string[];
-  readingTime?: number;
-  wordCount?: number;
-  status: "draft" | "published" | "archived";
-  publishedAt?: string;
-  lastReviewedAt?: string;
-  views: number;
+  author: string;
+  date: string;
+  isActive: boolean;
   isFeatured: boolean;
-  deletedAt?: string | null;
+  category: string;
+  targetSector: string;
+  location?: string;
+  coverImage: string;
+  slug: string;
+  excerpt: string;
+  metaTitle: string;
+  keywords: string[];
+  views: number;
   createdAt: string;
-  updatedAt?: string;
 }
 
 export interface JournalInput {
   title?: string;
   slug?: string;
-  slugHistory?: string[];
-  category?: string;
-  tags?: string[];
-  excerpt?: string;
   content?: string;
-  coverImage?: string | File;
-  removeCover?: boolean;
-  altText?: string;
-  author?:
-    | {
-        name?: string;
-        role?: string;
-        avatar?: string;
-      }
-    | string;
-  targetCity?: string;
+  author?: string;
+  category?: string;
   targetSector?: string;
-  series?: string;
-  articleNumber?: number;
-  metaTitle?: string;
-  metaDescription?: string;
-  keywords?: string[];
-  canonicalUrl?: string;
-  noIndex?: boolean;
-  relatedSlugs?: string[];
-  status?: "draft" | "published" | "archived";
+  location?: string;
+  coverImage?: string | File;
+  excerpt?: string;
+  isActive?: boolean;
   isFeatured?: boolean;
-  publishedAt?: string;
-  lastReviewedAt?: string;
+  metaTitle?: string;
+  keywords?: string[];
 }
 
 export interface PaginatedJournalsResponse {
@@ -104,101 +65,112 @@ export interface PaginatedJournalsResponse {
   hasNextPage: boolean;
 }
 
-// Builds multipart FormData: File -> as-is, arrays/objects -> JSON,
-// booleans/numbers -> strings. undefined/null are skipped.
-function buildJournalFormData(input: JournalInput): FormData {
-  const formData = new FormData();
-  (Object.keys(input) as Array<keyof JournalInput>).forEach((key) => {
-    const value = input[key] as unknown;
-    if (value === undefined || value === null) return;
-
-    if (value instanceof File) {
-      formData.append(key, value);
-    } else if (typeof value === "object") {
-      formData.append(key, JSON.stringify(value));
-    } else {
-      formData.append(key, String(value));
-    }
-  });
-  return formData;
-}
-
 export const journalApi = createApi({
   reducerPath: "journalApi",
   baseQuery: baseQueryWithAuth,
   tagTypes: ["Journal"],
   endpoints: (builder) => ({
-    // All non-deleted journals (any status) — admin dashboard
+    // Fetch all journals (active + inactive) — for admin dashboard
     getJournals: builder.query<
       PaginatedJournalsResponse,
       Record<string, any> | undefined
     >({
       query: (params) => ({
         url: "/v1/journals/all",
-        params,
+        params, // Handles ?page=1&limit=10&category=Locality Guide
       }),
       providesTags: (result) =>
         result
           ? [
-              ...result.journals.map(({ _id }) => ({
-                type: "Journal" as const,
-                id: _id,
-              })),
-              { type: "Journal" as const, id: "LIST" },
+              ...result.journals.map(
+                ({ _id }: { _id: string }) =>
+                  ({
+                    type: "Journal" as const,
+                    id: _id,
+                  }) as const,
+              ),
+              { type: "Journal", id: "LIST" },
             ]
-          : [{ type: "Journal" as const, id: "LIST" }],
+          : [{ type: "Journal", id: "LIST" }],
     }),
 
-    // Admin-only: single journal by id (drafts included)
+    // Fetch single journal by ID
     getJournalById: builder.query<Journal, string>({
       query: (id) => `/v1/journals/${id}`,
       providesTags: (result, error, id) => [{ type: "Journal", id }],
     }),
 
-    // Public: single journal by slug
+    // Fetch single journal by Slug (Crucial for SEO-friendly URLs)
     getJournalBySlug: builder.query<Journal, string>({
       query: (slug) => `/v1/journals/slug/${slug}`,
-      providesTags: (result, error, slug) => [
-        { type: "Journal", id: `slug:${slug}` },
-      ],
+      providesTags: (result, error, slug) => [{ type: "Journal", slug }],
     }),
 
+    // Create a new journal post
     createJournal: builder.mutation<Journal, JournalInput>({
-      query: (journalData) => ({
-        url: "/v1/journals",
-        method: "POST",
-        body: buildJournalFormData(journalData),
-      }),
+      query: (journalData) => {
+        const formData = new FormData();
+        Object.keys(journalData).forEach((key) => {
+          const value = journalData[key as keyof typeof journalData];
+          if (key === "coverImage" && value && (value as any) instanceof File) {
+            formData.append("coverImage", value as unknown as Blob);
+          } else if (Array.isArray(value) && value !== null) {
+            formData.append(key, JSON.stringify(value));
+          } else if (typeof value === "object" && value !== null) {
+            formData.append(key, JSON.stringify(value));
+          } else if (value !== undefined && value !== null) {
+            formData.append(key, value as any);
+          }
+        });
+
+        return {
+          url: "/v1/journals",
+          method: "POST",
+          body: formData,
+        };
+      },
       invalidatesTags: [{ type: "Journal", id: "LIST" }],
     }),
 
+    // Update an existing journal
     updateJournal: builder.mutation<
       Journal,
       { id: string; update: JournalInput }
     >({
-      query: ({ id, update }) => ({
-        url: `/v1/journals/${id}`,
-        method: "PUT",
-        body: buildJournalFormData(update),
-      }),
+      query: ({ id, update }) => {
+        const formData = new FormData();
+        Object.keys(update).forEach((key) => {
+          const value = update[key as keyof typeof update];
+          if (key === "coverImage" && value && (value as any) instanceof File) {
+            formData.append("coverImage", value as unknown as Blob);
+          } else if (Array.isArray(value) && value !== null) {
+            formData.append(key, JSON.stringify(value));
+          } else if (typeof value === "object" && value !== null) {
+            formData.append(key, JSON.stringify(value));
+          } else if (value !== undefined && value !== null) {
+            formData.append(key, value as any);
+          }
+        });
+
+        return {
+          url: `/v1/journals/${id}`,
+          method: "PUT",
+          body: formData,
+        };
+      },
       invalidatesTags: (result, error, { id }) => [
         { type: "Journal", id },
         { type: "Journal", id: "LIST" },
-        ...(result?.slug
-          ? [{ type: "Journal" as const, id: `slug:${result.slug}` }]
-          : []),
       ],
     }),
 
-    deleteJournal: builder.mutation<{ message: string }, string>({
+    // Delete a journal post
+    deleteJournal: builder.mutation<void, string>({
       query: (id) => ({
         url: `/v1/journals/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: (result, error, id) => [
-        { type: "Journal", id },
-        { type: "Journal", id: "LIST" },
-      ],
+      invalidatesTags: [{ type: "Journal", id: "LIST" }],
     }),
   }),
 });
