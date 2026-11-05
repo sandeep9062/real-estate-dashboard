@@ -38,7 +38,10 @@ export interface Journal {
   slug: string;
   excerpt: string;
   metaTitle: string;
+  metaDescription?: string;
   keywords: string[];
+  canonicalUrl?: string;
+  noIndex?: boolean;
   views: number;
   createdAt: string;
   altText?: string;
@@ -59,7 +62,10 @@ export interface JournalInput {
   isActive?: boolean;
   isFeatured?: boolean;
   metaTitle?: string;
+  metaDescription?: string;
   keywords?: string[];
+  canonicalUrl?: string;
+  noIndex?: boolean;
   altText?: string;
 }
 

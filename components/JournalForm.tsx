@@ -91,7 +91,10 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     targetSector: string;
     excerpt: string;
     metaTitle: string;
+    metaDescription: string;
     keywords: string[];
+    canonicalUrl: string;
+    noIndex: boolean;
     content: string;
     coverImage: string | File;
     altText: string;
@@ -104,7 +107,10 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     targetSector: "",
     excerpt: "",
     metaTitle: "",
+    metaDescription: "",
     keywords: [],
+    canonicalUrl: "",
+    noIndex: false,
     content: "",
     coverImage: "",
     altText: "",
@@ -179,7 +185,10 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
       targetSector: journal.targetSector || "",
       excerpt: journal.excerpt || content.substring(0, 150) || "",
       metaTitle: journal.metaTitle || "",
+      metaDescription: journal.metaDescription || "",
       keywords: journal.keywords || [],
+      canonicalUrl: journal.canonicalUrl || "",
+      noIndex: journal.noIndex ?? false,
       content,
       coverImage: journal.coverImage || "",
       altText: journal.altText || "",
@@ -565,6 +574,28 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
               </div>
             </div>
 
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-sm font-medium text-slate-700">
+                  Meta Description
+                </label>
+                <span className="text-[11px] text-slate-400">
+                  {formData.metaDescription.length}/170
+                </span>
+              </div>
+              <textarea
+                rows={3}
+                placeholder="Briefly describe what this guide is about for SEO..."
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none resize-none transition-all text-sm"
+                value={formData.metaDescription}
+                onChange={(e) => {
+                  setFormData({ ...formData, metaDescription: e.target.value });
+                  markDirty();
+                }}
+                maxLength={170}
+              />
+            </div>
+
             <div className="p-6 pt-4">
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-sm font-medium text-slate-700">
@@ -710,6 +741,38 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
                       markDirty();
                     }}
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                    Canonical URL
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. https://www.propertybulbul.com/journal/custom-slug"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
+                    value={formData.canonicalUrl}
+                    onChange={(e) => {
+                      setFormData({ ...formData, canonicalUrl: e.target.value });
+                      markDirty();
+                    }}
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="noIndex"
+                    checked={formData.noIndex}
+                    onChange={(e) => {
+                      setFormData({ ...formData, noIndex: e.target.checked });
+                      markDirty();
+                    }}
+                    className="w-4 h-4 rounded border-slate-300 text-[#4161df] focus:ring-[#4161df] bg-gray-50 border-gray-300"
+                  />
+                  <label htmlFor="noIndex" className="text-sm font-medium text-slate-700">
+                    No Index (hide from search engines)
+                  </label>
                 </div>
 
                 <div>
