@@ -25,7 +25,11 @@ export interface Journal {
   _id: string;
   title: string;
   content: string;
-  author: string;
+  author: {
+    name: string;
+    role?: string;
+    avatar?: string;
+  };
   date: string;
   isActive: boolean;
   isFeatured: boolean;
@@ -51,7 +55,12 @@ export interface JournalInput {
   title?: string;
   slug?: string;
   content?: string;
-  author?: string;
+  author?: {
+    name?: string;
+    role?: string;
+    avatar?: string;
+  };
+  authorAvatar?: string | File;
   category?: string;
   targetSector?: string;
   location?: string;
@@ -124,8 +133,12 @@ export const journalApi = createApi({
         const formData = new FormData();
         Object.keys(journalData).forEach((key) => {
           const value = journalData[key as keyof typeof journalData];
-          if (key === "coverImage" && value && (value as any) instanceof File) {
-            formData.append("coverImage", value as unknown as Blob);
+          if (
+            (key === "coverImage" || key === "authorAvatar") &&
+            value &&
+            (value as any) instanceof File
+          ) {
+            formData.append(key, value as unknown as Blob);
           } else if (Array.isArray(value) && value !== null) {
             formData.append(key, JSON.stringify(value));
           } else if (typeof value === "object" && value !== null) {
@@ -153,8 +166,12 @@ export const journalApi = createApi({
         const formData = new FormData();
         Object.keys(update).forEach((key) => {
           const value = update[key as keyof typeof update];
-          if (key === "coverImage" && value && (value as any) instanceof File) {
-            formData.append("coverImage", value as unknown as Blob);
+          if (
+            (key === "coverImage" || key === "authorAvatar") &&
+            value &&
+            (value as any) instanceof File
+          ) {
+            formData.append(key, value as unknown as Blob);
           } else if (Array.isArray(value) && value !== null) {
             formData.append(key, JSON.stringify(value));
           } else if (typeof value === "object" && value !== null) {

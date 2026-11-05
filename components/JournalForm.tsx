@@ -100,6 +100,9 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     altText: string;
     coverImageWidth?: number;
     coverImageHeight?: number;
+    authorName: string;
+    authorRole: string;
+    authorAvatar: string | File;
   }>({
     title: "",
     slug: "",
@@ -116,10 +119,14 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     altText: "",
     coverImageWidth: undefined,
     coverImageHeight: undefined,
+    authorName: "",
+    authorRole: "",
+    authorAvatar: "",
   });
 
   const [keywordInput, setKeywordInput] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [authorAvatarPreview, setAuthorAvatarPreview] = useState<string | null>(null);
   const [slugLocked, setSlugLocked] = useState(isEdit);
   const [showPreview, setShowPreview] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">(
@@ -149,6 +156,9 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
         if (parsed.coverImage && typeof parsed.coverImage === "string") {
           setImagePreview(parsed.coverImage);
         }
+        if (parsed.authorAvatar && typeof parsed.authorAvatar === "string") {
+          setAuthorAvatarPreview(parsed.authorAvatar);
+        }
       }
     } catch {}
   }, [isEdit]);
@@ -164,6 +174,10 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
           ...formData,
           coverImage:
             typeof formData.coverImage === "string" ? formData.coverImage : "",
+          authorAvatar:
+            typeof formData.authorAvatar === "string"
+              ? formData.authorAvatar
+              : "",
         };
         localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(toSave));
         setSaveStatus("saved");
@@ -191,6 +205,9 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
       noIndex: journal.noIndex ?? false,
       content,
       coverImage: journal.coverImage || "",
+      authorName: journal.author?.name || "",
+      authorRole: journal.author?.role || "",
+      authorAvatar: journal.author?.avatar || "",
       altText: journal.altText || "",
       coverImageWidth: journal.coverImageWidth,
       coverImageHeight: journal.coverImageHeight,
@@ -268,6 +285,19 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     }
   };
 
+  const handleAuthorAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData({ ...formData, authorAvatar: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAuthorAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      markDirty();
+    }
+  };
+
   const handleImageDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
@@ -292,10 +322,20 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
         toast.error("Content cannot be empty");
         return;
       }
+      const { authorName, authorRole, authorAvatar, ...rest } = formData;
+      const author =
+        authorName || authorRole
+          ? { name: authorName || undefined, role: authorRole || undefined }
+          : undefined;
       try {
         await updateJournal({
           id: journalId as string,
-          update: { ...formData, content: editorContent },
+          update: {
+            ...rest,
+            author,
+            authorAvatar,
+            content: editorContent,
+          },
         }).unwrap();
         toast.success("Journal updated successfully! ✅");
         setIsDirty(false);
@@ -317,10 +357,21 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
       return;
     }
 
+    const { authorName, authorRole, authorAvatar, ...rest } = formData;
+    const author =
+      authorName || authorRole
+        ? { name: authorName || undefined, role: authorRole || undefined }
+        : undefined;
+
     setSaveStatus("saving");
 
     try {
-      await createJournal({ ...formData, content: editorContent }).unwrap();
+      await createJournal({
+        ...rest,
+        author,
+        authorAvatar,
+        content: editorContent,
+      }).unwrap();
       clearDraft();
       toast.success("Journal published successfully! 🚀");
       router.push("/journals");
@@ -900,6 +951,96 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
                   </button>
                 </div>
               )}
+            </div>
+
+            {/* Author Avatar Preview */}
+            {authorAvatarPreview && (
+              <div className="mt-3 relative aspect-video max-h-48 rounded-xl overflow-hidden border border-slate-200 group">
+                <img
+                  src={authorAvatarPreview}
+                  alt="Author avatar preview"
+                  className="object-cover w-full h-full"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthorAvatarPreview(null);
+                    setFormData({ ...formData, authorAvatar: "" });
+                    markDirty();
+                  }}
+                  className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Author Section */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
+            <div className="p-6">
+              <h3 className="text-sm font-bold text-slate-800 mb-4">
+                Author
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                    Author Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Sandeep Saini"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
+                    value={formData.authorName}
+                    onChange={(e) => {
+                      setFormData({ ...formData, authorName: e.target.value });
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                    Author Role
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Real Estate Analyst"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
+                    value={formData.authorRole}
+                    onChange={(e) => {
+                      setFormData({ ...formData, authorRole: e.target.value });
+                      markDirty();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                    Author Avatar
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      id="authorAvatar"
+                      onChange={handleAuthorAvatarChange}
+                    />
+                    <label
+                      htmlFor="authorAvatar"
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-slate-300 hover:border-[#4161df] hover:bg-[#4161df]/5 cursor-pointer transition-all text-xs text-slate-600"
+                    >
+                      <ImageIcon size={16} />
+                      <span className="truncate">
+                        {formData.authorAvatar instanceof File
+                          ? formData.authorAvatar.name
+                          : isEdit
+                            ? "Change"
+                            : "Upload"}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
