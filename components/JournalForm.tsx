@@ -94,6 +94,9 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     keywords: string[];
     content: string;
     coverImage: string | File;
+    altText: string;
+    coverImageWidth?: number;
+    coverImageHeight?: number;
   }>({
     title: "",
     slug: "",
@@ -104,6 +107,9 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     keywords: [],
     content: "",
     coverImage: "",
+    altText: "",
+    coverImageWidth: undefined,
+    coverImageHeight: undefined,
   });
 
   const [keywordInput, setKeywordInput] = useState("");
@@ -176,6 +182,9 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
       keywords: journal.keywords || [],
       content,
       coverImage: journal.coverImage || "",
+      altText: journal.altText || "",
+      coverImageWidth: journal.coverImageWidth,
+      coverImageHeight: journal.coverImageHeight,
     });
     setImagePreview(journal.coverImage || null);
 
@@ -463,6 +472,25 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
                 <div className="absolute right-0 bottom-2 text-xs text-slate-400">
                   {formData.title.length}/120
                 </div>
+
+                <button
+                  disabled={loading}
+                  type="submit"
+                  className="w-full sm:w-auto bg-gradient-to-r from-[#4161df] to-[#3551c0] text-white px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:from-[#3551c0] hover:to-[#2a42a0] disabled:opacity-50 transition-all shadow-lg shadow-[#4161df]/20"
+                >
+                  {loading ? (
+                    <Loader2 className="animate-spin" size={20} />
+                  ) : (
+                    <Save size={20} />
+                  )}
+                  {isEdit
+                    ? loading
+                      ? "Saving Changes..."
+                      : "Save Journal"
+                    : loading
+                      ? "Publishing..."
+                      : "Publish Journal"}
+                </button>
               </div>
             </div>
 
@@ -724,6 +752,65 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
                           coverImage: e.target.value,
                         });
                         setImagePreview(e.target.value);
+                        markDirty();
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                    Alt Text
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Modern 3BHK apartment with balcony view"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
+                    value={formData.altText}
+                    onChange={(e) => {
+                      setFormData({ ...formData, altText: e.target.value });
+                      markDirty();
+                    }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                      Cover Image Width
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 800"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
+                      value={formData.coverImageWidth ?? ""}
+                      onChange={(e) => {
+                        setFormData({
+                          ...formData,
+                          coverImageWidth: e.target.value
+                            ? Number(e.target.value)
+                            : undefined,
+                        });
+                        markDirty();
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                      Cover Image Height
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 600"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
+                      value={formData.coverImageHeight ?? ""}
+                      onChange={(e) => {
+                        setFormData({
+                          ...formData,
+                          coverImageHeight: e.target.value
+                            ? Number(e.target.value)
+                            : undefined,
+                        });
                         markDirty();
                       }}
                     />

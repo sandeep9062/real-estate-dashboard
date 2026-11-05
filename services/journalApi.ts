@@ -33,12 +33,15 @@ export interface Journal {
   targetSector: string;
   location?: string;
   coverImage: string;
+  coverImageWidth?: number;
+  coverImageHeight?: number;
   slug: string;
   excerpt: string;
   metaTitle: string;
   keywords: string[];
   views: number;
   createdAt: string;
+  altText?: string;
 }
 
 export interface JournalInput {
@@ -50,11 +53,14 @@ export interface JournalInput {
   targetSector?: string;
   location?: string;
   coverImage?: string | File;
+  coverImageWidth?: number;
+  coverImageHeight?: number;
   excerpt?: string;
   isActive?: boolean;
   isFeatured?: boolean;
   metaTitle?: string;
   keywords?: string[];
+  altText?: string;
 }
 
 export interface PaginatedJournalsResponse {
