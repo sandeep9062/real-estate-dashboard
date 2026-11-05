@@ -88,6 +88,7 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     title: string;
     slug: string;
     category: string;
+    targetCity: string;
     targetSector: string;
     excerpt: string;
     metaTitle: string;
@@ -103,10 +104,12 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     authorName: string;
     authorRole: string;
     authorAvatar: string | File;
+    relatedSlugs: string[];
   }>({
     title: "",
     slug: "",
     category: "Investment",
+    targetCity: "",
     targetSector: "",
     excerpt: "",
     metaTitle: "",
@@ -122,6 +125,7 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     authorName: "",
     authorRole: "",
     authorAvatar: "",
+    relatedSlugs: [],
   });
 
   const [keywordInput, setKeywordInput] = useState("");
@@ -200,6 +204,7 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
       excerpt: journal.excerpt || content.substring(0, 150) || "",
       metaTitle: journal.metaTitle || "",
       metaDescription: journal.metaDescription || "",
+      targetCity: journal.targetCity || "",
       keywords: journal.keywords || [],
       canonicalUrl: journal.canonicalUrl || "",
       noIndex: journal.noIndex ?? false,
@@ -208,6 +213,7 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
       authorName: journal.author?.name || "",
       authorRole: journal.author?.role || "",
       authorAvatar: journal.author?.avatar || "",
+      relatedSlugs: journal.relatedSlugs || [],
       altText: journal.altText || "",
       coverImageWidth: journal.coverImageWidth,
       coverImageHeight: journal.coverImageHeight,
@@ -777,6 +783,25 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                    Target City
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Chandigarh"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
+                    value={formData.targetCity}
+                    onChange={(e) => {
+                      setFormData({
+                        ...formData,
+                        targetCity: e.target.value,
+                      });
+                      markDirty();
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
                     Target Sector/City
                   </label>
                   <input
@@ -1093,6 +1118,68 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
               ) : (
                 <p className="text-xs text-slate-400 text-center py-2">
                   No keywords added yet
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Related Slugs Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
+            <div className="p-6">
+              <h3 className="text-sm font-bold text-slate-800 mb-4">
+                Related Slugs
+              </h3>
+              <p className="text-xs text-slate-500 mb-4">
+                Comma-separated slugs of related journal posts for internal
+                linking.
+              </p>
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  placeholder="e.g. investment-guide-sector-115-mohali"
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
+                  value={formData.relatedSlugs.join(", ")}
+                  onChange={(e) => {
+                    setFormData({
+                      ...formData,
+                      relatedSlugs: e.target.value
+                        .split(",")
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    });
+                    markDirty();
+                  }}
+                />
+              </div>
+              {formData.relatedSlugs.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {formData.relatedSlugs.map((slug, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium transition-all hover:bg-purple-100"
+                    >
+                      {slug}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            relatedSlugs: formData.relatedSlugs.filter(
+                              (_, i) => i !== idx
+                            ),
+                          });
+                          markDirty();
+                        }}
+                        className="hover:text-red-500 transition-colors ml-0.5"
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 text-center py-2">
+                  No related slugs added yet
                 </p>
               )}
             </div>

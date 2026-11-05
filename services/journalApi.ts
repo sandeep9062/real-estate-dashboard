@@ -34,6 +34,7 @@ export interface Journal {
   isActive: boolean;
   isFeatured: boolean;
   category: string;
+  targetCity?: string;
   targetSector: string;
   location?: string;
   coverImage: string;
@@ -49,6 +50,7 @@ export interface Journal {
   views: number;
   createdAt: string;
   altText?: string;
+  relatedSlugs?: string[];
 }
 
 export interface JournalInput {
@@ -62,6 +64,7 @@ export interface JournalInput {
   };
   authorAvatar?: string | File;
   category?: string;
+  targetCity?: string;
   targetSector?: string;
   location?: string;
   coverImage?: string | File;
@@ -76,6 +79,7 @@ export interface JournalInput {
   canonicalUrl?: string;
   noIndex?: boolean;
   altText?: string;
+  relatedSlugs?: string[];
 }
 
 export interface PaginatedJournalsResponse {
