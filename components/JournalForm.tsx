@@ -8,20 +8,21 @@ import {
   Loader2,
   X,
   Eye,
-  Edit3,
+  PenLine,
   Lock,
   Unlock,
-  Clock,
-  AlignLeft,
-  Hash,
   Search,
   AlertCircle,
   CheckCircle2,
-  Sparkles,
   FileText,
-  Type,
-  BookOpen,
   Link2,
+  ChevronDown,
+  MapPin,
+  Tags,
+  UserRound,
+  Share2,
+  Upload,
+  type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -38,6 +39,51 @@ const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
 });
 
 const DRAFT_STORAGE_KEY = "journal_new_draft";
+
+const CATEGORIES: [string, string][] = [
+  ["Investment", "Investment Guide"],
+  ["Investment Analysis", "Investment Analysis"],
+  ["Locality Guide", "Locality Guide"],
+  ["City Guide", "City Guide"],
+  ["Market News", "Market News"],
+  ["Market Insights", "Market Insights"],
+  ["Market Updates", "Market Updates"],
+  ["Market Trends", "Market Trends"],
+  ["Market Outlook", "Market Outlook"],
+  ["Legal", "Legal & Documentation"],
+  ["Lifestyle", "Tricity Lifestyle"],
+  ["RERA Updates", "RERA Updates"],
+  ["Home Buying Guide", "Home Buying Guide"],
+  ["Buyer Guide", "Buyer Guide"],
+  ["Property Guide", "Property Guide"],
+  ["Real Estate Guide", "Real Estate Guide"],
+  ["Real Estate News", "Real Estate News"],
+  ["NRI Guide", "NRI Guide"],
+  ["Rental Guide", "Rental Guide"],
+  ["Tenant Guides", "Tenant Guides"],
+  ["Owner Guide", "Owner Guide"],
+  ["Owner Onboarding", "Owner Onboarding"],
+  ["Property Management", "Property Management"],
+  ["Construction", "Construction & Development"],
+  ["Interior & Design", "Interior & Design"],
+  ["Property Tax", "Property Tax & Finance"],
+  ["Home Loans", "Home Loans & Mortgages"],
+  ["Vastu", "Vastu & Feng Shui"],
+  ["Commercial Real Estate", "Commercial Real Estate"],
+  ["Plot & Land", "Plots & Land Buying"],
+  ["Affordable Housing", "Affordable Housing"],
+  ["Luxury Homes", "Luxury Homes"],
+  ["Builder Spotlight", "Builder Spotlight"],
+  ["Builder Reviews", "Builder & Project Reviews"],
+  ["Selling Guide", "Property Selling Guide"],
+  ["Government Schemes", "Government Schemes"],
+  ["Infrastructure", "Infrastructure & Connectivity"],
+  ["Smart Homes", "Smart Homes & Technology"],
+  ["PG & Co Living", "PG & Co-Living"],
+  ["Student Housing", "Student Housing"],
+  ["Real Estate Tips", "Tips & FAQs"],
+  ["News & Events", "News & Events"],
+];
 
 function slugify(text: string) {
   return text
@@ -56,6 +102,119 @@ function countWords(text: string): number {
   return text.trim() ? text.trim().split(/\s+/).length : 0;
 }
 
+/* ------------------------------------------------------------------ */
+/* Small presentational helpers                                        */
+/* ------------------------------------------------------------------ */
+
+const inputCls =
+  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 transition-colors hover:border-slate-300 focus:border-[#4161df] focus:outline-none focus:ring-2 focus:ring-[#4161df]/15";
+
+function Field({
+  label,
+  htmlFor,
+  counter,
+  hint,
+  children,
+}: {
+  label: string;
+  htmlFor?: string;
+  counter?: React.ReactNode;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div className="mb-1.5 flex items-baseline justify-between gap-2">
+        <label
+          htmlFor={htmlFor}
+          className="text-[13px] font-medium text-slate-700"
+        >
+          {label}
+        </label>
+        {counter}
+      </div>
+      {children}
+      {hint && <p className="mt-1.5 text-xs text-slate-500">{hint}</p>}
+    </div>
+  );
+}
+
+/** Length meter: grey when empty, amber outside the ideal range, green inside it. */
+function Meter({
+  value,
+  idealMin,
+  idealMax,
+  limit,
+}: {
+  value: number;
+  idealMin: number;
+  idealMax: number;
+  limit: number;
+}) {
+  const pct = Math.min(100, (value / limit) * 100);
+  const tone =
+    value === 0
+      ? "bg-slate-300"
+      : value >= idealMin && value <= idealMax
+        ? "bg-emerald-500"
+        : "bg-amber-500";
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs tabular-nums text-slate-500">
+        {value}/{limit}
+      </span>
+      <span className="h-1 w-12 overflow-hidden rounded-full bg-slate-100">
+        <span
+          className={`block h-full rounded-full transition-all ${tone}`}
+          style={{ width: `${pct}%` }}
+        />
+      </span>
+    </div>
+  );
+}
+
+function Section({
+  icon: Icon,
+  title,
+  summary,
+  defaultOpen = false,
+  children,
+}: {
+  icon: LucideIcon;
+  title: string;
+  summary?: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <details
+      open={defaultOpen}
+      className="group overflow-hidden rounded-xl border border-slate-200 bg-white"
+    >
+      <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 select-none hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#4161df]/40 [&::-webkit-details-marker]:hidden">
+        <Icon size={16} className="shrink-0 text-slate-400" />
+        <span className="text-sm font-semibold text-slate-900">{title}</span>
+        {summary && (
+          <span className="ml-auto max-w-[45%] truncate text-xs text-slate-500">
+            {summary}
+          </span>
+        )}
+        <ChevronDown
+          size={16}
+          className={`shrink-0 text-slate-400 transition-transform group-open:rotate-180 ${
+            summary ? "" : "ml-auto"
+          }`}
+        />
+      </summary>
+      <div className="space-y-4 border-t border-slate-100 px-4 py-4">
+        {children}
+      </div>
+    </details>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
 interface JournalFormProps {
   /** "create" renders an empty form that publishes a new journal.
    *  "edit" loads the existing journal by id and updates it. */
@@ -64,10 +223,34 @@ interface JournalFormProps {
   journalId?: string;
 }
 
+interface FormState {
+  title: string;
+  slug: string;
+  category: string;
+  targetCity: string;
+  targetSector: string;
+  excerpt: string;
+  metaTitle: string;
+  metaDescription: string;
+  keywords: string[];
+  canonicalUrl: string;
+  noIndex: boolean;
+  content: string;
+  coverImage: string | File;
+  altText: string;
+  coverImageWidth?: number;
+  coverImageHeight?: number;
+  authorName: string;
+  authorRole: string;
+  authorAvatar: string | File;
+  relatedSlugs: string[];
+}
+
 export default function JournalForm({ mode, journalId }: JournalFormProps) {
   const isEdit = mode === "edit";
   const router = useRouter();
   const editorRef = useRef<RichTextEditorRef>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const contentInitializedRef = useRef(false);
 
   // Only fetch in edit mode; skip otherwise so create mode never hits the API.
@@ -84,28 +267,7 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
 
   const loading = isEdit ? updating : creating;
 
-  const [formData, setFormData] = useState<{
-    title: string;
-    slug: string;
-    category: string;
-    targetCity: string;
-    targetSector: string;
-    excerpt: string;
-    metaTitle: string;
-    metaDescription: string;
-    keywords: string[];
-    canonicalUrl: string;
-    noIndex: boolean;
-    content: string;
-    coverImage: string | File;
-    altText: string;
-    coverImageWidth?: number;
-    coverImageHeight?: number;
-    authorName: string;
-    authorRole: string;
-    authorAvatar: string | File;
-    relatedSlugs: string[];
-  }>({
+  const [formData, setFormData] = useState<FormState>({
     title: "",
     slug: "",
     category: "Investment",
@@ -130,9 +292,12 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
 
   const [keywordInput, setKeywordInput] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [authorAvatarPreview, setAuthorAvatarPreview] = useState<string | null>(null);
+  const [authorAvatarPreview, setAuthorAvatarPreview] = useState<string | null>(
+    null,
+  );
   const [slugLocked, setSlugLocked] = useState(isEdit);
   const [showPreview, setShowPreview] = useState(false);
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">(
     "saved",
   );
@@ -148,6 +313,12 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
   const markDirty = useCallback(() => {
     if (isEdit) setIsDirty(true);
   }, [isEdit]);
+
+  /** Update one field and mark the form dirty. */
+  const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+    markDirty();
+  };
 
   // Load draft from localStorage on mount (create mode only)
   useEffect(() => {
@@ -219,6 +390,7 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
       coverImageHeight: journal.coverImageHeight,
     });
     setImagePreview(journal.coverImage || null);
+    if (journal.author?.avatar) setAuthorAvatarPreview(journal.author.avatar);
 
     if (editorRef.current && content) {
       editorRef.current.setContent(content);
@@ -235,15 +407,36 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
   // Update content stats when editor content changes
   const updateContentStats = useCallback(() => {
     const content = editorRef.current?.getCurrentContent() || "";
-    const words = countWords(content);
-    const chars = content.length;
     setContentStats({
-      words,
-      chars,
+      words: countWords(content),
+      chars: content.length,
       readingTime: estimateReadingTime(content),
     });
     if (isEdit) setIsDirty(true);
   }, [isEdit]);
+
+  // Warn before leaving with unsaved edits
+  useEffect(() => {
+    if (!isEdit || !isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isEdit, isDirty]);
+
+  // Ctrl/Cmd + S submits the form
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        formRef.current?.requestSubmit();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const clearDraft = () => {
     try {
@@ -251,15 +444,11 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     } catch {}
   };
 
-  const parseKeywords = (input: string) => {
-    return input
+  const addKeywords = () => {
+    const newKeywords = keywordInput
       .split(",")
       .map((kw) => kw.trim())
       .filter((kw) => kw.length > 0);
-  };
-
-  const addKeywords = () => {
-    const newKeywords = parseKeywords(keywordInput);
     if (newKeywords.length > 0) {
       setFormData((prev) => ({
         ...prev,
@@ -278,43 +467,35 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     markDirty();
   };
 
+  const readPreview = (file: File, setter: (v: string) => void) => {
+    const reader = new FileReader();
+    reader.onloadend = () => setter(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData({ ...formData, coverImage: file });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-      markDirty();
+      update("coverImage", file);
+      readPreview(file, setImagePreview);
     }
   };
 
   const handleAuthorAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData({ ...formData, authorAvatar: file });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAuthorAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-      markDirty();
+      update("authorAvatar", file);
+      readPreview(file, setAuthorAvatarPreview);
     }
   };
 
   const handleImageDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    setIsDraggingImage(false);
     const file = e.dataTransfer.files?.[0];
     if (file && file.type.startsWith("image/")) {
-      setFormData({ ...formData, coverImage: file });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-      markDirty();
+      update("coverImage", file);
+      readPreview(file, setImagePreview);
     }
   };
 
@@ -407,813 +588,226 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
   // Edit-mode loading & error states
   if (isEdit && fetching)
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
           <Loader2
-            className="animate-spin text-[#4161df] mx-auto mb-4"
-            size={40}
+            className="mx-auto mb-3 animate-spin text-[#4161df]"
+            size={32}
           />
-          <p className="text-slate-500 font-medium">Loading journal...</p>
+          <p className="text-sm font-medium text-slate-500">Loading journal…</p>
         </div>
       </div>
     );
 
   if (isEdit && isError)
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col items-center justify-center gap-4">
-        <AlertCircle size={48} className="text-red-400" />
-        <p className="text-red-500 font-medium">Error loading journal.</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-50">
+        <AlertCircle size={40} className="text-red-400" />
+        <p className="font-medium text-slate-900">
+          This journal couldn’t be loaded.
+        </p>
+        <p className="text-sm text-slate-500">
+          Check your connection and try again.
+        </p>
         <Link
           href="/journals"
-          className="text-[#4161df] hover:underline font-medium"
+          className="mt-1 text-sm font-medium text-[#4161df] hover:underline"
         >
-          Go Back to Journals
+          Back to journals
         </Link>
       </div>
     );
 
+  const publishLabel = isEdit
+    ? loading
+      ? "Saving…"
+      : "Save changes"
+    : loading
+      ? "Publishing…"
+      : "Publish";
+
+  const serpTitle = formData.metaTitle || formData.title || "Journal title";
+  const serpDescription =
+    formData.metaDescription ||
+    formData.excerpt ||
+    "Add a meta description to control how this article appears in search results.";
+  const draftText = isEdit
+    ? isDirty
+      ? "Unsaved changes"
+      : "All changes saved"
+    : saveStatus === "saving"
+      ? "Saving draft…"
+      : saveStatus === "unsaved"
+        ? "Not saved"
+        : "Draft saved";
+  const draftTone = isEdit
+    ? isDirty
+      ? "amber"
+      : "green"
+    : saveStatus === "saved"
+      ? "green"
+      : saveStatus === "saving"
+        ? "amber"
+        : "red";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-slate-200 shadow-sm">
-        <div className="py-3 px-6 flex items-center justify-between">
+    <form
+      ref={formRef}
+      onSubmit={handleSubmit}
+      className="min-h-screen bg-slate-50 text-slate-900"
+    >
+      {/* Top bar */}
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-3 px-4 sm:px-6">
           <Link
             href="/journals"
-            className="flex items-center gap-2 text-slate-600 hover:text-[#4161df] transition-colors font-medium group"
+            className="-ml-2 flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
           >
-            <ArrowLeft
-              size={20}
-              className="group-hover:-translate-x-0.5 transition-transform"
-            />
-            <span className="hidden sm:inline">
-              {isEdit ? "Back to List" : "Back to Journals"}
-            </span>
+            <ArrowLeft size={16} />
+            <span className="hidden sm:inline">Journals</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-1.5 text-xs">
-              {isEdit ? (
-                isDirty ? (
-                  <>
-                    <AlertCircle size={12} className="text-amber-500" />
-                    <span className="text-amber-600 font-medium">
-                      Unsaved changes
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 size={12} className="text-emerald-500" />
-                    <span className="text-emerald-600 font-medium">Saved</span>
-                  </>
-                )
-              ) : (
-                <>
-                  {saveStatus === "saving" && (
-                    <>
-                      <Loader2
-                        size={12}
-                        className="animate-spin text-amber-500"
-                      />
-                      <span className="text-amber-600 font-medium">
-                        Saving draft...
-                      </span>
-                    </>
-                  )}
-                  {saveStatus === "saved" && (
-                    <>
-                      <CheckCircle2 size={12} className="text-emerald-500" />
-                      <span className="text-emerald-600 font-medium">
-                        Draft saved
-                      </span>
-                    </>
-                  )}
-                  {saveStatus === "unsaved" && (
-                    <>
-                      <AlertCircle size={12} className="text-red-500" />
-                      <span className="text-red-600 font-medium">
-                        Unsaved changes
-                      </span>
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-            <h1
-              className={`text-lg font-bold text-slate-900 hidden md:block ${
-                isEdit ? "truncate max-w-[200px]" : ""
+
+          <span className="hidden h-5 w-px bg-slate-200 sm:block" />
+          <p className="hidden min-w-0 flex-1 truncate text-sm text-slate-500 sm:block">
+            {isEdit
+              ? journal?.title || "Edit journal"
+              : formData.title || "New journal"}
+          </p>
+
+          <div className="ml-auto flex items-center gap-3">
+            <span
+              className={`hidden items-center gap-1.5 text-xs font-medium sm:flex ${
+                draftTone === "green"
+                  ? "text-emerald-600"
+                  : draftTone === "amber"
+                    ? "text-amber-600"
+                    : "text-red-600"
               }`}
             >
-              {isEdit
-                ? `Edit: ${journal?.title?.substring(0, 30)}...`
-                : "New Journal"}
-            </h1>
+              {draftTone === "green" ? (
+                <CheckCircle2 size={14} />
+              ) : saveStatus === "saving" && !isEdit ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <AlertCircle size={14} />
+              )}
+              {draftText}
+            </span>
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#4161df] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#3551c0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4161df]/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+              title="Ctrl/Cmd + S"
+            >
+              {loading ? (
+                <Loader2 className="animate-spin" size={16} />
+              ) : (
+                <Save size={16} />
+              )}
+              {publishLabel}
+            </button>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="py-6 px-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title Card */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
-            <div className="p-6 pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-2 text-slate-500 mb-4">
-                <Type size={16} />
-                <span className="text-xs font-semibold uppercase tracking-wider">
-                  Article Details
-                </span>
-              </div>
-              <div className="relative">
-                <input
-                  required
-                  type="text"
-                  placeholder={
-                    isEdit
-                      ? "Journal title"
-                      : "e.g. Best Residential Societies in Sector 82, Mohali"
-                  }
-                  className="w-full text-xl md:text-2xl font-bold text-slate-900 px-0 py-2 border-0 border-b-2 border-transparent focus:border-[#4161df] focus:ring-0 outline-none bg-transparent placeholder:text-slate-300 transition-all"
-                  value={formData.title}
-                  onChange={handleTitleChange}
-                  maxLength={120}
-                />
-                <div className="absolute right-0 bottom-2 text-xs text-slate-400">
-                  {formData.title.length}/120
-                </div>
-
-                <button
-                  disabled={loading}
-                  type="submit"
-                  className="w-full sm:w-auto bg-gradient-to-r from-[#4161df] to-[#3551c0] text-white px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:from-[#3551c0] hover:to-[#2a42a0] disabled:opacity-50 transition-all shadow-lg shadow-[#4161df]/20"
-                >
-                  {loading ? (
-                    <Loader2 className="animate-spin" size={20} />
-                  ) : (
-                    <Save size={20} />
-                  )}
-                  {isEdit
-                    ? loading
-                      ? "Saving Changes..."
-                      : "Save Journal"
-                    : loading
-                      ? "Publishing..."
-                      : "Publish Journal"}
-                </button>
-              </div>
-            </div>
-
-            <div className="px-6 py-3 bg-slate-50/50 flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
-                <Link2 size={14} />
-                <span className="text-xs font-medium">Slug</span>
-              </div>
-              <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-mono">
-                  /journal/
-                </span>
-                <input
-                  type="text"
-                  placeholder="auto-generated-from-title"
-                  className="w-full pl-[4.5rem] pr-8 py-1.5 text-sm font-mono bg-white rounded-lg border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all"
-                  value={formData.slug}
-                  onChange={(e) => {
-                    setFormData({ ...formData, slug: e.target.value });
-                    markDirty();
-                  }}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => setSlugLocked(!slugLocked)}
-                className={`p-1.5 rounded-lg transition-all ${
-                  slugLocked
-                    ? "bg-amber-50 text-amber-600 border border-amber-200"
-                    : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-                }`}
-                title={
-                  slugLocked
-                    ? "Unlock slug to edit manually"
-                    : "Lock slug to edit manually"
+      <div className="mx-auto grid max-w-[1400px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:py-8">
+        {/* ============ Writing column ============ */}
+        <main className="min-w-0 space-y-4">
+          <div className="rounded-xl border border-slate-200 bg-white">
+            <div className="px-5 pt-5 sm:px-8 sm:pt-7">
+              <label htmlFor="title" className="sr-only">
+                Title
+              </label>
+              <textarea
+                id="title"
+                required
+                rows={2}
+                maxLength={120}
+                placeholder="Best residential societies in Sector 82, Mohali"
+                value={formData.title}
+                onChange={(e) =>
+                  handleTitleChange(
+                    e as unknown as React.ChangeEvent<HTMLInputElement>,
+                  )
                 }
-              >
-                {slugLocked ? <Lock size={14} /> : <Unlock size={14} />}
-              </button>
-            </div>
-          </div>
-
-          {/* SEO Section */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
-            <div className="p-6 pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2 text-slate-500 mb-4">
-                <Search size={16} />
-                <span className="text-xs font-semibold uppercase tracking-wider">
-                  SEO & Metadata
-                </span>
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-sm font-medium text-slate-700">
-                    Meta Title
-                  </label>
-                  <span className="text-[11px] text-slate-400">
-                    {formData.metaTitle.length}/120
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.preventDefault();
+                }}
+                className="w-full resize-none border-0 bg-transparent p-0 font-serif text-3xl font-bold leading-tight tracking-tight text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-0 sm:text-4xl"
+              />
+              <div className="mt-1 flex items-center justify-between gap-3 pb-4">
+                <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg bg-slate-50 px-2.5 py-1.5 text-sm">
+                  <Link2 size={14} className="shrink-0 text-slate-400" />
+                  <span className="hidden shrink-0 font-mono text-xs text-slate-400 sm:inline">
+                    /journal/
                   </span>
-                </div>
-                <input
-                  type="text"
-                  placeholder="e.g. Best Investment Guide for Mohali - PropertyBulbul"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
-                  value={formData.metaTitle}
-                  onChange={(e) => {
-                    setFormData({ ...formData, metaTitle: e.target.value });
-                    markDirty();
-                  }}
-                  maxLength={120}
-                />
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-medium text-slate-700">
-                  Meta Description
-                </label>
-                <span className="text-[11px] text-slate-400">
-                  {formData.metaDescription.length}/170
-                </span>
-              </div>
-              <textarea
-                rows={3}
-                placeholder="Briefly describe what this guide is about for SEO..."
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none resize-none transition-all text-sm"
-                value={formData.metaDescription}
-                onChange={(e) => {
-                  setFormData({ ...formData, metaDescription: e.target.value });
-                  markDirty();
-                }}
-                maxLength={170}
-              />
-            </div>
-
-            <div className="p-6 pt-4">
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-medium text-slate-700">
-                  Meta Description (Excerpt)
-                </label>
-                <span className="text-[11px] text-slate-400">
-                  {formData.excerpt.length}/260
-                </span>
-              </div>
-              <textarea
-                rows={3}
-                placeholder="Briefly describe what this guide is about for SEO..."
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none resize-none transition-all text-sm"
-                value={formData.excerpt}
-                onChange={(e) => {
-                  setFormData({ ...formData, excerpt: e.target.value });
-                  markDirty();
-                }}
-                maxLength={260}
-              />
-
-              {(formData.metaTitle || formData.excerpt) && (
-                <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-slate-50 to-blue-50/50 border border-slate-200">
-                  <div className="flex items-center gap-1.5 mb-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                    <Sparkles size={12} />
-                    Search Result Preview
-                  </div>
-                  <div className="text-sm text-blue-700 font-medium truncate">
-                    {formData.metaTitle || formData.title || "Journal Title"} |
-                    PropertyBulbul Journal
-                  </div>
-                  <div className="text-xs text-emerald-700 truncate mt-0.5">
-                    https://www.propertybulbul.com/journal/
-                    {formData.slug || "slug"}
-                  </div>
-                  <div className="text-xs text-slate-600 mt-1 line-clamp-2">
-                    {formData.excerpt ||
-                      "A comprehensive guide about real estate in Tricity..."}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Settings - Inline horizontal fields */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
-            <div className="p-6">
-              <h3 className="text-sm font-bold text-slate-800 mb-4">
-                Settings
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Category
-                  </label>
-                  <select
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-[#4161df]/20 transition-all text-sm bg-white cursor-pointer appearance-none"
-                    value={formData.category}
-                    onChange={(e) => {
-                      setFormData({ ...formData, category: e.target.value });
-                      markDirty();
-                    }}
-                  >
-                    <option value="Investment">Investment Guide</option>
-                    <option value="Investment Analysis">
-                      Investment Analysis
-                    </option>
-                    <option value="Locality Guide">Locality Guide</option>
-                    <option value="City Guide">City Guide</option>
-                    <option value="Market News">Market News</option>
-                    <option value="Market Insights">Market Insights</option>
-                    <option value="Market Updates">Market Updates</option>
-                    <option value="Market Trends">Market Trends</option>
-                    <option value="Market Outlook">Market Outlook</option>
-                    <option value="Legal">Legal & Documentation</option>
-                    <option value="Lifestyle">Tricity Lifestyle</option>
-                    <option value="RERA Updates">RERA Updates</option>
-                    <option value="Home Buying Guide">Home Buying Guide</option>
-                    <option value="Buyer Guide">Buyer Guide</option>
-                    <option value="Property Guide">Property Guide</option>
-                    <option value="Real Estate Guide">Real Estate Guide</option>
-                    <option value="Real Estate News">Real Estate News</option>
-                    <option value="NRI Guide">NRI Guide</option>
-                    <option value="Rental Guide">Rental Guide</option>
-                    <option value="Tenant Guides">Tenant Guides</option>
-                    <option value="Owner Guide">Owner Guide</option>
-                    <option value="Owner Onboarding">Owner Onboarding</option>
-                    <option value="Property Management">
-                      Property Management
-                    </option>
-                    <option value="Construction">
-                      Construction & Development
-                    </option>
-                    <option value="Interior & Design">Interior & Design</option>
-                    <option value="Property Tax">Property Tax & Finance</option>
-                    <option value="Home Loans">Home Loans & Mortgages</option>
-                    <option value="Vastu">Vastu & Feng Shui</option>
-                    <option value="Commercial Real Estate">
-                      Commercial Real Estate
-                    </option>
-                    <option value="Plot & Land">Plots & Land Buying</option>
-                    <option value="Affordable Housing">
-                      Affordable Housing
-                    </option>
-                    <option value="Luxury Homes">Luxury Homes</option>
-                    <option value="Builder Spotlight">Builder Spotlight</option>
-                    <option value="Builder Reviews">
-                      Builder & Project Reviews
-                    </option>
-                    <option value="Selling Guide">
-                      Property Selling Guide
-                    </option>
-                    <option value="Government Schemes">
-                      Government Schemes
-                    </option>
-                    <option value="Infrastructure">
-                      Infrastructure & Connectivity
-                    </option>
-                    <option value="Smart Homes">
-                      Smart Homes & Technology
-                    </option>
-                    <option value="PG & Co Living">PG & Co-Living</option>
-                    <option value="Student Housing">Student Housing</option>
-                    <option value="Real Estate Tips">Tips & FAQs</option>
-                    <option value="News & Events">News & Events</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Target City
-                  </label>
                   <input
                     type="text"
-                    placeholder="e.g. Chandigarh"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
-                    value={formData.targetCity}
-                    onChange={(e) => {
-                      setFormData({
-                        ...formData,
-                        targetCity: e.target.value,
-                      });
-                      markDirty();
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Target Sector/City
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Mohali Sector 115"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
-                    value={formData.targetSector}
-                    onChange={(e) => {
-                      setFormData({
-                        ...formData,
-                        targetSector: e.target.value,
-                      });
-                      markDirty();
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Canonical URL
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. https://www.propertybulbul.com/journal/custom-slug"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
-                    value={formData.canonicalUrl}
-                    onChange={(e) => {
-                      setFormData({ ...formData, canonicalUrl: e.target.value });
-                      markDirty();
-                    }}
-                  />
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="noIndex"
-                    checked={formData.noIndex}
-                    onChange={(e) => {
-                      setFormData({ ...formData, noIndex: e.target.checked });
-                      markDirty();
-                    }}
-                    className="w-4 h-4 rounded border-slate-300 text-[#4161df] focus:ring-[#4161df] bg-gray-50 border-gray-300"
-                  />
-                  <label htmlFor="noIndex" className="text-sm font-medium text-slate-700">
-                    No Index (hide from search engines)
-                  </label>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Cover Image
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      id="coverImage"
-                      onChange={handleImageChange}
-                    />
-                    <label
-                      htmlFor="coverImage"
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-slate-300 hover:border-[#4161df] hover:bg-[#4161df]/5 cursor-pointer transition-all text-xs text-slate-600"
-                    >
-                      <ImageIcon size={16} />
-                      <span className="truncate">
-                        {formData.coverImage instanceof File
-                          ? formData.coverImage.name
-                          : isEdit
-                            ? "Change"
-                            : "Upload"}
-                      </span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Or image URL"
-                      className="flex-1 px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-xs focus:ring-2 focus:ring-[#4161df]/20 transition-all"
-                      value={
-                        typeof formData.coverImage === "string"
-                          ? formData.coverImage
-                          : ""
-                      }
-                      onChange={(e) => {
-                        setFormData({
-                          ...formData,
-                          coverImage: e.target.value,
-                        });
-                        setImagePreview(e.target.value);
-                        markDirty();
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Alt Text
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Modern 3BHK apartment with balcony view"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
-                    value={formData.altText}
-                    onChange={(e) => {
-                      setFormData({ ...formData, altText: e.target.value });
-                      markDirty();
-                    }}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                      Cover Image Width
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 800"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
-                      value={formData.coverImageWidth ?? ""}
-                      onChange={(e) => {
-                        setFormData({
-                          ...formData,
-                          coverImageWidth: e.target.value
-                            ? Number(e.target.value)
-                            : undefined,
-                        });
-                        markDirty();
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                      Cover Image Height
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 600"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
-                      value={formData.coverImageHeight ?? ""}
-                      onChange={(e) => {
-                        setFormData({
-                          ...formData,
-                          coverImageHeight: e.target.value
-                            ? Number(e.target.value)
-                            : undefined,
-                        });
-                        markDirty();
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-              {imagePreview && (
-                <div className="mt-3 relative aspect-video max-h-48 rounded-xl overflow-hidden border border-slate-200 group">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="object-cover w-full h-full"
+                    aria-label="Slug"
+                    placeholder="generated-from-title"
+                    value={formData.slug}
+                    onChange={(e) => update("slug", e.target.value)}
+                    className="min-w-0 flex-1 border-0 bg-transparent p-0 font-mono text-xs text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-0"
                   />
                   <button
                     type="button"
-                    onClick={() => {
-                      setImagePreview(null);
-                      setFormData({ ...formData, coverImage: "" });
-                      markDirty();
-                    }}
-                    className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => setSlugLocked(!slugLocked)}
+                    aria-pressed={slugLocked}
+                    className={`shrink-0 rounded-md p-1 transition-colors ${
+                      slugLocked
+                        ? "bg-amber-100 text-amber-700"
+                        : "text-slate-400 hover:bg-slate-200 hover:text-slate-600"
+                    }`}
+                    title={
+                      slugLocked
+                        ? "Slug is locked. It won’t follow the title."
+                        : "Slug follows the title until you edit it."
+                    }
                   >
-                    <X size={14} />
+                    {slugLocked ? <Lock size={13} /> : <Unlock size={13} />}
                   </button>
                 </div>
-              )}
-            </div>
-
-            {/* Author Avatar Preview */}
-            {authorAvatarPreview && (
-              <div className="mt-3 relative aspect-video max-h-48 rounded-xl overflow-hidden border border-slate-200 group">
-                <img
-                  src={authorAvatarPreview}
-                  alt="Author avatar preview"
-                  className="object-cover w-full h-full"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthorAvatarPreview(null);
-                    setFormData({ ...formData, authorAvatar: "" });
-                    markDirty();
-                  }}
-                  className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Author Section */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
-            <div className="p-6">
-              <h3 className="text-sm font-bold text-slate-800 mb-4">
-                Author
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Author Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Sandeep Saini"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
-                    value={formData.authorName}
-                    onChange={(e) => {
-                      setFormData({ ...formData, authorName: e.target.value });
-                      markDirty();
-                    }}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Author Role
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Real Estate Analyst"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
-                    value={formData.authorRole}
-                    onChange={(e) => {
-                      setFormData({ ...formData, authorRole: e.target.value });
-                      markDirty();
-                    }}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Author Avatar
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      id="authorAvatar"
-                      onChange={handleAuthorAvatarChange}
-                    />
-                    <label
-                      htmlFor="authorAvatar"
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-slate-300 hover:border-[#4161df] hover:bg-[#4161df]/5 cursor-pointer transition-all text-xs text-slate-600"
-                    >
-                      <ImageIcon size={16} />
-                      <span className="truncate">
-                        {formData.authorAvatar instanceof File
-                          ? formData.authorAvatar.name
-                          : isEdit
-                            ? "Change"
-                            : "Upload"}
-                      </span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Keywords Card */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
-            <div className="p-6">
-              <h3 className="text-sm font-bold text-slate-800 mb-4">
-                Keywords
-              </h3>
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  placeholder="Type keyword, press Add"
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
-                  value={keywordInput}
-                  onChange={(e) => setKeywordInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addKeywords();
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={addKeywords}
-                  className="px-5 py-2.5 bg-[#4161df] text-white rounded-xl text-sm font-medium hover:bg-[#3551c0] transition-all shrink-0"
-                >
-                  Add
-                </button>
-              </div>
-              {formData.keywords.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {formData.keywords.map((kw, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium transition-all hover:bg-blue-100"
-                    >
-                      #{kw}
-                      <button
-                        type="button"
-                        onClick={() => removeKeyword(idx)}
-                        className="hover:text-red-500 transition-colors ml-0.5"
-                      >
-                        <X size={12} />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-400 text-center py-2">
-                  No keywords added yet
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Related Slugs Card */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
-            <div className="p-6">
-              <h3 className="text-sm font-bold text-slate-800 mb-4">
-                Related Slugs
-              </h3>
-              <p className="text-xs text-slate-500 mb-4">
-                Comma-separated slugs of related journal posts for internal
-                linking.
-              </p>
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  placeholder="e.g. investment-guide-sector-115-mohali"
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#4161df]/20 outline-none transition-all text-sm"
-                  value={formData.relatedSlugs.join(", ")}
-                  onChange={(e) => {
-                    setFormData({
-                      ...formData,
-                      relatedSlugs: e.target.value
-                        .split(",")
-                        .map((s) => s.trim())
-                        .filter(Boolean),
-                    });
-                    markDirty();
-                  }}
-                />
-              </div>
-              {formData.relatedSlugs.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {formData.relatedSlugs.map((slug, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium transition-all hover:bg-purple-100"
-                    >
-                      {slug}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData({
-                            ...formData,
-                            relatedSlugs: formData.relatedSlugs.filter(
-                              (_, i) => i !== idx
-                            ),
-                          });
-                          markDirty();
-                        }}
-                        className="hover:text-red-500 transition-colors ml-0.5"
-                      >
-                        <X size={12} />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-400 text-center py-2">
-                  No related slugs added yet
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Content Editor Card */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
-            <div className="p-6 pb-3 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-500">
-                <BookOpen size={16} />
-                <span className="text-xs font-semibold uppercase tracking-wider">
-                  Content
-                </span>
-                <span className="text-[11px] text-slate-400 hidden sm:inline">
-                  ({contentStats.words} words · {contentStats.readingTime})
+                <span className="shrink-0 text-xs tabular-nums text-slate-400">
+                  {formData.title.length}/120
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPreview(!showPreview);
-                    updateContentStats();
-                  }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
-                    showPreview
-                      ? "bg-[#4161df] text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
-                >
-                  {showPreview ? <Edit3 size={14} /> : <Eye size={14} />}
-                  {showPreview ? "Edit" : "Preview"}
-                </button>
+            </div>
+
+            {/* Editor toolbar: write / preview */}
+            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2 sm:px-6">
+              <div
+                role="tablist"
+                aria-label="Editor mode"
+                className="inline-flex rounded-lg bg-slate-100 p-0.5"
+              >
+                {[
+                  { id: false, label: "Write", icon: PenLine },
+                  { id: true, label: "Preview", icon: Eye },
+                ].map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={label}
+                    type="button"
+                    role="tab"
+                    aria-selected={showPreview === id}
+                    onClick={() => {
+                      setShowPreview(id);
+                      updateContentStats();
+                    }}
+                    className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                      showPreview === id
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-500 hover:text-slate-800"
+                    }`}
+                  >
+                    <Icon size={13} />
+                    {label}
+                  </button>
+                ))}
               </div>
+              <span className="text-xs tabular-nums text-slate-500">
+                {contentStats.words.toLocaleString()} words ·{" "}
+                {contentStats.readingTime}
+              </span>
             </div>
 
             <div className={showPreview ? "hidden" : "block"}>
@@ -1226,101 +820,532 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
             </div>
 
             {showPreview && (
-              <div className="p-6 max-h-[600px] overflow-y-auto prose prose-slate max-w-none">
+              <div className="max-h-[70vh] overflow-y-auto px-5 py-8 sm:px-8">
                 {editorRef.current?.getCurrentContent() ? (
-                  <div className="space-y-4">
-                    <h2 className="text-2xl font-bold text-slate-900">
+                  <article className="mx-auto max-w-2xl">
+                    <h2 className="font-serif text-3xl font-bold leading-tight text-slate-900">
                       {formData.title || "Untitled"}
                     </h2>
-                    <div className="text-sm text-slate-500 border-b border-slate-200 pb-4">
-                      {contentStats.readingTime} · {contentStats.words} words
-                    </div>
-                    <div className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                    <p className="mt-2 border-b border-slate-200 pb-5 text-sm text-slate-500">
+                      {contentStats.readingTime} ·{" "}
+                      {contentStats.words.toLocaleString()} words
+                    </p>
+                    <div className="mt-6 whitespace-pre-wrap font-serif text-[17px] leading-8 text-slate-700">
                       {editorRef.current?.getCurrentContent()}
                     </div>
-                  </div>
+                  </article>
                 ) : (
-                  <div className="text-center py-16 text-slate-400">
-                    <FileText size={48} className="mx-auto mb-3 opacity-50" />
-                    <p>
+                  <div className="py-16 text-center text-slate-400">
+                    <FileText size={40} className="mx-auto mb-3 opacity-50" />
+                    <p className="text-sm">
                       {isEdit
-                        ? "No content yet"
-                        : "Start writing to see a preview"}
+                        ? "This journal has no content yet."
+                        : "Write something to see it here."}
                     </p>
                   </div>
                 )}
               </div>
             )}
 
-            <div className="px-6 py-2.5 bg-slate-50/50 border-t border-slate-100 flex items-center gap-4 text-[11px] text-slate-400">
-              <span className="flex items-center gap-1">
-                <AlignLeft size={12} />
-                {contentStats.words} words
-              </span>
-              <span className="flex items-center gap-1">
-                <Hash size={12} />
-                {contentStats.chars} characters
-              </span>
-              <span className="flex items-center gap-1">
-                <Clock size={12} />
-                {contentStats.readingTime}
-              </span>
+            <div className="flex items-center gap-4 border-t border-slate-100 px-4 py-2 text-xs tabular-nums text-slate-500 sm:px-6">
+              <span>{contentStats.words.toLocaleString()} words</span>
+              <span>{contentStats.chars.toLocaleString()} characters</span>
+              {isEdit && journalId && (
+                <span className="ml-auto font-mono text-[11px] text-slate-400">
+                  ID {journalId.substring(0, 8)}
+                </span>
+              )}
             </div>
           </div>
+        </main>
 
-          {/* Publish/Save Button */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
-            <div className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3 text-xs text-slate-400">
-                <span className="flex items-center gap-1">
-                  <CheckCircle2 size={12} />
-                  {isEdit
-                    ? isDirty
-                      ? "Unsaved changes"
-                      : "All saved"
-                    : "Draft auto-saved"}
+        {/* ============ Sidebar ============ */}
+        <aside className="space-y-3 lg:sticky lg:top-[4.5rem] lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto lg:pr-1">
+          <Section
+            icon={MapPin}
+            title="Category and location"
+            summary={formData.category}
+            defaultOpen
+          >
+            <Field label="Category" htmlFor="category">
+              <select
+                id="category"
+                value={formData.category}
+                onChange={(e) => update("category", e.target.value)}
+                className={`${inputCls} cursor-pointer`}
+              >
+                {CATEGORIES.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="City" htmlFor="targetCity">
+                <input
+                  id="targetCity"
+                  type="text"
+                  placeholder="Chandigarh"
+                  value={formData.targetCity}
+                  onChange={(e) => update("targetCity", e.target.value)}
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Sector or area" htmlFor="targetSector">
+                <input
+                  id="targetSector"
+                  type="text"
+                  placeholder="Mohali Sector 115"
+                  value={formData.targetSector}
+                  onChange={(e) => update("targetSector", e.target.value)}
+                  className={inputCls}
+                />
+              </Field>
+            </div>
+          </Section>
+
+          <Section
+            icon={ImageIcon}
+            title="Cover image"
+            summary={imagePreview ? "Added" : "None"}
+            defaultOpen
+          >
+            {imagePreview ? (
+              <div className="group/img relative aspect-video overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                <img
+                  src={imagePreview}
+                  alt={formData.altText || "Cover preview"}
+                  className="h-full w-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImagePreview(null);
+                    update("coverImage", "");
+                  }}
+                  className="absolute right-2 top-2 rounded-md bg-slate-900/70 p-1.5 text-white opacity-100 transition-opacity hover:bg-slate-900 focus-visible:opacity-100 sm:opacity-0 sm:group-hover/img:opacity-100"
+                  aria-label="Remove cover image"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  id="coverImage"
+                  onChange={handleImageChange}
+                />
+                <label
+                  htmlFor="coverImage"
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDraggingImage(true);
+                  }}
+                  onDragLeave={() => setIsDraggingImage(false)}
+                  onDrop={handleImageDrop}
+                  className={`flex aspect-video cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed text-center transition-colors ${
+                    isDraggingImage
+                      ? "border-[#4161df] bg-[#4161df]/5"
+                      : "border-slate-300 hover:border-[#4161df] hover:bg-slate-50"
+                  }`}
+                >
+                  <Upload size={20} className="text-slate-400" />
+                  <span className="text-sm font-medium text-slate-700">
+                    Drop an image or browse
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    PNG, JPG or WebP
+                  </span>
+                </label>
+              </>
+            )}
+
+            {formData.coverImage instanceof File && (
+              <p className="truncate text-xs text-slate-500">
+                {formData.coverImage.name}
+              </p>
+            )}
+
+            <Field label="Or paste an image URL" htmlFor="coverUrl">
+              <input
+                id="coverUrl"
+                type="text"
+                placeholder="https://…"
+                value={
+                  typeof formData.coverImage === "string"
+                    ? formData.coverImage
+                    : ""
+                }
+                onChange={(e) => {
+                  update("coverImage", e.target.value);
+                  setImagePreview(e.target.value || null);
+                }}
+                className={inputCls}
+              />
+            </Field>
+
+            <Field
+              label="Alt text"
+              htmlFor="altText"
+              hint="Describe the image for screen readers and search engines."
+            >
+              <input
+                id="altText"
+                type="text"
+                placeholder="Modern 3BHK apartment with balcony view"
+                value={formData.altText}
+                onChange={(e) => update("altText", e.target.value)}
+                className={inputCls}
+              />
+            </Field>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Width (px)" htmlFor="coverW">
+                <input
+                  id="coverW"
+                  type="number"
+                  placeholder="1200"
+                  value={formData.coverImageWidth ?? ""}
+                  onChange={(e) =>
+                    update(
+                      "coverImageWidth",
+                      e.target.value ? Number(e.target.value) : undefined,
+                    )
+                  }
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Height (px)" htmlFor="coverH">
+                <input
+                  id="coverH"
+                  type="number"
+                  placeholder="630"
+                  value={formData.coverImageHeight ?? ""}
+                  onChange={(e) =>
+                    update(
+                      "coverImageHeight",
+                      e.target.value ? Number(e.target.value) : undefined,
+                    )
+                  }
+                  className={inputCls}
+                />
+              </Field>
+            </div>
+          </Section>
+
+          <Section
+            icon={Search}
+            title="Search appearance"
+            summary={formData.noIndex ? "Hidden" : undefined}
+            defaultOpen
+          >
+            {/* Live search result preview */}
+            <div className="rounded-lg border border-slate-200 bg-white p-3.5">
+              <p className="truncate text-xs text-slate-500">
+                propertybulbul.com › journal › {formData.slug || "slug"}
+              </p>
+              <p className="mt-0.5 truncate text-[17px] leading-snug text-[#1a0dab]">
+                {serpTitle} | PropertyBulbul Journal
+              </p>
+              <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-slate-600">
+                {serpDescription}
+              </p>
+            </div>
+
+            <Field
+              label="Meta title"
+              htmlFor="metaTitle"
+              counter={
+                <Meter
+                  value={formData.metaTitle.length}
+                  idealMin={30}
+                  idealMax={60}
+                  limit={120}
+                />
+              }
+            >
+              <input
+                id="metaTitle"
+                type="text"
+                maxLength={120}
+                placeholder="Best investment guide for Mohali"
+                value={formData.metaTitle}
+                onChange={(e) => update("metaTitle", e.target.value)}
+                className={inputCls}
+              />
+            </Field>
+
+            <Field
+              label="Meta description"
+              htmlFor="metaDescription"
+              counter={
+                <Meter
+                  value={formData.metaDescription.length}
+                  idealMin={110}
+                  idealMax={160}
+                  limit={170}
+                />
+              }
+            >
+              <textarea
+                id="metaDescription"
+                rows={3}
+                maxLength={170}
+                placeholder="Summarise the article in one or two sentences."
+                value={formData.metaDescription}
+                onChange={(e) => update("metaDescription", e.target.value)}
+                className={`${inputCls} resize-none`}
+              />
+            </Field>
+
+            <Field
+              label="Excerpt"
+              htmlFor="excerpt"
+              hint="Shown on journal cards and listings."
+              counter={
+                <span className="text-xs tabular-nums text-slate-500">
+                  {formData.excerpt.length}/260
                 </span>
-                <span>·</span>
-                <span className="flex items-center gap-1">
-                  <Clock size={12} />
-                  {contentStats.readingTime}
+              }
+            >
+              <textarea
+                id="excerpt"
+                rows={3}
+                maxLength={260}
+                placeholder="A short teaser for the article."
+                value={formData.excerpt}
+                onChange={(e) => update("excerpt", e.target.value)}
+                className={`${inputCls} resize-none`}
+              />
+            </Field>
+
+            <Field label="Canonical URL" htmlFor="canonicalUrl">
+              <input
+                id="canonicalUrl"
+                type="text"
+                placeholder="https://www.propertybulbul.com/journal/custom-slug"
+                value={formData.canonicalUrl}
+                onChange={(e) => update("canonicalUrl", e.target.value)}
+                className={inputCls}
+              />
+            </Field>
+
+            <label
+              htmlFor="noIndex"
+              className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50"
+            >
+              <input
+                type="checkbox"
+                id="noIndex"
+                checked={formData.noIndex}
+                onChange={(e) => update("noIndex", e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#4161df] focus:ring-[#4161df]"
+              />
+              <span>
+                <span className="block text-sm font-medium text-slate-800">
+                  Hide from search engines
                 </span>
-                <span>·</span>
-                <span className="flex items-center gap-1">
-                  <AlignLeft size={12} />
-                  {contentStats.words} words
+                <span className="block text-xs text-slate-500">
+                  Adds a noindex tag. Readers with the link can still open it.
                 </span>
-                {isEdit && (
-                  <>
-                    <span>·</span>
-                    <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono">
-                      ID: {journalId?.substring(0, 8)}...
-                    </span>
-                  </>
+              </span>
+            </label>
+          </Section>
+
+          <Section
+            icon={UserRound}
+            title="Author"
+            summary={formData.authorName || undefined}
+          >
+            <div className="flex items-center gap-3">
+              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
+                {authorAvatarPreview ? (
+                  <img
+                    src={authorAvatarPreview}
+                    alt="Author avatar preview"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <UserRound
+                    size={20}
+                    className="absolute inset-0 m-auto text-slate-400"
+                  />
                 )}
               </div>
-              <button
-                disabled={loading}
-                type="submit"
-                className="w-full sm:w-auto bg-gradient-to-r from-[#4161df] to-[#3551c0] text-white px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:from-[#3551c0] hover:to-[#2a42a0] disabled:opacity-50 transition-all shadow-lg shadow-[#4161df]/20"
-              >
-                {loading ? (
-                  <Loader2 className="animate-spin" size={20} />
-                ) : (
-                  <Save size={20} />
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  id="authorAvatar"
+                  onChange={handleAuthorAvatarChange}
+                />
+                <label
+                  htmlFor="authorAvatar"
+                  className="cursor-pointer rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+                >
+                  {authorAvatarPreview ? "Change photo" : "Upload photo"}
+                </label>
+                {authorAvatarPreview && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthorAvatarPreview(null);
+                      update("authorAvatar", "");
+                    }}
+                    className="rounded-lg px-2 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-red-600"
+                  >
+                    Remove
+                  </button>
                 )}
-                {isEdit
-                  ? loading
-                    ? "Saving Changes..."
-                    : "Save Journal"
-                  : loading
-                    ? "Publishing..."
-                    : "Publish Journal"}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Name" htmlFor="authorName">
+                <input
+                  id="authorName"
+                  type="text"
+                  placeholder="Sandeep Saini"
+                  value={formData.authorName}
+                  onChange={(e) => update("authorName", e.target.value)}
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Role" htmlFor="authorRole">
+                <input
+                  id="authorRole"
+                  type="text"
+                  placeholder="Real Estate Analyst"
+                  value={formData.authorRole}
+                  onChange={(e) => update("authorRole", e.target.value)}
+                  className={inputCls}
+                />
+              </Field>
+            </div>
+          </Section>
+
+          <Section
+            icon={Tags}
+            title="Keywords"
+            summary={
+              formData.keywords.length
+                ? `${formData.keywords.length}`
+                : undefined
+            }
+          >
+            <div className="flex gap-2">
+              <input
+                type="text"
+                aria-label="Add keywords"
+                placeholder="Type a keyword, then press Enter"
+                value={keywordInput}
+                onChange={(e) => setKeywordInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addKeywords();
+                  }
+                }}
+                className={inputCls}
+              />
+              <button
+                type="button"
+                onClick={addKeywords}
+                className="shrink-0 rounded-lg border border-slate-200 px-3.5 text-sm font-medium text-slate-700 transition-colors hover:border-[#4161df] hover:text-[#4161df]"
+              >
+                Add
               </button>
             </div>
-          </div>
-        </form>
+            <p className="-mt-2 text-xs text-slate-500">
+              Separate several keywords with commas.
+            </p>
+            {formData.keywords.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {formData.keywords.map((kw, idx) => (
+                  <span
+                    key={`${kw}-${idx}`}
+                    className="inline-flex items-center gap-1 rounded-md bg-[#4161df]/10 py-1 pl-2.5 pr-1.5 text-xs font-medium text-[#3551c0]"
+                  >
+                    {kw}
+                    <button
+                      type="button"
+                      onClick={() => removeKeyword(idx)}
+                      className="rounded p-0.5 transition-colors hover:bg-[#4161df]/15 hover:text-red-600"
+                      aria-label={`Remove ${kw}`}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400">No keywords yet.</p>
+            )}
+          </Section>
+
+          <Section
+            icon={Share2}
+            title="Related articles"
+            summary={
+              formData.relatedSlugs.length
+                ? `${formData.relatedSlugs.length}`
+                : undefined
+            }
+          >
+            <Field
+              label="Slugs"
+              htmlFor="relatedSlugs"
+              hint="Comma-separated slugs of journals to link from this article."
+            >
+              <input
+                id="relatedSlugs"
+                type="text"
+                placeholder="investment-guide-sector-115-mohali"
+                value={formData.relatedSlugs.join(", ")}
+                onChange={(e) =>
+                  update(
+                    "relatedSlugs",
+                    e.target.value
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  )
+                }
+                className={`${inputCls} font-mono text-xs`}
+              />
+            </Field>
+            {formData.relatedSlugs.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {formData.relatedSlugs.map((slug, idx) => (
+                  <span
+                    key={`${slug}-${idx}`}
+                    className="inline-flex items-center gap-1 rounded-md bg-slate-100 py-1 pl-2.5 pr-1.5 font-mono text-xs text-slate-700"
+                  >
+                    {slug}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        update(
+                          "relatedSlugs",
+                          formData.relatedSlugs.filter((_, i) => i !== idx),
+                        )
+                      }
+                      className="rounded p-0.5 transition-colors hover:bg-slate-200 hover:text-red-600"
+                      aria-label={`Remove ${slug}`}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </Section>
+        </aside>
       </div>
-    </div>
+    </form>
   );
 }
