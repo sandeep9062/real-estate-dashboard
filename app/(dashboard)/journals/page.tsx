@@ -13,7 +13,6 @@ import {
   Star,
 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -73,9 +72,11 @@ export default function JournalsDashboard() {
     () =>
       journals.filter(
         (j) =>
-          j.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          j.targetSector.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          j.category.toLowerCase().includes(searchTerm.toLowerCase()),
+          (j.title ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (j.targetSector ?? "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (j.category ?? "").toLowerCase().includes(searchTerm.toLowerCase()),
       ),
     [journals, searchTerm],
   );
@@ -169,12 +170,16 @@ export default function JournalsDashboard() {
                             className="relative size-10 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shrink-0"
                             title="View Live"
                           >
-                            <Image
-                              src={journal.coverImage}
-                              alt={journal.title}
-                              fill
-                              className="object-cover"
-                            />
+                            {journal.coverImage ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={journal.coverImage}
+                                alt={journal.altText || journal.title}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <FileText className="m-auto size-5 text-slate-300" />
+                            )}
                           </a>
                           <div className="min-w-0">
                             <p className="font-semibold text-slate-900 truncate">

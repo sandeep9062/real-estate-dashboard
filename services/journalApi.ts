@@ -80,6 +80,8 @@ export interface JournalInput {
   noIndex?: boolean;
   altText?: string;
   relatedSlugs?: string[];
+  removeCover?: boolean;
+  removeAuthorAvatar?: boolean;
 }
 
 export interface PaginatedJournalsResponse {
@@ -120,15 +122,16 @@ export const journalApi = createApi({
     }),
 
     // Fetch single journal by ID
+    // Uses the admin route so inactive journals can be opened for editing.
     getJournalById: builder.query<Journal, string>({
-      query: (id) => `/v1/journals/${id}`,
+      query: (id) => `/v1/journals/admin/${id}`,
       providesTags: (result, error, id) => [{ type: "Journal", id }],
     }),
 
     // Fetch single journal by Slug (Crucial for SEO-friendly URLs)
     getJournalBySlug: builder.query<Journal, string>({
       query: (slug) => `/v1/journals/slug/${slug}`,
-      providesTags: (result, error, slug) => [{ type: "Journal", slug }],
+      providesTags: (result, error, slug) => [{ type: "Journal", id: slug }],
     }),
 
     // Create a new journal post

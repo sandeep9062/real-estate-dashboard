@@ -392,6 +392,8 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     setImagePreview(journal.coverImage || null);
     if (journal.author?.avatar) setAuthorAvatarPreview(journal.author.avatar);
 
+    // The editor is loaded dynamically, so its ref may not exist yet. Content is
+    // also passed through the `content` prop and kept in formData as fallback.
     if (editorRef.current && content) {
       editorRef.current.setContent(content);
     }
@@ -502,7 +504,10 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const editorContent = editorRef.current?.getCurrentContent() || "";
+    // Fall back to the loaded content if the editor ref isn't ready, so saving
+    // an untouched journal never fails with "Content cannot be empty".
+    const editorContent =
+      editorRef.current?.getCurrentContent() || formData.content || "";
 
     if (isEdit) {
       if (!editorContent) {
@@ -514,6 +519,9 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
         authorName || authorRole
           ? { name: authorName || undefined, role: authorRole || undefined }
           : undefined;
+      // Tell the server about explicit removals (empty strings are ignored).
+      const removeCover = !rest.coverImage && !!journal?.coverImage;
+      const removeAuthorAvatar = !authorAvatar && !!journal?.author?.avatar;
       try {
         await updateJournal({
           id: journalId as string,
@@ -522,6 +530,8 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
             author,
             authorAvatar,
             content: editorContent,
+            ...(removeCover ? { removeCover: true } : {}),
+            ...(removeAuthorAvatar ? { removeAuthorAvatar: true } : {}),
           },
         }).unwrap();
         toast.success("Journal updated successfully! ✅");
@@ -537,7 +547,7 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
       return;
     }
 
-    if (!formData.title || !editorContent) {
+    if (!formData.title.trim() || !editorContent) {
       toast.error("Missing required fields", {
         description: "Title and content are required to publish a journal.",
       });
