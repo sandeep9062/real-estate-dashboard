@@ -234,6 +234,7 @@ interface FormState {
   metaTitle: string;
   metaDescription: string;
   keywords: string[];
+  tags: string[];
   canonicalUrl: string;
   noIndex: boolean;
   content: string;
@@ -279,6 +280,7 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     metaTitle: "",
     metaDescription: "",
     keywords: [],
+    tags: [],
     canonicalUrl: "",
     noIndex: false,
     content: "",
@@ -293,6 +295,7 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
   });
 
   const [keywordInput, setKeywordInput] = useState("");
+  const [tagInput, setTagInput] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [authorAvatarPreview, setAuthorAvatarPreview] = useState<string | null>(
     null,
@@ -380,6 +383,7 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
       targetCity: journal.targetCity || "",
       status: journal.status || "published",
       keywords: journal.keywords || [],
+      tags: journal.tags || [],
       canonicalUrl: journal.canonicalUrl || "",
       noIndex: journal.noIndex ?? false,
       content,
@@ -468,6 +472,29 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     setFormData((prev) => ({
       ...prev,
       keywords: prev.keywords.filter((_, i) => i !== index),
+    }));
+    markDirty();
+  };
+
+  const addTags = () => {
+    const newTags = tagInput
+      .split(",")
+      .map((t) => t.trim().toLowerCase())
+      .filter((t) => t.length > 0);
+    if (newTags.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        tags: [...new Set([...prev.tags, ...newTags])],
+      }));
+      markDirty();
+    }
+    setTagInput("");
+  };
+
+  const removeTag = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((_, i) => i !== index),
     }));
     markDirty();
   };
@@ -1310,6 +1337,63 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
               </div>
             ) : (
               <p className="text-xs text-slate-400">No keywords yet.</p>
+            )}
+          </Section>
+
+          <Section
+            icon={Tags}
+            title="Tags"
+            summary={
+              formData.tags.length ? `${formData.tags.length}` : undefined
+            }
+          >
+            <div className="flex gap-2">
+              <input
+                type="text"
+                aria-label="Add tags"
+                placeholder="Type a tag, then press Enter"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addTags();
+                  }
+                }}
+                className={inputCls}
+              />
+              <button
+                type="button"
+                onClick={addTags}
+                className="shrink-0 rounded-lg border border-slate-200 px-3.5 text-sm font-medium text-slate-700 transition-colors hover:border-[#4161df] hover:text-[#4161df]"
+              >
+                Add
+              </button>
+            </div>
+            <p className="-mt-2 text-xs text-slate-500">
+              Separate several tags with commas.
+            </p>
+            {formData.tags.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {formData.tags.map((t, idx) => (
+                  <span
+                    key={`${t}-${idx}`}
+                    className="inline-flex items-center gap-1 rounded-md bg-slate-100 py-1 pl-2.5 pr-1.5 text-xs font-medium text-slate-700"
+                  >
+                    {t}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(idx)}
+                      className="rounded p-0.5 transition-colors hover:bg-red-100 hover:text-red-600"
+                      aria-label={`Remove ${t}`}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400">No tags yet.</p>
             )}
           </Section>
 

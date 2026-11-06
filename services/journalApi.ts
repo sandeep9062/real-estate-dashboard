@@ -47,6 +47,7 @@ export interface Journal {
   metaDescription?: string;
   keywords: string[];
   canonicalUrl?: string;
+  tags?: string[];
   noIndex?: boolean;
   views: number;
   createdAt: string;
@@ -79,6 +80,7 @@ export interface JournalInput {
   metaDescription?: string;
   keywords?: string[];
   canonicalUrl?: string;
+  tags?: string[];
   noIndex?: boolean;
   altText?: string;
   relatedSlugs?: string[];
