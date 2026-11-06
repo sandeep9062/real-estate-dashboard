@@ -36,6 +36,7 @@ export interface Journal {
   category: string;
   targetCity?: string;
   targetSector: string;
+  status?: string;
   location?: string;
   coverImage: string;
   coverImageWidth?: number;
@@ -66,6 +67,7 @@ export interface JournalInput {
   category?: string;
   targetCity?: string;
   targetSector?: string;
+  status?: string;
   location?: string;
   coverImage?: string | File;
   coverImageWidth?: number;

@@ -229,6 +229,7 @@ interface FormState {
   category: string;
   targetCity: string;
   targetSector: string;
+  status: string;
   excerpt: string;
   metaTitle: string;
   metaDescription: string;
@@ -273,6 +274,7 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
     category: "Investment",
     targetCity: "",
     targetSector: "",
+    status: "published",
     excerpt: "",
     metaTitle: "",
     metaDescription: "",
@@ -376,6 +378,7 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
       metaTitle: journal.metaTitle || "",
       metaDescription: journal.metaDescription || "",
       targetCity: journal.targetCity || "",
+      status: journal.status || "published",
       keywords: journal.keywords || [],
       canonicalUrl: journal.canonicalUrl || "",
       noIndex: journal.noIndex ?? false,
@@ -913,6 +916,19 @@ export default function JournalForm({ mode, journalId }: JournalFormProps) {
                 />
               </Field>
             </div>
+
+            <Field label="Status" htmlFor="status">
+              <select
+                id="status"
+                value={formData.status}
+                onChange={(e) => update("status", e.target.value)}
+                className={`${inputCls} cursor-pointer`}
+              >
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+              </select>
+            </Field>
           </Section>
 
           <Section
